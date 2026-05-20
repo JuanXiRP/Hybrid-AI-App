@@ -1,3 +1,8 @@
 <resources>
-    <string name="app_name">Hybrid-AI-App</string>
+    <string name="app_name">Hybrid.AI</string>
+    <string name="today_focus">Today\'s Focus</string>
+    <string name="performance_dashboard">PERFORMANCE DASHBOARD</string>
+    <string name="settings_title">Settings</string>
+    <string name="language_label">Language / Idioma</string>
+    <string name="dark_mode_label">Dark Mode</string>
 </resources>

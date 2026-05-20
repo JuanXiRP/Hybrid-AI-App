@@ -8,9 +8,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import com.example.hybrid_ai_app.onboarding.data.remote.dto.ProfileUpdateRequest
-import com.example.hybrid_ai_app.onboarding.domain.repository.UserRepository
+import com.example.hybrid_ai_app.core.domain.repository.UserRepository
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import android.util.Log
 
 data class OnboardingState(
     val age: String = "",
@@ -102,7 +103,7 @@ class OnboardingViewModel @Inject constructor(
             )
 
             // 2. Execute network request (Mock token for now)
-            val mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            val mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhMGI0YWRiOWU3ZWU4ZTQ5NGRiYjllZSIsImlhdCI6MTc3OTEyNDk1NSwiZXhwIjoxNzgxNzE2OTU1fQ.9IlYxRJajkUJBrdq98JJzOWXFfVHduHVLrmgd7t1hy0"
             val result = repository.updateProfile(mockToken, payload)
 
             isLoading = false
@@ -111,7 +112,15 @@ class OnboardingViewModel @Inject constructor(
             result.onSuccess {
                 onSuccess()
             }.onFailure { exception ->
-                onError(exception.message ?: "Unknown network error")
+                // 3. Handle outcome
+                result.onSuccess {
+                    Log.d("API_SUCCESS", "Datos guardados correctamente en Mongo")
+                    onSuccess()
+                }.onFailure { exception ->
+                    // ESTA ES LA LÍNEA MÁGICA QUE NOS DIRÁ QUÉ PASA
+                    Log.e("API_ERROR", "Fallo al conectar con el backend: ${exception.message}", exception)
+                    onError(exception.message ?: "Unknown network error")
+                }
             }
         }
     }

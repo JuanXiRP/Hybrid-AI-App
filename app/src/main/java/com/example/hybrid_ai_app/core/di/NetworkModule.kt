@@ -1,29 +1,39 @@
 package com.example.hybrid_ai_app.core.di
 
-import com.example.hybrid_ai_app.onboarding.data.remote.UserApi
-import com.example.hybrid_ai_app.onboarding.data.repository.UserRepositoryImpl
-import com.example.hybrid_ai_app.onboarding.domain.repository.UserRepository
-import dagger.Binds
+// Ensure these imports point to the correct refactored packages
+import com.example.hybrid_ai_app.core.data.remote.UserApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    // TODO: Replace with your actual Node.js server IP (e.g., http://10.0.2.2:3000/ for local emulator)
-    private const val BASE_URL = "http://10.0.2.2:3000/"
+    private const val BASE_URL = "https://hybrid-ai-backend-7h7k.onrender.com/"
 
     @Provides
     @Singleton
-    fun provideRetrofit(): Retrofit {
+    fun provideOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder()
+            .connectTimeout(45, TimeUnit.SECONDS)
+            .readTimeout(45, TimeUnit.SECONDS)
+            .writeTimeout(45, TimeUnit.SECONDS)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
@@ -33,15 +43,4 @@ object NetworkModule {
     fun provideUserApi(retrofit: Retrofit): UserApi {
         return retrofit.create(UserApi::class.java)
     }
-}
-
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class RepositoryModule {
-
-    @Binds
-    @Singleton
-    abstract fun bindUserRepository(
-        userRepositoryImpl: UserRepositoryImpl
-    ): UserRepository
 }

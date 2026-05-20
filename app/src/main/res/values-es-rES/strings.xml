@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Hybrid.AI</string>
+    <string name="today_focus">Enfoque de Hoy</string>
+    <string name="performance_dashboard">PANEL DE RENDIMIENTO</string>
+    <string name="settings_title">Ajustes</string>
+    <string name="language_label">Language / Idioma</string>
+    <string name="dark_mode_label">Modo Oscuro</string>
+</resources>

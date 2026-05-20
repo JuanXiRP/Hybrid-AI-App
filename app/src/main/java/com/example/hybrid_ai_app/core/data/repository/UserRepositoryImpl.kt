@@ -1,8 +1,8 @@
-package com.example.hybrid_ai_app.onboarding.data.repository
+package com.example.hybrid_ai_app.core.data.repository
 
-import com.example.hybrid_ai_app.onboarding.data.remote.UserApi
+import com.example.hybrid_ai_app.core.domain.repository.UserRepository
+import com.example.hybrid_ai_app.core.data.remote.UserApi
 import com.example.hybrid_ai_app.onboarding.data.remote.dto.ProfileUpdateRequest
-import com.example.hybrid_ai_app.onboarding.domain.repository.UserRepository
 import javax.inject.Inject
 
 // Implementation of the repository pattern handling API responses safely

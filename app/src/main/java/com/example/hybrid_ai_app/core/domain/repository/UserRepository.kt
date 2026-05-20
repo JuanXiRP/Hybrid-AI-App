@@ -1,4 +1,4 @@
-package com.example.hybrid_ai_app.onboarding.domain.repository
+package com.example.hybrid_ai_app.core.domain.repository
 
 import com.example.hybrid_ai_app.onboarding.data.remote.dto.ProfileUpdateRequest
 
