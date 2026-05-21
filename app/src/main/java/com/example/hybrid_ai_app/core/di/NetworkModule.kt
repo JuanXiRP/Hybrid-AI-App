@@ -1,6 +1,7 @@
 package com.example.hybrid_ai_app.core.di
 
 // Ensure these imports point to the correct refactored packages
+import com.example.hybrid_ai_app.coach.data.CoachApi
 import com.example.hybrid_ai_app.core.data.remote.UserApi
 import dagger.Module
 import dagger.Provides
@@ -11,6 +12,9 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
+import com.example.hybrid_ai_app.core.data.PreferencesManager
+import okhttp3.Interceptor
+import okhttp3.logging.HttpLoggingInterceptor
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -20,11 +24,34 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    // 🟢 Inject PreferencesManager here
+    fun provideOkHttpClient(preferencesManager: PreferencesManager): OkHttpClient {
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
+        val authInterceptor = Interceptor { chain ->
+            val originalRequest = chain.request()
+
+            // 🟢 Read the real token from DataStore
+            val token = preferencesManager.getTokenSync()
+
+            val requestBuilder = originalRequest.newBuilder()
+
+            // Only add the header if we actually have a token
+            if (!token.isNullOrEmpty()) {
+                requestBuilder.header("Authorization", "Bearer $token")
+            }
+
+            chain.proceed(requestBuilder.build())
+        }
+
         return OkHttpClient.Builder()
-            .connectTimeout(45, TimeUnit.SECONDS)
-            .readTimeout(45, TimeUnit.SECONDS)
-            .writeTimeout(45, TimeUnit.SECONDS)
+            .connectTimeout(90, TimeUnit.SECONDS)
+            .readTimeout(90, TimeUnit.SECONDS)
+            .writeTimeout(90, TimeUnit.SECONDS)
+            .addInterceptor(loggingInterceptor)
+            .addInterceptor(authInterceptor)
             .build()
     }
 
@@ -42,5 +69,11 @@ object NetworkModule {
     @Singleton
     fun provideUserApi(retrofit: Retrofit): UserApi {
         return retrofit.create(UserApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCoachApi(retrofit: Retrofit): CoachApi {
+        return retrofit.create(CoachApi::class.java)
     }
 }

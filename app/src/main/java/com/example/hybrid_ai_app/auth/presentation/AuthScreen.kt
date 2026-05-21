@@ -89,24 +89,26 @@ fun AuthScreen(
 
         // --- INPUT FIELDS ---
         OutlinedTextField(
-            value = "", // TODO: Bind to UI state
-            onValueChange = {},
+            value = viewModel.email, // 🟢 Conectado al estado
+            onValueChange = { viewModel.updateEmail(it) }, // 🟢 Conectado a la acción
             label = { Text("Email") },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.small
+            shape = MaterialTheme.shapes.small,
+            enabled = !viewModel.isLoading
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
-            value = "",
-            onValueChange = {},
+            value = viewModel.password, // 🟢 Conectado al estado
+            onValueChange = { viewModel.updatePassword(it) }, // 🟢 Conectado a la acción
             label = { Text("Password") },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.small
+            shape = MaterialTheme.shapes.small,
+            enabled = !viewModel.isLoading
         )
 
         if (viewModel.isLoginMode) {
@@ -122,17 +124,31 @@ fun AuthScreen(
 
         // --- MAIN ACTION BUTTON ---
         Button(
-            onClick = onAuthSuccess,
+            onClick = {
+                // 🟢 Ahora ejecuta la lógica, guarda el token y luego navega
+                viewModel.authenticate(
+                    onSuccess = { onAuthSuccess() },
+                    onError = { errorMsg ->
+                        // Aquí podrías mostrar un Snackbar o un Toast con el errorMsg
+                        Log.e("Auth", "Error de Login: $errorMsg")
+                    }
+                )
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            shape = MaterialTheme.shapes.extraLarge
+            shape = MaterialTheme.shapes.extraLarge,
+            enabled = !viewModel.isLoading
         ) {
-            Text(
-                text = if (viewModel.isLoginMode) "Sign In" else "Create Account",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
-            )
+            if (viewModel.isLoading) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
+            } else {
+                Text(
+                    text = if (viewModel.isLoginMode) "Sign In" else "Create Account",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))

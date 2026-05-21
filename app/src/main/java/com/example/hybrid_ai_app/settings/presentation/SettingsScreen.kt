@@ -7,24 +7,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.hybrid_ai_app.core.data.PreferencesManager
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(navController: NavController) {
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-
-    // Instantiating the manager (Tomorrow we will inject this via Hilt into a ViewModel)
-    val preferencesManager = remember { PreferencesManager(context) }
-
-    val currentLanguage by preferencesManager.languageFlow.collectAsState(initial = "en")
-    val isDarkMode by preferencesManager.darkModeFlow.collectAsState(initial = true)
+fun SettingsScreen(
+    navController: NavController,
+    viewModel: SettingsViewModel = hiltViewModel() //Delegate instantiation to Hilt
+) {
+    // UI strictly observes state from ViewModel
+    val currentLanguage by viewModel.currentLanguage.collectAsState(initial = "en")
+    val isDarkMode by viewModel.isDarkMode.collectAsState(initial = true)
 
     Scaffold(
         topBar = {
@@ -45,7 +41,6 @@ fun SettingsScreen(navController: NavController) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Language Selection Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -57,36 +52,31 @@ fun SettingsScreen(navController: NavController) {
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         FilterChip(
                             selected = currentLanguage == "en",
-                            onClick = { coroutineScope.launch { preferencesManager.saveLanguage("en") } },
+                            onClick = { viewModel.saveLanguage("en") }, // 🟢 Delegate action to ViewModel
                             label = { Text("English") }
                         )
                         FilterChip(
                             selected = currentLanguage == "es",
-                            onClick = { coroutineScope.launch { preferencesManager.saveLanguage("es") } },
+                            onClick = { viewModel.saveLanguage("es") }, // 🟢 Delegate action to ViewModel
                             label = { Text("Español") }
                         )
                     }
                 }
             }
 
-            // Theme Selection Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("Dark Mode", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Switch(
                         checked = isDarkMode,
-                        onCheckedChange = { isDark ->
-                            coroutineScope.launch { preferencesManager.toggleDarkMode(isDark) }
-                        }
+                        onCheckedChange = { isDark -> viewModel.toggleDarkMode(isDark) } // 🟢 Delegate action
                     )
                 }
             }

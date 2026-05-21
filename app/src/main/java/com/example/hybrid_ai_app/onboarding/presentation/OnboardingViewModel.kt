@@ -84,7 +84,6 @@ class OnboardingViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading = true
 
-            // 1. Map UI state to DTO
             val parsedInjuries = uiState.injuriesInput
                 .split(",")
                 .map { it.trim() }
@@ -102,25 +101,32 @@ class OnboardingViewModel @Inject constructor(
                 injuries = parsedInjuries
             )
 
-            // 2. Execute network request (Mock token for now)
-            val mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhMGI0YWRiOWU3ZWU4ZTQ5NGRiYjllZSIsImlhdCI6MTc3OTEyNDk1NSwiZXhwIjoxNzgxNzE2OTU1fQ.9IlYxRJajkUJBrdq98JJzOWXFfVHduHVLrmgd7t1hy0"
-            val result = repository.updateProfile(mockToken, payload)
+            // 1. Save user profile data
+            val profileResult = repository.updateProfile(payload)
 
-            isLoading = false
+            profileResult.onSuccess {
+                Log.d("API_SUCCESS", "Profile saved to MongoDB")
 
-            // 3. Handle outcome
-            result.onSuccess {
-                onSuccess()
-            }.onFailure { exception ->
-                // 3. Handle outcome
-                result.onSuccess {
-                    Log.d("API_SUCCESS", "Datos guardados correctamente en Mongo")
-                    onSuccess()
+                // 2. Automatically trigger AI Workout Generation
+                val aiResult = repository.generateAiPlan(
+                    planDuration = uiState.planDuration,
+                    goal = uiState.goal
+                )
+
+                aiResult.onSuccess {
+                    Log.d("API_SUCCESS", "Gemini successfully generated and saved the workout plan")
+                    isLoading = false
+                    onSuccess() // Navigate to HomeScreen
                 }.onFailure { exception ->
-                    // ESTA ES LA LÍNEA MÁGICA QUE NOS DIRÁ QUÉ PASA
-                    Log.e("API_ERROR", "Fallo al conectar con el backend: ${exception.message}", exception)
-                    onError(exception.message ?: "Unknown network error")
+                    isLoading = false
+                    Log.e("API_ERROR", "Profile saved, but AI generation failed: ${exception.message}", exception)
+                    onError("Profile saved, but plan generation failed. You can retry later.")
                 }
+
+            }.onFailure { exception ->
+                isLoading = false
+                Log.e("API_ERROR", "Failed to connect to backend: ${exception.message}", exception)
+                onError(exception.message ?: "Unknown network error")
             }
         }
     }
