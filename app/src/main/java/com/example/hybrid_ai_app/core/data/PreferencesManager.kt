@@ -71,4 +71,8 @@ class PreferencesManager(private val context: Context) {
     val tokenFlow: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[JWT_TOKEN_KEY]
     }
+    // Add this below getTokenSync()
+    suspend fun getToken(): String? {
+        return tokenFlow.first()
+    }
 }

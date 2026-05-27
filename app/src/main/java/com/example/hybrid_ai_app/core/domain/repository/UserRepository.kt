@@ -1,5 +1,6 @@
 package com.example.hybrid_ai_app.core.domain.repository
 
+import com.example.hybrid_ai_app.core.data.remote.dto.UserDto
 import com.example.hybrid_ai_app.onboarding.data.remote.dto.ProfileUpdateRequest
 
 interface UserRepository {
@@ -8,4 +9,6 @@ interface UserRepository {
 
     // Triggers the Gemini AI generation flow on the backend
     suspend fun generateAiPlan(planDuration: Int, goal: String): Result<Unit>
+
+    suspend fun getUserProfile(): Result<UserDto>
 }
