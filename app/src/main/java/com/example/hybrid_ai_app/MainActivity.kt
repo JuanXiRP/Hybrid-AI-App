@@ -18,7 +18,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.os.LocaleListCompat
+import androidx.navigation.compose.rememberNavController
 import com.example.hybrid_ai_app.core.data.PreferencesManager
+import com.example.hybrid_ai_app.navigation.RootNavGraph
+import com.example.hybrid_ai_app.navigation.Screen
 import com.example.hybrid_ai_app.ui.theme.HybridTrainingTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -33,14 +36,20 @@ class MainActivity : ComponentActivity() {
             val currentLanguage by preferencesManager.languageFlow.collectAsState(initial = "en")
             val isDarkMode by preferencesManager.darkModeFlow.collectAsState(initial = true)
 
-            // 1. Hold the start destination in a state
+            // Creates the global NavController for the Root graph
+            val navController = rememberNavController()
+
             var startDestination by remember { mutableStateOf<String?>(null) }
 
-            // 2. Read the token ONLY ONCE when the app starts
+            // Safe async read: Doesn't block the UI thread
             LaunchedEffect(Unit) {
-                // Using the synchronous read we created earlier
-                val token = preferencesManager.getTokenSync()
-                startDestination = if (token.isNullOrEmpty()) "auth" else "home"
+                val token = preferencesManager.getToken()
+                // 🟢 Uses your strictly typed Sealed Classes from NavGraph.kt
+                startDestination = if (token.isNullOrEmpty()) {
+                    Screen.Auth.route
+                } else {
+                    Screen.MainContainer.route
+                }
             }
 
             LaunchedEffect(currentLanguage) {
@@ -53,14 +62,16 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // 3. Only render the NavHost when we know where to go
                     if (startDestination == null) {
-                        // Opcional: Mostrar una pantalla de carga o logo
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                         }
                     } else {
-                        AppNavigation(startDestination = startDestination!!)
+                        // 🟢 Connects to your modern Navigation Graph
+                        RootNavGraph(
+                            navController = navController,
+                            startDestination = startDestination!!
+                        )
                     }
                 }
             }

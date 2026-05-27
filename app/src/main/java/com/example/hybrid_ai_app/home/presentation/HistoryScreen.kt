@@ -10,41 +10,25 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.hybrid_ai_app.home.presentation.components.HybridTopAppBar
 import com.example.hybrid_ai_app.navigation.Screen
 
-enum class WorkoutIntensity {
-    HIGH, MODERATE, LOW
-}
-
-data class WorkoutHistoryItem(
-    val id: String,
-    val date: String,
-    val title: String,
-    val type: String, // "gym" or "run"
-    val duration: String,
-    val calories: String,
-    val intensity: WorkoutIntensity
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoryScreen(navController: NavController) {
-    val historyItems = remember {
-        listOf(
-            WorkoutHistoryItem("1", "May 18, 2026", "Push Hypertrophy", "gym", "55 min", "420 kcal", WorkoutIntensity.HIGH),
-            WorkoutHistoryItem("2", "May 17, 2026", "Zone 2 Steady Run", "run", "45 min", "510 kcal", WorkoutIntensity.MODERATE),
-            WorkoutHistoryItem("3", "May 15, 2026", "Pull & Core Power", "gym", "60 min", "480 kcal", WorkoutIntensity.HIGH),
-            WorkoutHistoryItem("4", "May 14, 2026", "Active Recovery Walk", "run", "30 min", "200 kcal", WorkoutIntensity.LOW)
-        )
-    }
+fun HistoryScreen(
+    navController: NavController,
+    viewModel: HistoryViewModel = hiltViewModel() // 🟢 Bind tracking ViewModel
+) {
+    val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -54,53 +38,74 @@ fun HistoryScreen(navController: NavController) {
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
         ) {
-            // Placeholder para futuras gráficas
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(
+            when (val state = uiState) {
+                is HistoryUiState.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+                is HistoryUiState.Error -> {
+                    Text(
+                        text = "Error: ${state.message}",
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                is HistoryUiState.Empty -> {
+                    Text(
+                        text = "No workouts logged yet.\nComplete sessions on the Home tab to build history.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.align(Alignment.Center),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+                is HistoryUiState.Success -> {
+                    LazyColumn(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
                     ) {
-                        Text("Analytics & Charts", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text("Available in future updates", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        // Analytics placeholder
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                                shape = RoundedCornerShape(16.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(24.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Text("Analytics & Charts", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                    Text("Available in future updates", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+
+                        // 🟢 Fully dynamic mapping from Room log events
+                        items(state.items, key = { it.logId }) { item ->
+                            HistoryCard(item)
+                        }
                     }
                 }
-            }
-
-            // Lista del historial de entrenamientos
-            items(historyItems) { item ->
-                HistoryCard(item)
             }
         }
     }
 }
 
 @Composable
-fun HistoryCard(item: WorkoutHistoryItem) {
-    // Definimos los colores semánticos según la intensidad
-    val intensityColor = when (item.intensity) {
-        WorkoutIntensity.HIGH -> MaterialTheme.colorScheme.error // Rojo/Atención
-        WorkoutIntensity.MODERATE -> MaterialTheme.colorScheme.primary // Azul/Principal
-        WorkoutIntensity.LOW -> MaterialTheme.colorScheme.tertiary // Verde/Terciario
-    }
-
+fun HistoryCard(item: HistoryItem) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -108,7 +113,6 @@ fun HistoryCard(item: WorkoutHistoryItem) {
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Fila superior: Icono, Título, Fecha y Badge de Intensidad
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -119,61 +123,56 @@ fun HistoryCard(item: WorkoutHistoryItem) {
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
+                    // Container styles itself automatically depending on workout type
                     Box(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer),
+                            .background(
+                                if (item.isCardio) MaterialTheme.colorScheme.primaryContainer
+                                else MaterialTheme.colorScheme.secondaryContainer
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = if (item.type == "gym") Icons.Default.Build else Icons.Default.Share,
-                            contentDescription = item.type,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            imageVector = if (item.isCardio) Icons.Default.Share else Icons.Default.Build,
+                            contentDescription = null,
+                            tint = if (item.isCardio) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
                     Column {
                         Text(text = item.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(text = item.date, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(text = item.formattedDate, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
 
-                // Badge de Intensidad
+                // Macrocycle sequential badges
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(intensityColor.copy(alpha = 0.15f))
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = item.intensity.name,
+                        text = "W${item.weekNumber} · D${item.dayNumber}",
                         style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Black,
-                        color = intensityColor
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f))
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Fila inferior: Métricas de rendimiento
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                MetricText(label = "Duration", value = item.duration)
-                MetricText(label = "Calories", value = item.calories)
-            }
+            // Subtext summary detailing exercises loaded dynamically from the specific completed macro day
+            Text(
+                text = item.summary,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Medium
+            )
         }
-    }
-}
-
-@Composable
-fun MetricText(label: String, value: String) {
-    Column {
-        Text(text = label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
     }
 }

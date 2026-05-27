@@ -54,20 +54,51 @@ class OnboardingViewModel @Inject constructor(
     fun updatePlanDuration(value: Int) { uiState = uiState.copy(planDuration = value) }
 
     // --- Validation Logic ---
+    // --- Validation Logic ---
     fun validateCurrentStep(): String? {
         return when (currentStep) {
             1 -> {
-                val ageInt = uiState.age.toIntOrNull()
+                // Validation for Step 1: Biometrics
                 val weightNum = uiState.weight.toDoubleOrNull()
                 val heightNum = uiState.height.toDoubleOrNull()
+                val ageInt = uiState.age.toIntOrNull()
 
-                if (weightNum == null || weightNum < 30) return "Please enter a valid weight (min 30kg)."
-                if (heightNum == null || heightNum < 100) return "Please enter a valid height (min 100cm)."
-                if (ageInt == null || ageInt < 16) return "You must be at least 16 years old."
-
-                null // Passed validation
+                if (uiState.weight.isBlank() || weightNum == null || weightNum < 30) {
+                    return "Please enter a valid weight (min 30kg)."
+                }
+                if (uiState.height.isBlank() || heightNum == null || heightNum < 100) {
+                    return "Please enter a valid height (min 100cm)."
+                }
+                if (uiState.age.isBlank() || ageInt == null || ageInt < 16) {
+                    return "You must be at least 16 years old."
+                }
+                if (uiState.sex.isBlank()) {
+                    return "Please select a biological sex."
+                }
+                null // Passed validation for Step 1
             }
-            else -> null
+            2 -> {
+                // Validation for Step 2: Athletic Profile
+                if (uiState.goal.isBlank()) {
+                    return "Please select a primary fitness goal."
+                }
+                if (uiState.fitnessLevel.isBlank()) {
+                    return "Please select your current experience level."
+                }
+                // Injuries are optional, so no strict check is needed here
+                null // Passed validation for Step 2
+            }
+            3 -> {
+                // Validation for Step 3: Logistics
+                if (uiState.daysAvailable !in 1..7) {
+                    return "Available days must be between 1 and 7."
+                }
+                if (uiState.planDuration !in listOf(4, 8, 12)) {
+                    return "Plan duration must be 4, 8, or 12 weeks."
+                }
+                null // Passed validation for Step 3
+            }
+            else -> null // Default fallback
         }
     }
 
