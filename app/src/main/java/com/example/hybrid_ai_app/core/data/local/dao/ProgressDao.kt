@@ -1,9 +1,11 @@
 package com.example.hybrid_ai_app.core.data.local.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.example.hybrid_ai_app.core.data.local.entity.UserProgressEntity
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutLogEntity
 import kotlinx.coroutines.flow.Flow
@@ -25,4 +27,21 @@ interface ProgressDao {
 
     @Query("SELECT * FROM workout_logs ORDER BY timestamp DESC")
     fun getAllWorkoutLogs(): Flow<List<WorkoutLogEntity>>
+
+    @Delete
+    suspend fun deleteWorkoutLog(log: WorkoutLogEntity)
+
+    // Merged from the duplicated nested interface
+    @Query("SELECT * FROM user_progress LIMIT 1")
+    suspend fun getProgress(): UserProgressEntity?
+
+    @Update
+    suspend fun updateProgress(progress: UserProgressEntity)
+
+    // 🟢 ADDED: Atomic clearing methods matching your explicit table names
+    @Query("DELETE FROM user_progress")
+    suspend fun clearAllProgress()
+
+    @Query("DELETE FROM workout_logs")
+    suspend fun clearAllLogs()
 }

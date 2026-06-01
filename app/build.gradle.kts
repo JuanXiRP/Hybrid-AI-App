@@ -78,6 +78,7 @@ dependencies {
     // Dagger Hilt (Dependency Injection)
     implementation("com.google.dagger:hilt-android:2.51.1")
     implementation(libs.androidx.compose.ui.text)
+    implementation(libs.androidx.material3)
     kapt("com.google.dagger:hilt-compiler:2.51.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
@@ -105,4 +106,10 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    implementation("androidx.compose.material:material-icons-extended")
+
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    // Google Play Billing
+    implementation("com.android.billingclient:billing-ktx:6.2.0") // Or latest stable
 }

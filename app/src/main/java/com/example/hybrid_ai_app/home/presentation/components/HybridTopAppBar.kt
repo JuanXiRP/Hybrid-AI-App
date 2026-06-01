@@ -7,24 +7,25 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.hybrid_ai_app.R
-import androidx.compose.ui.res.stringResource
 
 @Composable
 fun HybridTopAppBar(
     title: String,
     label: String? = null,
+    profilePicPath: String? = null, // 🟢 New parameter to receive the saved local image path
     onProfileClick: () -> Unit
 ) {
     Column(
@@ -42,7 +43,7 @@ fun HybridTopAppBar(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(
-                    painter = painterResource(id = com.example.hybrid_ai_app.R.drawable.only_logo),
+                    painter = painterResource(id = R.drawable.only_logo),
                     contentDescription = "Hybrid Icon",
                     contentScale = ContentScale.Fit,
                     modifier = Modifier.height(100.dp)
@@ -56,21 +57,19 @@ fun HybridTopAppBar(
                 )
             }
 
-            // Profile Avatar (Navigates to Settings)
-            Box(
+            // 🟢 Profile Avatar using Coil. Falls back to default icon if path is null or invalid
+            AsyncImage(
+                model = profilePicPath,
+                fallback = rememberVectorPainter(Icons.Default.Person),
+                error = rememberVectorPainter(Icons.Default.Person),
+                contentDescription = "Profile Settings",
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .clickable { onProfileClick() },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Profile Settings",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+                    .clickable { onProfileClick() }
+            )
         }
 
         // Screen Title Row
@@ -95,5 +94,4 @@ fun HybridTopAppBar(
             )
         }
     }
-
 }

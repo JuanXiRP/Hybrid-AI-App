@@ -7,10 +7,23 @@ import kotlinx.coroutines.flow.Flow
 
 interface WorkoutPlanRepository {
     fun getActivePlan(): Flow<WorkoutPlanEntity?>
+
     fun getUserProgress(): Flow<UserProgressEntity?>
+
     fun getLogsForWeek(weekNumber: Int): Flow<List<WorkoutLogEntity>>
-    suspend fun updateProgress(progress: UserProgressEntity)
-    suspend fun completeWorkout(log: WorkoutLogEntity, nextProgress: UserProgressEntity)
 
     fun getAllWorkoutLogs(): Flow<List<WorkoutLogEntity>>
+
+    suspend fun updateProgress(progress: UserProgressEntity)
+
+    suspend fun toggleDayStatus(weekNumber: Int, dayIndex: Int)
+
+    // Updated signature matching our new MongoDB synchronization requirement
+    suspend fun completeWorkout(
+        log: WorkoutLogEntity,
+        nextProgress: UserProgressEntity,
+        workoutType: String,
+        dayName: String
+    )
+    suspend fun clearActivePlanAndProgress()
 }

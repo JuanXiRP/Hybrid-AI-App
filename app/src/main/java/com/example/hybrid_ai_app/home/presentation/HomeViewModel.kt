@@ -2,11 +2,13 @@ package com.example.hybrid_ai_app.home.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.hybrid_ai_app.core.data.PreferencesManager
+import com.example.hybrid_ai_app.core.data.local.entity.LoggedExerciseEntity // 🟢 Imported the new metrics entity
 import com.example.hybrid_ai_app.core.data.local.entity.UserProgressEntity
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutLogEntity
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutPlanEntity
-import com.example.hybrid_ai_app.core.data.remote.dto.WeekDto // 🟢 Explicit import
-import com.example.hybrid_ai_app.core.data.remote.dto.DayDto  // 🟢 Explicit import
+import com.example.hybrid_ai_app.core.data.remote.dto.WeekDto
+import com.example.hybrid_ai_app.core.data.remote.dto.DayDto
 import com.example.hybrid_ai_app.core.domain.repository.WorkoutPlanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -18,8 +20,8 @@ sealed interface HomeUiState {
     object Empty : HomeUiState
     data class Success(
         val plan: WorkoutPlanEntity,
-        val currentWeek: WeekDto, // 🟢 Strongly typed using your network/db DTO
-        val currentDay: DayDto?,  // 🟢 Strongly typed using your network/db DTO
+        val currentWeek: WeekDto,
+        val currentDay: DayDto?,
         val weeklyCompletion: List<Boolean>,
         val currentWeekNumber: Int,
         val currentDayIndex: Int
@@ -29,9 +31,11 @@ sealed interface HomeUiState {
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val repository: WorkoutPlanRepository
+    private val repository: WorkoutPlanRepository,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
+    val localProfilePicPath = preferencesManager.userProfilePicFlow
     val uiState: StateFlow<HomeUiState> = repository.getActivePlan()
         .flatMapLatest { plan ->
             if (plan == null) {
@@ -74,14 +78,16 @@ class HomeViewModel @Inject constructor(
             initialValue = HomeUiState.Loading
         )
 
-    fun logCurrentWorkoutAsCompleted() {
+    fun logCurrentWorkoutAsCompleted(metrics: List<LoggedExerciseEntity> = emptyList()) {
         val currentState = uiState.value
         if (currentState is HomeUiState.Success) {
             viewModelScope.launch {
                 val log = WorkoutLogEntity(
                     weekNumber = currentState.currentWeekNumber,
                     dayIndex = currentState.currentDayIndex,
-                    isCompleted = true
+                    timestamp = System.currentTimeMillis(),
+                    isCompleted = true,
+                    loggedExercises = metrics
                 )
 
                 val isLastDayOfWeek = currentState.currentDayIndex == 6
@@ -89,13 +95,29 @@ class HomeViewModel @Inject constructor(
                 val nextDay = if (isLastDayOfWeek) 0 else currentState.currentDayIndex + 1
 
                 val updatedProgress = UserProgressEntity(
-                    userId = "active_plan", // Matches your PrimaryKey static fallback in WorkoutPlanEntity
+                    userId = "active_plan",
                     currentWeekNumber = nextWeek,
                     currentDayIndex = nextDay
                 )
 
-                repository.completeWorkout(log, updatedProgress)
+                // Pass context to the repository to route the network request
+                val workoutType = currentState.currentDay?.workoutType ?: "rest"
+                val dayName = currentState.currentDay?.dayName ?: "Workout"
+
+                repository.completeWorkout(log, updatedProgress, workoutType, dayName)
             }
         }
     }
+
+    fun toggleWorkoutCompletion(weekNumber: Int, dayIndex: Int) {
+        viewModelScope.launch {
+            try {
+                // Update the local database
+                repository.toggleDayStatus(weekNumber, dayIndex)
+            } catch (e: Exception) {
+                // Handle error (e.g., emit an error state)
+            }
+        }
+    }
+
 }

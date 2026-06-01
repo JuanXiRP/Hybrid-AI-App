@@ -30,16 +30,19 @@ import com.example.hybrid_ai_app.navigation.Screen
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel() // Make sure HomeViewModel exposes the photo flow
 ) {
     // Collect the UI state exposed by Room unified flows
     val uiState by viewModel.uiState.collectAsState()
+
+    val profilePicPath by viewModel.localProfilePicPath.collectAsState(initial = null)
 
     Scaffold(
         topBar = {
             HybridTopAppBar(
                 title = stringResource(id = R.string.today_focus),
                 label = stringResource(id = R.string.performance_dashboard),
+                profilePicPath = profilePicPath,
                 onProfileClick = { navController.navigate(Screen.Settings.route) }
             )
         }
@@ -83,7 +86,7 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                     contentPadding = PaddingValues(bottom = 24.dp)
                 ) {
-                    // Header Info - Fully Dynamic macrocycle indicators
+                    // Header Info
                     item {
                         Column(modifier = Modifier.padding(vertical = 8.dp)) {
                             Text(
@@ -102,7 +105,6 @@ fun HomeScreen(
 
                     // DYNAMIC WORKOUT CONTENT GENERATION
                     if (currentDay == null || currentDay.exercises.isEmpty()) {
-                        // REST DAY COMPOSABLE
                         item {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
@@ -143,9 +145,7 @@ fun HomeScreen(
                             }
                         }
                     } else {
-                        // ACTIVE SESSION COMPOSABLE (Adapts between Strength and Endurance)
-                        val isCardioSession = currentDay.dayName?.contains("Endurance", ignoreCase = true) == true ||
-                                currentDay.dayName?.contains("Intervals", ignoreCase = true) == true
+                        val isCardioSession = currentDay.workoutType == "cardio"
 
                         item {
                             Card(
@@ -169,7 +169,6 @@ fun HomeScreen(
                                         modifier = Modifier.padding(bottom = 16.dp)
                                     )
 
-                                    // Dynamic rendering loop from Gemini JSON scheme structure
                                     currentDay.exercises.forEachIndexed { index, exercise ->
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
@@ -202,7 +201,6 @@ fun HomeScreen(
 
                                     Spacer(modifier = Modifier.height(20.dp))
 
-                                    // Action button to store completion logs inside Room database
                                     Button(
                                         onClick = { viewModel.logCurrentWorkoutAsCompleted() },
                                         modifier = Modifier.fillMaxWidth()
@@ -219,7 +217,7 @@ fun HomeScreen(
                         }
                     }
 
-                    // WEEKLY PROGRESS COMPONENT - Real-time metrics
+                    // WEEKLY PROGRESS COMPONENT
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -248,7 +246,6 @@ fun HomeScreen(
                                         ) {
                                             Text(text = label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
 
-                                            // 🟢 Reactively updates according to state.weeklyCompletion index flags
                                             if (state.weeklyCompletion[index]) {
                                                 Icon(
                                                     imageVector = Icons.Default.CheckCircle,

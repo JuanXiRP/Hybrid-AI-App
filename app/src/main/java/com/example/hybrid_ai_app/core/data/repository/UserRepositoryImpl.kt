@@ -72,4 +72,14 @@ class UserRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override suspend fun upgradeToPremium(purchaseToken: String): Result<Boolean> {
+        return try {
+            // llamada real a Retrofit cuando el endpoint exista
+            Result.success(true)
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

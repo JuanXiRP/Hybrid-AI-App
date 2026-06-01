@@ -11,4 +11,5 @@ interface UserRepository {
     suspend fun generateAiPlan(planDuration: Int, goal: String): Result<Unit>
 
     suspend fun getUserProfile(): Result<UserDto>
+    suspend fun upgradeToPremium(purchaseToken: String): Result<Boolean>
 }
