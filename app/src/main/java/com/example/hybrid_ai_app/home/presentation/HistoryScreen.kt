@@ -1,17 +1,17 @@
 package com.example.hybrid_ai_app.home.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,18 +22,42 @@ import androidx.navigation.NavController
 import com.example.hybrid_ai_app.home.presentation.components.HybridTopAppBar
 import com.example.hybrid_ai_app.navigation.Screen
 
+data class LoggedExerciseMetric(
+    val name: String,
+    val sets: String,
+    val reps: String,
+    val weight: String, // e.g., "80.5"
+    val rpe: String
+)
+
+data class HistoryItem(
+    val logId: Long,
+    val formattedDate: String,
+    val weekNumber: Int,
+    val dayNumber: Int,
+    val title: String,
+    val isCardio: Boolean,
+    val summary: String,
+    val loggedMetrics: List<LoggedExerciseMetric> = emptyList() // Added payload
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
     navController: NavController,
-    viewModel: HistoryViewModel = hiltViewModel() // 🟢 Bind tracking ViewModel
+    viewModel: HistoryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    var selectedHistoryItem by remember { mutableStateOf<HistoryItem?>(null) }
+    val sheetState = rememberModalBottomSheetState()
+    val profilePicPath by viewModel.localProfilePicPath.collectAsState(initial = null)
 
     Scaffold(
         topBar = {
             HybridTopAppBar(
                 title = "PERFORMANCE HISTORY",
+                profilePicPath = profilePicPath,
                 onProfileClick = { navController.navigate(Screen.Settings.route) }
             )
         }
@@ -71,7 +95,6 @@ fun HistoryScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
                     ) {
-                        // Analytics placeholder
                         item {
                             Card(
                                 modifier = Modifier
@@ -93,21 +116,37 @@ fun HistoryScreen(
                             }
                         }
 
-                        // 🟢 Fully dynamic mapping from Room log events
                         items(state.items, key = { it.logId }) { item ->
-                            HistoryCard(item)
+                            HistoryCard(
+                                item = item,
+                                onClick = { selectedHistoryItem = item } // 🟢 Trigger bottom sheet
+                            )
                         }
                     }
                 }
+            }
+        }
+
+        // 🟢 Detailed Performance Sheet
+        if (selectedHistoryItem != null) {
+            ModalBottomSheet(
+                onDismissRequest = { selectedHistoryItem = null },
+                sheetState = sheetState,
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                containerColor = MaterialTheme.colorScheme.surface
+            ) {
+                HistoryDetailSheetContent(item = selectedHistoryItem!!)
             }
         }
     }
 }
 
 @Composable
-fun HistoryCard(item: HistoryItem) {
+fun HistoryCard(item: HistoryItem, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }, // 🟢 Make card clickable
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = CardDefaults.outlinedCardBorder(),
         shape = RoundedCornerShape(16.dp)
@@ -123,7 +162,6 @@ fun HistoryCard(item: HistoryItem) {
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
-                    // Container styles itself automatically depending on workout type
                     Box(
                         modifier = Modifier
                             .size(48.dp)
@@ -146,7 +184,6 @@ fun HistoryCard(item: HistoryItem) {
                     }
                 }
 
-                // Macrocycle sequential badges
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
@@ -166,13 +203,81 @@ fun HistoryCard(item: HistoryItem) {
             HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Subtext summary detailing exercises loaded dynamically from the specific completed macro day
             Text(
                 text = item.summary,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
+        }
+    }
+}
+
+// 🟢 NEW: Bottom Sheet Content to display actual lifted weights/paces
+@Composable
+fun HistoryDetailSheetContent(item: HistoryItem) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 32.dp)
+    ) {
+        Text(
+            text = "Performance Log",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.ExtraBold,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        if (item.loggedMetrics.isEmpty()) {
+            Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                Text(
+                    text = "No detailed metrics recorded for this session.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(item.loggedMetrics) { metric ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = metric.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "${metric.sets} Sets × ${metric.reps} Reps",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            // Highlighted Actual Weight
+                            if (metric.weight.isNotBlank()) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(start = 8.dp)
+                                ) {
+                                    Text(
+                                        text = "${metric.weight} kg",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Black,
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

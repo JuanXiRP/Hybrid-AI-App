@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.hybrid_ai_app.coach.data.CoachRepository
 import com.example.hybrid_ai_app.coach.data.presentation.ChatMessage
 import com.example.hybrid_ai_app.coach.data.presentation.MessageSender
+import com.example.hybrid_ai_app.core.data.PreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,11 +16,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CoachViewModel @Inject constructor(
-    private val coachRepository: CoachRepository
+    private val coachRepository: CoachRepository,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     // Reactive list of messages displayed in the LazyColumn
     val messages = mutableStateListOf<ChatMessage>()
+    val localProfilePicPath = preferencesManager.userProfilePicFlow
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()

@@ -8,6 +8,7 @@ data class WorkoutLogEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val weekNumber: Int,
     val dayIndex: Int,
+    val timestamp: Long,
     val isCompleted: Boolean,
-    val timestamp: Long = System.currentTimeMillis()
+    val loggedExercises: List<LoggedExerciseEntity> = emptyList()
 )

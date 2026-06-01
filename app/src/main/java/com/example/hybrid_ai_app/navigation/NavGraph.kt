@@ -1,6 +1,10 @@
 package com.example.hybrid_ai_app.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -13,7 +17,9 @@ import com.example.hybrid_ai_app.home.presentation.HomeScreen
 import com.example.hybrid_ai_app.home.presentation.WorkoutsScreen
 import com.example.hybrid_ai_app.home.presentation.CoachScreen
 import com.example.hybrid_ai_app.home.presentation.HistoryScreen
+import com.example.hybrid_ai_app.home.presentation.PaywallScreen
 import com.example.hybrid_ai_app.home.presentation.WorkoutExecutionScreen
+import com.example.hybrid_ai_app.settings.presentation.SettingsScreen
 
 sealed class Screen(val route: String) {
     // Rutas Raíz (Pantalla Completa)
@@ -26,10 +32,13 @@ sealed class Screen(val route: String) {
     object Workouts : Screen("workouts")
     object Coach : Screen("coach")
     object History : Screen("history")
-    object WorkoutExecution : Screen("workout_execution/{workoutId}/{type}") {
-        fun createRoute(workoutId: String, type: String) = "workout_execution/$workoutId/$type"
+    object WorkoutExecution : Screen("workout_execution/{weekNumber}/{dayIndex}") {
+        fun createRoute(weekNumber: Int, dayIndex: Int): String {
+            return "workout_execution/$weekNumber/$dayIndex"
+        }
     }
     object Settings : Screen("settings")
+    object Paywall : Screen("paywall")
 }
 
 // 1. GRAFO RAÍZ (Controla la entrada a la app)
@@ -63,18 +72,23 @@ fun RootNavGraph(navController: NavHostController,
 
         composable(route = Screen.MainContainer.route) {
             // Aquí cargamos la estructura con la barra inferior
-            MainScaffold()
+            MainScaffold(rootNavController = navController)
         }
-
-        composable(route = Screen.Settings.route) {
-            com.example.hybrid_ai_app.settings.presentation.SettingsScreen(navController = navController)
+        composable(route = Screen.Paywall.route) {
+            // Asegúrate de importar PaywallScreen arriba si no lo está
+            com.example.hybrid_ai_app.home.presentation.PaywallScreen(
+                navController = navController
+            )
         }
     }
 }
 
 // 2. GRAFO PRINCIPAL (Controla las pestañas y la navegación profunda)
 @Composable
-fun MainNavGraph(navController: NavHostController) {
+fun MainNavGraph(
+    navController: NavHostController,
+    rootNavController: NavHostController
+) {
     NavHost(
         navController = navController,
         startDestination = Screen.Home.route
@@ -94,19 +108,30 @@ fun MainNavGraph(navController: NavHostController) {
 
         // Ruta dinámica para iniciar un entrenamiento
         composable(
-            route = Screen.WorkoutExecution.route,
+            route = Screen.WorkoutExecution.route, // "workout_execution/{weekNumber}/{dayIndex}"
             arguments = listOf(
-                navArgument("workoutId") { type = NavType.StringType },
-                navArgument("type") { type = NavType.StringType }
+                navArgument("weekNumber") { type = NavType.IntType },
+                navArgument("dayIndex") { type = NavType.IntType }
             )
         ) { backStackEntry ->
-            val workoutId = backStackEntry.arguments?.getString("workoutId") ?: ""
-            val type = backStackEntry.arguments?.getString("type") ?: ""
-            WorkoutExecutionScreen(workoutId = workoutId, workoutType = type, navController = navController)
+            val weekNumber = backStackEntry.arguments?.getInt("weekNumber") ?: 1
+            val dayIndex = backStackEntry.arguments?.getInt("dayIndex") ?: 0
+
+            WorkoutExecutionScreen(
+                weekNumber = weekNumber,
+                dayIndex = dayIndex,
+                navController = navController
+            )
         }
+
         composable(route = Screen.Settings.route) {
-            // Usamos el import completo para evitar conflictos si tienes otro SettingsScreen
-            com.example.hybrid_ai_app.settings.presentation.SettingsScreen(navController = navController)
+            SettingsScreen(
+                navController = navController,
+                rootNavController = rootNavController // 🟢 Passed to Settings
+            )
+        }
+        composable(route = Screen.Paywall.route) {
+            PaywallScreen(navController = navController)
         }
     }
 }

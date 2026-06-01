@@ -45,11 +45,13 @@ fun WorkoutsScreen(
     // State to manage the currently inspected workout routine inside the sheet
     var activeWorkoutDetailSheet by remember { mutableStateOf<DayDto?>(null) }
     val sheetState = rememberModalBottomSheetState()
+    val profilePicPath by viewModel.localProfilePicPath.collectAsState(initial = null)
 
     Scaffold(
         topBar = {
             HybridTopAppBar(
                 title = "PROGRAM CALENDAR",
+                profilePicPath = profilePicPath,
                 onProfileClick = { navController.navigate(Screen.Settings.route) }
             )
         }
@@ -159,15 +161,19 @@ fun WorkoutsScreen(
                         ) {
                             currentWeekData?.days?.let { dayList ->
                                 itemsIndexed(dayList) { index, day ->
-                                    // Real-time timeline node state calculations
+
+                                    // 🟢 1. NUEVA LÓGICA: Evaluación flexible (Acceso Aleatorio)
                                     val status = when {
                                         day.exercises.isEmpty() -> WorkoutStatus.REST
                                         selectedWeek < state.currentWeekNumber -> WorkoutStatus.COMPLETED
                                         selectedWeek == state.currentWeekNumber -> {
-                                            when {
-                                                index < state.currentDayIndex -> WorkoutStatus.COMPLETED
-                                                index == state.currentDayIndex -> WorkoutStatus.ACTIVE
-                                                else -> WorkoutStatus.LOCKED // Treated as 'Upcoming' in UI styling
+                                            // Leemos directamente si este día específico está completado
+                                            val isCompleted = state.weeklyCompletion.getOrElse(index) { false }
+                                            if (isCompleted) {
+                                                WorkoutStatus.COMPLETED
+                                            } else {
+                                                // TODOS los días pendientes de la semana actual están DISPONIBLES
+                                                WorkoutStatus.ACTIVE
                                             }
                                         }
                                         else -> WorkoutStatus.LOCKED
@@ -178,9 +184,11 @@ fun WorkoutsScreen(
                                         index = index,
                                         status = status,
                                         onItemClick = { activeWorkoutDetailSheet = day },
-                                        onStartClick = {
-                                            // Interconnects with the quick start pipeline via viewmodel trigger
-                                            viewModel.logCurrentWorkoutAsCompleted()
+                                        onToggleComplete = {
+                                            // 🟢 2. Pasamos las coordenadas exactas en lugar de un avance ciego
+                                            if (status == WorkoutStatus.ACTIVE || status == WorkoutStatus.COMPLETED) {
+                                                viewModel.toggleWorkoutCompletion(selectedWeek, index)
+                                            }
                                         }
                                     )
                                 }
@@ -191,7 +199,7 @@ fun WorkoutsScreen(
             }
         }
 
-        // 🟢 IMPROVED: Dynamic Routine Sheet with reduced rounding and better structure
+        // Dynamic Routine Sheet with reduced rounding and better structure
         if (activeWorkoutDetailSheet != null) {
             ModalBottomSheet(
                 onDismissRequest = { activeWorkoutDetailSheet = null },
@@ -213,19 +221,17 @@ fun TimelineItemRow(
     index: Int,
     status: WorkoutStatus,
     onItemClick: () -> Unit,
-    onStartClick: () -> Unit
+    onToggleComplete: () -> Unit
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onItemClick() }, // Open routine details regardless of status
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Left Node Status Indicator Line
+        // 🟢 Left Node Status Indicator Line (NOW INTERACTIVE)
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(48.dp) // Slightly larger touch target
                 .clip(CircleShape)
                 .background(
                     when (status) {
@@ -234,24 +240,36 @@ fun TimelineItemRow(
                         WorkoutStatus.LOCKED -> MaterialTheme.colorScheme.surfaceVariant
                         WorkoutStatus.REST -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                     }
-                ),
+                )
+                // 🟢 Added click listener specifically to the node indicator
+                .clickable(
+                    enabled = status == WorkoutStatus.ACTIVE || status == WorkoutStatus.COMPLETED
+                ) {
+                    onToggleComplete()
+                },
             contentAlignment = Alignment.Center
         ) {
             when (status) {
                 WorkoutStatus.COMPLETED -> Icon(Icons.Default.Check, contentDescription = "Done", tint = MaterialTheme.colorScheme.onPrimary)
-                WorkoutStatus.ACTIVE -> Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))
+                WorkoutStatus.ACTIVE -> Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))
                 WorkoutStatus.LOCKED -> Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)))
                 WorkoutStatus.REST -> Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)))
             }
         }
 
-        // Right Card Container
-        val isCardio = day.dayName.contains("Endurance", ignoreCase = true) || day.dayName.contains("Intervals", ignoreCase = true)
+        // Right Card Container (Detail view trigger)
+        val isCardio = day.workoutType == "cardio"
 
         Card(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .clickable { onItemClick() }, // 🟢 The card purely opens the detail sheet now
             colors = CardDefaults.cardColors(
-                containerColor = if (status == WorkoutStatus.ACTIVE) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                containerColor = when (status) {
+                    WorkoutStatus.COMPLETED -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                    WorkoutStatus.ACTIVE -> MaterialTheme.colorScheme.surface
+                    else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                }
             ),
             border = if (status == WorkoutStatus.ACTIVE) CardDefaults.outlinedCardBorder() else null
         ) {
@@ -263,7 +281,7 @@ fun TimelineItemRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    // 🟢 IMPROVED: Hierarchical labels for type and day number
+                    // Hierarchical labels for type and day number
                     Text(
                         text = "${if (isCardio) "CARDIO" else "STRENGTH"} DAY ${index + 1}".uppercase(),
                         style = MaterialTheme.typography.labelSmall,
@@ -285,14 +303,6 @@ fun TimelineItemRow(
                     )
                 }
 
-                if (status == WorkoutStatus.ACTIVE) {
-                    Button(
-                        onClick = { onStartClick() },
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
-                    ) {
-                        Text("START", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                    }
-                }
             }
         }
     }
@@ -346,7 +356,7 @@ fun WorkoutDetailSheetContent(day: DayDto) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 items(day.exercises) { exercise ->
-                    // 🟢 IMPROVED: Redesigned exercise card for superior legibility
+                    // Redesigned exercise card for superior legibility
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
@@ -404,7 +414,7 @@ fun WorkoutDetailSheetContent(day: DayDto) {
     }
 }
 
-// 🟢 NEW: Compact component to display an exercise metric with an icon
+// Compact component to display an exercise metric with an icon
 @Composable
 fun ExerciseMetricItem(
     label: String,

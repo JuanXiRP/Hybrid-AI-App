@@ -33,6 +33,7 @@ fun CoachScreen(
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val profilePicPath by viewModel.localProfilePicPath.collectAsState(initial = null)
 
     // Auto-scroll to the latest message when the feed expands
     LaunchedEffect(viewModel.messages.size) {
@@ -45,6 +46,7 @@ fun CoachScreen(
         topBar = {
             HybridTopAppBar(
                 title = "GEMINI COACH AI",
+                profilePicPath = profilePicPath,
                 onProfileClick = { navController.navigate("settings") }
             )
         }

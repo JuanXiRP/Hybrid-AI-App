@@ -4,12 +4,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.hybrid_ai_app.navigation.MainNavGraph
@@ -17,25 +24,19 @@ import com.example.hybrid_ai_app.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScaffold() {
-    // 1. UN SOLO CONTROLADOR para todo el andamiaje
+fun MainScaffold(
+    // 🟢 1. Inject rootNavController explicitly in the signature
+    rootNavController: NavHostController,
+    viewModel: HomeViewModel = hiltViewModel()
+) {
     val bottomNavController = rememberNavController()
-
-    // 2. Escuchamos la ruta del controlador correcto
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
     var showWorkoutSelector by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
-    // Temporary mock data for the weekly workouts selector
-    val weeklyWorkouts = remember {
-        listOf(
-            Pair("w1", "gym"), // ID and Type
-            Pair("w2", "run"),
-            Pair("w3", "gym")
-        )
-    }
+    val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         bottomBar = {
@@ -69,8 +70,9 @@ fun MainScaffold() {
         floatingActionButton = {
             val isCoachScreen = currentRoute == Screen.Coach.route
             val isExecutionScreen = currentRoute?.startsWith("workout_execution") == true
+            val isOnboarding = currentRoute == Screen.Onboarding.route
 
-            if (!isCoachScreen && !isExecutionScreen) {
+            if (!isCoachScreen && !isExecutionScreen && !isOnboarding) {
                 FloatingActionButton(
                     onClick = { showWorkoutSelector = true },
                     containerColor = MaterialTheme.colorScheme.primary
@@ -85,48 +87,94 @@ fun MainScaffold() {
         }
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
-            // El NavGraph usa el mismo controlador que los botones
-            MainNavGraph(navController = bottomNavController)
+            // 🟢 2. Render MainNavGraph ONLY ONCE inside the content box, passing both controllers
+            MainNavGraph(
+                navController = bottomNavController,
+                rootNavController = rootNavController
+            )
         }
 
-        // Bottom sheet displaying current week's available workouts
         if (showWorkoutSelector) {
             ModalBottomSheet(
                 onDismissRequest = { showWorkoutSelector = false },
-                sheetState = sheetState
+                sheetState = sheetState,
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                containerColor = MaterialTheme.colorScheme.surface
             ) {
-                Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                    Text(
-                        text = "Select Workout for Week 1",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(weeklyWorkouts) { workout ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        showWorkoutSelector = false
-                                        bottomNavController.navigate(
-                                            Screen.WorkoutExecution.createRoute(workout.first, workout.second)
-                                        )
-                                    }
-                            ) {
-                                ListItem(
-                                    headlineContent = { Text(text = if (workout.second == "gym") "Strength Session" else "Running Protocol") },
-                                    supportingContent = { Text(text = "Type: ${workout.second.uppercase()}") },
-                                    leadingContent = {
-                                        Icon(
-                                            imageVector = if (workout.second == "gym") Icons.Default.Build else Icons.Default.Share,
-                                            contentDescription = null
-                                        )
-                                    }
-                                )
+                when (val state = uiState) {
+                    is HomeUiState.Success -> {
+                        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                            Text(
+                                text = "Select Session · Week ${state.currentWeekNumber}",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+
+                            val pendingWorkouts = state.currentWeek.days.mapIndexedNotNull { index, day ->
+                                val isCompleted = state.weeklyCompletion[index]
+                                val isRestDay = day.exercises.isEmpty()
+                                val isCardio = day.workoutType == "cardio"
+
+                                if (!isCompleted && !isRestDay) {
+                                    Triple(index, day, isCardio)
+                                } else null
                             }
+
+                            if (pendingWorkouts.isEmpty()) {
+                                Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = "All active sessions for this week are completed! Enjoy your recovery.",
+                                        color = MaterialTheme.colorScheme.primary,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            } else {
+                                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    items(pendingWorkouts) { (originalDayIndex, day, isCardio) ->
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    showWorkoutSelector = false
+                                                    bottomNavController.navigate(
+                                                        Screen.WorkoutExecution.createRoute(state.currentWeekNumber, originalDayIndex)
+                                                    )
+                                                },
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = if (isCardio) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                            )
+                                        ) {
+                                            ListItem(
+                                                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                                                headlineContent = {
+                                                    Text(
+                                                        text = day.dayName,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = if (isCardio) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                },
+                                                supportingContent = { Text(text = "${day.exercises.size} Exercises") },
+                                                leadingContent = {
+                                                    Icon(
+                                                        imageVector = if (isCardio) Icons.Default.Share else Icons.Default.Build,
+                                                        contentDescription = null,
+                                                        tint = if (isCardio) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(24.dp))
                         }
                     }
-                    Spacer(modifier = Modifier.height(24.dp))
+                    else -> {
+                        Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                            Text("No active plan to select from.")
+                        }
+                    }
                 }
             }
         }

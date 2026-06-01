@@ -20,7 +20,8 @@ data class WeekDto(
 @Serializable
 data class DayDto(
     val dayName: String = "Training Day",
-    val exercises: List<ExerciseDto>
+    val workoutType: String = "rest", // "strength", "cardio", or "rest"
+    val exercises: List<ExerciseDto> = emptyList()
 )
 
 // Represents the lowest level component: the exercise parameters
