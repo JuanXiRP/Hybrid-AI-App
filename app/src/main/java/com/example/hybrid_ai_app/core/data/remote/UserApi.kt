@@ -37,6 +37,6 @@ interface UserApi {
     @POST("api/workouts/run")
     suspend fun syncRunWorkout(@Body payload: WorkoutRunDto): Response<Unit>
 
-    @POST("auth/google")
+    @POST("api/auth/google")
     suspend fun googleLogin(@Body request: GoogleAuthRequest): Response<AuthResponse>
 }
