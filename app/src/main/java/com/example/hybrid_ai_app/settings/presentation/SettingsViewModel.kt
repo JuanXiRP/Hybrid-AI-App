@@ -99,7 +99,9 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun saveLanguage(language: String) {
-        viewModelScope.launch { preferencesManager.saveLanguage(language) }
+        viewModelScope.launch {
+            preferencesManager.saveLanguage(language)
+        }
     }
 
     fun toggleDarkMode(isDark: Boolean) {

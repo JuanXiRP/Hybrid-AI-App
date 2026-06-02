@@ -28,3 +28,4 @@ data class UserProfileResponse(
     val success: Boolean,
     val data: UserDto
 )
+data class GoogleAuthRequest(val idToken: String)

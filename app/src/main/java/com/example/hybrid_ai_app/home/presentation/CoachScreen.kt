@@ -15,10 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.hybrid_ai_app.R
 import com.example.hybrid_ai_app.coach.data.presentation.ChatMessage
 import com.example.hybrid_ai_app.coach.data.presentation.MessageSender
 import com.example.hybrid_ai_app.coach.presentation.CoachViewModel
@@ -28,7 +30,7 @@ import com.example.hybrid_ai_app.home.presentation.components.HybridTopAppBar
 @Composable
 fun CoachScreen(
     navController: NavController,
-    viewModel: CoachViewModel = hiltViewModel() // 🟢 Injected via Hilt
+    viewModel: CoachViewModel = hiltViewModel()
 ) {
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
@@ -45,7 +47,7 @@ fun CoachScreen(
     Scaffold(
         topBar = {
             HybridTopAppBar(
-                title = "GEMINI COACH AI",
+                title = stringResource(id = R.string.coach_title),
                 profilePicPath = profilePicPath,
                 onProfileClick = { navController.navigate("settings") }
             )
@@ -98,7 +100,7 @@ fun CoachScreen(
                     OutlinedTextField(
                         value = inputText,
                         onValueChange = { inputText = it },
-                        placeholder = { Text("Ask Gemini Coach...") },
+                        placeholder = { Text(text = stringResource(id = R.string.input_placeholder_coach)) },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(24.dp),
                         enabled = !isLoading
@@ -110,7 +112,7 @@ fun CoachScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = "Voice Input",
+                            contentDescription = stringResource(id = R.string.cd_voice_input),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -128,7 +130,7 @@ fun CoachScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.PlayArrow,
-                            contentDescription = "Send",
+                            contentDescription = stringResource(id = R.string.cd_send_message),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
@@ -137,24 +139,24 @@ fun CoachScreen(
         }
     }
 }
+
 @Composable
 fun ChatBubbleRow(message: ChatMessage) {
     val isUser = message.sender == MessageSender.USER
 
-    // Align to End (Right) if it's the User, Start (Left) if it's the Coach
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.85f) // Prevent long messages from stretching across the entire screen
+                .fillMaxWidth(0.85f)
                 .wrapContentWidth(if (isUser) Alignment.End else Alignment.Start)
                 .clip(
                     RoundedCornerShape(
                         topStart = 16.dp,
                         topEnd = 16.dp,
-                        bottomStart = if (isUser) 16.dp else 4.dp, // Asymmetric tail effect
+                        bottomStart = if (isUser) 16.dp else 4.dp,
                         bottomEnd = if (isUser) 4.dp else 16.dp
                     )
                 )

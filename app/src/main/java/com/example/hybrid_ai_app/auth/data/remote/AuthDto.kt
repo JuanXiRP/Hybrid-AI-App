@@ -33,5 +33,6 @@ data class AuthResponse(
     @SerialName("success") val success: Boolean,
     // Provide explicit null defaults to avoid crashes if the backend omits these fields
     @SerialName("token") val token: String? = null,
-    @SerialName("message") val message: String? = null
+    @SerialName("message") val message: String? = null,
+    @SerialName("has_completed_onboarding") val hasCompletedOnboarding: Boolean = false
 )
