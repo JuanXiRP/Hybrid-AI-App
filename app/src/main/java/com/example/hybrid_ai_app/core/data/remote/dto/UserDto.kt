@@ -26,4 +26,7 @@ data class UserProfileResponse(
     val success: Boolean,
     val data: UserDto
 )
-data class GoogleAuthRequest(val idToken: String)
+@Serializable
+data class GoogleAuthRequest(
+    @SerialName("idToken") val idToken: String
+)

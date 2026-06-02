@@ -30,6 +30,10 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.credentials.CustomCredential
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.NoCredentialException
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 
 @Composable
 fun AuthScreen(
@@ -159,17 +163,18 @@ fun AuthScreen(
                             context = context,
                             credentialManager = credentialManager,
                             onTokenReceived = { googleToken ->
-                                // If Sign In is active, mock existing user (true). If Sign Up is active, mock new user (false).
-                                viewModel.bypassGoogleAuthForTesting(
-                                    isExistingUser = viewModel.isLoginMode,
-                                    onSuccess = { hasCompletedOnboarding -> onAuthSuccess(hasCompletedOnboarding) }
+                                viewModel.loginWithGoogle(
+                                    idToken = googleToken,
+                                    onSuccess = { hasCompletedOnboarding -> onAuthSuccess(hasCompletedOnboarding) },
+                                    onError = { errorMsg ->
+                                        coroutineScope.launch { snackbarHostState.showSnackbar(errorMsg) }
+                                    }
                                 )
                             },
                             onAuthFailed = {
-                                viewModel.bypassGoogleAuthForTesting(
-                                    isExistingUser = viewModel.isLoginMode,
-                                    onSuccess = { hasCompletedOnboarding -> onAuthSuccess(hasCompletedOnboarding) }
-                                )
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar("Google sign-in failed. Please try again.")
+                                }
                             }
                         )
                     }
@@ -222,18 +227,15 @@ suspend fun handleGoogleSignIn(
     context: Context,
     credentialManager: CredentialManager,
     onTokenReceived: (String) -> Unit,
-    onAuthFailed: () -> Unit // 🟢 This parameter definition is what was missing
+    onAuthFailed: () -> Unit
 ) {
-    val webClientId = "394206999877-2s58p8hbo10res6ea7h7ggue3udnju56.apps.googleusercontent.com"
+    val webClientId = "394206999877-a7hjgm2ofls8k3dces9m4d5rl0u71fsn.apps.googleusercontent.com"
 
-    val googleIdOption = GetGoogleIdOption.Builder()
-        .setFilterByAuthorizedAccounts(false)
-        .setServerClientId(webClientId)
-        .setAutoSelectEnabled(false)
+    val signInWithGoogleOption = GetSignInWithGoogleOption.Builder(webClientId)
         .build()
 
     val request = GetCredentialRequest.Builder()
-        .addCredentialOption(googleIdOption)
+        .addCredentialOption(signInWithGoogleOption)
         .build()
 
     try {
@@ -243,14 +245,25 @@ suspend fun handleGoogleSignIn(
         )
 
         val credential = result.credential
-        if (credential is GoogleIdTokenCredential) {
-            onTokenReceived(credential.idToken)
+        if (credential is CustomCredential &&
+            credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+            val googleIdCredential = GoogleIdTokenCredential.createFrom(credential.data)
+            onTokenReceived(googleIdCredential.idToken)
         } else {
-            Log.e("GoogleAuth", "Unexpected credential type")
+            Log.e("GoogleAuth", "Tipo de credencial inesperado: ${credential.type}")
             onAuthFailed()
         }
+    } catch (e: GetCredentialCancellationException) {
+        Log.e("GoogleAuth", "Cancelado o cerrado por el usuario: ${e.message}")
+        onAuthFailed()
+    } catch (e: NoCredentialException) {
+        Log.e("GoogleAuth", "No hay credenciales (revisa cuentas/SHA-1): ${e.message}")
+        onAuthFailed()
+    } catch (e: GetCredentialException) {
+        Log.e("GoogleAuth", "Error de credencial [${e.type}]: ${e.message}")
+        onAuthFailed()
     } catch (e: Exception) {
-        Log.e("GoogleAuth", "Sign In failed: ${e.message}")
+        Log.e("GoogleAuth", "Error inesperado: ${e.message}")
         onAuthFailed()
     }
 }
