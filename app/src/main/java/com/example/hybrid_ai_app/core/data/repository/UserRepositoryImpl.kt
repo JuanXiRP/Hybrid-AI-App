@@ -12,7 +12,7 @@ import javax.inject.Inject
 // Implementation of the repository pattern handling API responses safely
 class UserRepositoryImpl @Inject constructor(
     private val api: UserApi,
-    private val dao: WorkoutPlanDao // 🟢 Inyectamos el DAO para poder guardar la rutina
+    private val dao: WorkoutPlanDao
 ) : UserRepository {
 
     override suspend fun updateProfile(payload: ProfileUpdateRequest): Result<Unit> {
@@ -33,10 +33,9 @@ class UserRepositoryImpl @Inject constructor(
             val request = GeneratePlanRequest(planDuration = planDuration, goal = goal)
             val response = api.generateAiPlan(request)
 
-            // 🟢 Validamos que la respuesta sea un 200 OK y que el campo 'data' no sea nulo
             if (response.isSuccessful && response.body()?.data != null) {
 
-                // Extraemos el DTO limpio
+                // Extraemos el DTO
                 val dto = response.body()!!.data!!
 
                 // Mapeamos el DTO de red a la Entidad local de base de datos
@@ -46,7 +45,7 @@ class UserRepositoryImpl @Inject constructor(
                     weeks = dto.weeks
                 )
 
-                // Guardamos en Room. Esto disparará automáticamente el StateFlow de tu WorkoutsScreen
+                // Guardamos en Room.
                 dao.insertPlan(entity)
 
                 Result.success(Unit)
@@ -75,7 +74,6 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun upgradeToPremium(purchaseToken: String): Result<Boolean> {
         return try {
-            // llamada real a Retrofit cuando el endpoint exista
             Result.success(true)
 
         } catch (e: Exception) {

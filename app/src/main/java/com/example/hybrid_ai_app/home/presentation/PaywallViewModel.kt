@@ -30,7 +30,7 @@ class PaywallViewModel @Inject constructor(
             purchaseState.collect { state ->
                 when (state) {
                     is PurchaseState.Success -> verifyAndUpgradeUserInBackend(state.purchaseToken)
-                    // 🟢 Si hay error en Google Play, paramos el Loading y mostramos el error
+
                     is PurchaseState.Error -> _upgradeStatus.value = UpgradeStatus.Error(state.message)
                     else -> {}
                 }
@@ -41,10 +41,6 @@ class PaywallViewModel @Inject constructor(
     fun launchPurchaseFlow(activity: Activity) {
         _upgradeStatus.value = UpgradeStatus.Loading
 
-        //MODO PRODUCCIÓN (Comentado hasta que configures Google Play Console)
-        // billingManager.launchBillingFlow(activity)
-
-        // MODO DESARROLLO: Simulamos que Google Play fue un éxito tras 2 segundos
         viewModelScope.launch {
             kotlinx.coroutines.delay(2000) // Ruedita gira 2 segundos
             verifyAndUpgradeUserInBackend("dummy_test_token_12345")
@@ -54,10 +50,6 @@ class PaywallViewModel @Inject constructor(
     private fun verifyAndUpgradeUserInBackend(purchaseToken: String) {
         viewModelScope.launch {
             try {
-                // ⚠️ ARCHITECTURE NOTE: In a real production app, you send the `purchaseToken`
-                // to Node.js. Node.js asks Google Developer API if the token is valid,
-                // and if true, Node.js sets isPremium = true in MongoDB.
-                // For now, assuming you have an endpoint like PATCH /api/users/upgrade:
 
                 val response = userRepository.upgradeToPremium(purchaseToken)
                 if (response.isSuccess) {

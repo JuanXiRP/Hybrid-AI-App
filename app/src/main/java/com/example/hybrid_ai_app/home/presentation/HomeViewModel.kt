@@ -3,7 +3,7 @@ package com.example.hybrid_ai_app.home.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hybrid_ai_app.core.data.PreferencesManager
-import com.example.hybrid_ai_app.core.data.local.entity.LoggedExerciseEntity // 🟢 Imported the new metrics entity
+import com.example.hybrid_ai_app.core.data.local.entity.LoggedExerciseEntity
 import com.example.hybrid_ai_app.core.data.local.entity.UserProgressEntity
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutLogEntity
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutPlanEntity

@@ -34,7 +34,7 @@ import androidx.compose.material.icons.filled.*
 @Composable
 fun AuthScreen(
     viewModel: AuthViewModel = hiltViewModel(),
-    onAuthSuccess: (hasCompletedOnboarding: Boolean) -> Unit // 🟢 Signature updated
+    onAuthSuccess: (hasCompletedOnboarding: Boolean) -> Unit
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
@@ -109,7 +109,7 @@ fun AuthScreen(
 
             if (viewModel.isLoginMode) {
                 TextButton(
-                    onClick = { /* TODO: Forgot Password Flow */ },
+                    onClick = {  },
                     modifier = Modifier.align(Alignment.End)
                 ) {
                     Text(text = stringResource(id = R.string.btn_forgot_password), color = MaterialTheme.colorScheme.primary)
@@ -118,7 +118,7 @@ fun AuthScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- STANDARD LOGIN / REGISTER BUTTON ---
+            // REGISTER BUTTON
             Button(
                 onClick = {
                     viewModel.authenticate(
@@ -151,7 +151,7 @@ fun AuthScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- GOOGLE SIGN IN BUTTON WITH DYNAMIC TESTING FLOWS ---
+            //GOOGLE SIGN IN BUTTON
             OutlinedButton(
                 onClick = {
                     coroutineScope.launch {
@@ -251,6 +251,6 @@ suspend fun handleGoogleSignIn(
         }
     } catch (e: Exception) {
         Log.e("GoogleAuth", "Sign In failed: ${e.message}")
-        onAuthFailed() // This triggers the bypass navigation
+        onAuthFailed()
     }
 }

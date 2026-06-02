@@ -2,13 +2,11 @@ package com.example.hybrid_ai_app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Base Kinetic Performance System Colors
 val SurfaceBase = Color(0xFFF8FAF9)
 val SurfaceCards = Color(0xFFFFFFFF)
 val OnSurfaceText = Color(0xFF191C1C)
 val OnSurfaceVariantText = Color(0xFF404943)
 
-// Brand Accents (Botanical Greens)
 val PrimaryBrand = Color(0xFF0F5238)
 val OnPrimaryText = Color(0xFFFFFFFF)
 val PrimaryContainerSage = Color(0xFF2D6A4F)

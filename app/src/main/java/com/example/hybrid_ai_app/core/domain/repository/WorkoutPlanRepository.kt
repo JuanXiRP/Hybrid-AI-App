@@ -18,7 +18,6 @@ interface WorkoutPlanRepository {
 
     suspend fun toggleDayStatus(weekNumber: Int, dayIndex: Int)
 
-    // Updated signature matching our new MongoDB synchronization requirement
     suspend fun completeWorkout(
         log: WorkoutLogEntity,
         nextProgress: UserProgressEntity,

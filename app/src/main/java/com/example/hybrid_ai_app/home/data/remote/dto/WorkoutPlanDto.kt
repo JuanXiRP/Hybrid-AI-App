@@ -6,15 +6,14 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class WorkoutPlanDto(
     @SerialName("_id")
-    val id: String = "",          // Mapea el _id de MongoDB
-    val startDate: String = "",   // Mapea la fecha de creación de MongoDB
-    val active: Boolean = true,   // Mapea el estado del plan
+    val id: String = "",
+    val startDate: String = "",
+    val active: Boolean = true,
     val durationWeeks: Int,
     val goal: String,
     val weeks: List<WeekDto>
 )
 
-// Las clases WeekDto, DayDto y ExerciseDto se quedan igual
 @Serializable
 data class WeekDto(
     val weekNumber: Int,

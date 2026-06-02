@@ -17,7 +17,6 @@ class LocationTrackingService : Service() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
 
-    // Service level coroutine scope for handling the independent timer ticker
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var timerJob: Job? = null
     private var totalSeconds = 0L
@@ -38,7 +37,7 @@ class LocationTrackingService : Service() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 super.onLocationResult(result)
-                // Only log coordinates if the engine is actively tracking (not paused)
+                // Only log coordinates
                 if (WorkoutLocationManager.isTracking.value) {
                     result.locations.lastOrNull()?.let { location ->
                         val latLng = com.google.android.gms.maps.model.LatLng(location.latitude, location.longitude)

@@ -31,14 +31,12 @@ interface ProgressDao {
     @Delete
     suspend fun deleteWorkoutLog(log: WorkoutLogEntity)
 
-    // Merged from the duplicated nested interface
     @Query("SELECT * FROM user_progress LIMIT 1")
     suspend fun getProgress(): UserProgressEntity?
 
     @Update
     suspend fun updateProgress(progress: UserProgressEntity)
 
-    // 🟢 ADDED: Atomic clearing methods matching your explicit table names
     @Query("DELETE FROM user_progress")
     suspend fun clearAllProgress()
 

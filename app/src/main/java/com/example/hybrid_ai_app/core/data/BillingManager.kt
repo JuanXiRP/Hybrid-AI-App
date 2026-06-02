@@ -26,7 +26,6 @@ class BillingManager @Inject constructor(
     private val _purchaseState = MutableStateFlow<PurchaseState>(PurchaseState.Idle)
     val purchaseState: StateFlow<PurchaseState> = _purchaseState.asStateFlow()
 
-    // Replace with your actual product ID from Google Play Console
     private val SUBSCRIPTION_ID = "hybrid_ai_pro_monthly"
 
     init {
@@ -37,11 +36,9 @@ class BillingManager @Inject constructor(
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(billingResult: BillingResult) {
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    // Ready to query products
                 }
             }
             override fun onBillingServiceDisconnected() {
-                // Try to restart the connection on the next request
             }
         })
     }
@@ -75,7 +72,6 @@ class BillingManager @Inject constructor(
                             .setProductDetailsParamsList(productDetailsParamsList)
                             .build()
 
-                        // 🟢 FIX 1: Google Play exige abrir su panel desde el Hilo Principal (Main)
                         CoroutineScope(Dispatchers.Main).launch {
                             billingClient.launchBillingFlow(activity, billingFlowParams)
                         }
@@ -83,7 +79,6 @@ class BillingManager @Inject constructor(
                         _purchaseState.value = PurchaseState.Error("No se encontró una oferta válida.")
                     }
                 } else {
-                    // 🟢 FIX 2: Si el producto no existe (Play Console sin configurar), rompemos el bucle infinito
                     _purchaseState.value = PurchaseState.Error("Producto no encontrado en Google Play Console.")
                 }
             }

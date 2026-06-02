@@ -51,7 +51,6 @@ class SettingsViewModel @Inject constructor(
                 val result = userRepository.getUserProfile()
 
                 result.onSuccess { user ->
-                    // 🟢 FIX 1: The repository already unwraps the response. 'user' is the UserDto.
                     _profileState.value = ProfileState.Success(user)
                 }.onFailure { exception ->
                     _profileState.value = ProfileState.Error(exception.message ?: "Failed to load profile")
@@ -64,7 +63,6 @@ class SettingsViewModel @Inject constructor(
 
     fun updateProfileMetrics(weight: Double?, goal: String, daysAvailable: Int?) {
         viewModelScope.launch {
-            // Retrieve current state to access existing user data
             val currentState = _profileState.value
             if (currentState !is ProfileState.Success) return@launch
 
@@ -72,8 +70,6 @@ class SettingsViewModel @Inject constructor(
 
             _isUpdating.value = true
             try {
-                // 🟢 FIX 2: Construct the strict ProfileUpdateRequest by blending the
-                // new UI inputs with the existing data from the database.
                 val request = ProfileUpdateRequest(
                     age = currentUser.age ?: 0,
                     weight = weight ?: currentUser.weight ?: 0.0,
@@ -88,10 +84,9 @@ class SettingsViewModel @Inject constructor(
 
                 val response = userRepository.updateProfile(request)
                 if (response.isSuccess) {
-                    fetchUserProfile() // Refresh UI state with updated Mongo data
+                    fetchUserProfile()
                 }
             } catch (e: Exception) {
-                // Failsafe catch
             } finally {
                 _isUpdating.value = false
             }
@@ -119,7 +114,7 @@ class SettingsViewModel @Inject constructor(
             _isUpdating.value = true
             try {
                 workoutPlanRepository.clearActivePlanAndProgress()
-                onCleared() // Avisa a la UI para que navegue
+                onCleared()
             } catch (e: Exception) {
                 _profileState.value = ProfileState.Error("Failed to clear plan: ${e.message}")
             } finally {

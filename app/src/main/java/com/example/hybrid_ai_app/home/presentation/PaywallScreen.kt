@@ -48,17 +48,14 @@ fun PaywallScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        // Silent callback: If denied, the notification simply won't show.
     }
 
-    // Request permission immediately when the Paywall opens (if applicable)
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
-    // Observe Purchase State to trigger Notification and Navigate
     LaunchedEffect(upgradeStatus) {
         if (upgradeStatus is UpgradeStatus.Success) {
             notificationHelper.showPremiumWelcomeNotification()
@@ -85,7 +82,6 @@ fun PaywallScreen(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
-            // Dark Overlay for readability
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -120,7 +116,6 @@ fun PaywallScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Feature Cards List
         Column(modifier = Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             FeatureCard(
                 icon = Icons.Default.AutoAwesome,
@@ -141,7 +136,7 @@ fun PaywallScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Footer Actions
+        // Footer
         Column(
             modifier = Modifier
                 .fillMaxWidth()

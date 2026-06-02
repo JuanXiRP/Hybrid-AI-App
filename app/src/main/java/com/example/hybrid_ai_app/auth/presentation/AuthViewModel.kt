@@ -62,7 +62,6 @@ class AuthViewModel @Inject constructor(
 
                     if (!realToken.isNullOrEmpty()) {
                         preferencesManager.saveToken(realToken)
-                        // New registrations always go to onboarding, logins depend on backend profile status
                         onSuccess(if (isLoginMode) hasCompletedOnboarding else false)
                     } else {
                         onError("Server didn't return a token")

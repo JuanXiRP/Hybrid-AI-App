@@ -47,21 +47,19 @@ fun OnboardingScreen(
     onFinishOnboarding: () -> Unit
 ) {
     if (viewModel.isLoading) {
-        // Renders the animated screen we just created
         LoadingScreen(message = "Calibrating your hybrid macrocycle...")
     } else {
         val currentStep = viewModel.currentStep
         val state = viewModel.uiState
         val scrollState = rememberScrollState()
 
-        // --- ESTADO DEL SNACKBAR ---
         val snackbarHostState = remember { SnackbarHostState() }
         val coroutineScope = rememberCoroutineScope()
 
-        // 1. BOX PRINCIPAL (Otorga el contexto para usar .align)
+        // 1. BOX PRINCIPAL
         Box(modifier = Modifier.fillMaxSize()) {
 
-            // 2. COLUMNA DE CONTENIDO (Tu formulario normal)
+            // 2. COLUMNA DE CONTENIDO
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -70,7 +68,7 @@ fun OnboardingScreen(
             ) {
                 Spacer(modifier = Modifier.height(50.dp))
 
-                // --- HEADER: LOGO + WORDMARK ---
+                //HEADER
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
@@ -93,7 +91,7 @@ fun OnboardingScreen(
                     )
                 }
 
-                // --- STEPPER PROGRESS BAR ---
+                //STEPPER PROGRESS BAR
                 LinearProgressIndicator(
                     progress = { currentStep.toFloat() / viewModel.totalSteps },
                     modifier = Modifier
@@ -105,7 +103,7 @@ fun OnboardingScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // --- DYNAMIC MULTI-STEP FORM ---
+                //DYNAMIC MULTI-STEP FORM
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -126,7 +124,7 @@ fun OnboardingScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- BOTTOM NAVIGATION CONTROLS ---
+                //BOTTOM NAVIGATION CONTROLS
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -159,7 +157,6 @@ fun OnboardingScreen(
                                 if (currentStep < viewModel.totalSteps) {
                                     viewModel.nextStep()
                                 } else {
-                                    // Llamamos a la API real y manejamos el error con el Snackbar
                                     viewModel.submitOnboarding(
                                         onSuccess = { onFinishOnboarding() },
                                         onError = { errorMsg ->
@@ -182,10 +179,9 @@ fun OnboardingScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-            } // Fin del Column
+            }
 
             // 3. CAPA FLOTANTE DEL SNACKBAR
-            // Como estamos dentro del Box principal, .align() funciona perfectamente aquí.
             SnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier

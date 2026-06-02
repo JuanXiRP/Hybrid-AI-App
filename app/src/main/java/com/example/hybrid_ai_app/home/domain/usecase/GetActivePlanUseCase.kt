@@ -4,7 +4,6 @@ import com.example.hybrid_ai_app.home.domain.model.ActivePlan
 import com.example.hybrid_ai_app.home.domain.repository.PlanRepository
 import javax.inject.Inject
 
-// Encapsulates the specific business logic to fetch the active plan
 class GetActivePlanUseCase @Inject constructor(
     private val repository: PlanRepository
 ) {

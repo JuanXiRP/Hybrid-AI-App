@@ -45,7 +45,6 @@ object NetworkModule {
         }
 
         return OkHttpClient.Builder()
-            // Extended timeouts specifically for heavy AI generation payloads
             .connectTimeout(90, TimeUnit.SECONDS)
             .readTimeout(90, TimeUnit.SECONDS)
             .writeTimeout(90, TimeUnit.SECONDS)
@@ -57,11 +56,10 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
-        // Tolerant JSON parser config
         val networkJson = Json { ignoreUnknownKeys = true }
 
         return Retrofit.Builder()
-            .baseUrl(BASE_URL) // 🟢 DRY Principle applied
+            .baseUrl(BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(networkJson.asConverterFactory("application/json".toMediaType()))
             .build()

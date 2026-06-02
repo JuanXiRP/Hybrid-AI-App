@@ -1,11 +1,11 @@
 package com.example.hybrid_ai_app.coach.data.presentation
-// Defines who sent the message to render the bubble correctly (left or right)
+// Defines who sent the message
 enum class MessageSender {
     USER,
     COACH
 }
 
-// Data class representing a single message in the chat UI
+// Data class representing a single message
 data class ChatMessage(
     val id: String,
     val text: String,

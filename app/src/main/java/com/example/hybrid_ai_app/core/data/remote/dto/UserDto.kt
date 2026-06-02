@@ -8,7 +8,7 @@ data class UserDto(
     @SerialName("_id") val id: String? = null,
     val name: String,
     val email: String,
-    // Onboarding fields (nullable because they might be empty right after registration)
+    // Onboarding fields
     val age: Int? = null,
     val weight: Double? = null,
     val height: Double? = null,
@@ -21,8 +21,6 @@ data class UserDto(
     val isPremium: Boolean = false
 )
 
-// 🟢 Si tu backend de Node.js devuelve los datos envueltos en un "data" (ej: { "success": true, "data": { ... } })
-// usa este wrapper en el UserApi. Si devuelve el usuario directamente, ignora esto.
 @Serializable
 data class UserProfileResponse(
     val success: Boolean,

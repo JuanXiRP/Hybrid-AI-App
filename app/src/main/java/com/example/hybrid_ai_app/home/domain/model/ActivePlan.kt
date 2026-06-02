@@ -2,7 +2,6 @@ package com.example.hybrid_ai_app.home.domain.model
 
 import java.util.Date
 
-// Clean representation of the training plan for the UI
 data class ActivePlan(
     val id: String,
     val startDate: Date,
