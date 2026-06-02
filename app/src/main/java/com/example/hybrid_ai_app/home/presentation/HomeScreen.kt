@@ -30,11 +30,9 @@ import com.example.hybrid_ai_app.navigation.Screen
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: HomeViewModel = hiltViewModel() // Make sure HomeViewModel exposes the photo flow
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
-    // Collect the UI state exposed by Room unified flows
     val uiState by viewModel.uiState.collectAsState()
-
     val profilePicPath by viewModel.localProfilePicPath.collectAsState(initial = null)
 
     Scaffold(
@@ -57,13 +55,13 @@ fun HomeScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "No active training plan found.\nPlease complete onboarding.",
+                            text = stringResource(id = R.string.empty_plan_msg),
                             style = MaterialTheme.typography.bodyLarge,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
                         Button(onClick = { navController.navigate(Screen.Onboarding.route) }) {
-                            Text("Go to Onboarding")
+                            Text(text = stringResource(id = R.string.btn_go_onboarding))
                         }
                     }
                 }
@@ -75,7 +73,6 @@ fun HomeScreen(
             }
             is HomeUiState.Success -> {
                 val plan = state.plan
-                val currentWeek = state.currentWeek
                 val currentDay = state.currentDay
 
                 LazyColumn(
@@ -86,24 +83,26 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                     contentPadding = PaddingValues(bottom = 24.dp)
                 ) {
-                    // Header Info
                     item {
                         Column(modifier = Modifier.padding(vertical = 8.dp)) {
                             Text(
-                                text = "${plan.durationWeeks}-Week Hybrid Protocol",
+                                text = stringResource(id = R.string.protocol_weeks_header, plan.durationWeeks),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Week ${state.currentWeekNumber} · ${currentDay?.dayName ?: "Rest & Recovery"}",
+                                text = stringResource(
+                                    id = R.string.week_day_subtitle,
+                                    state.currentWeekNumber,
+                                    currentDay?.dayName ?: stringResource(id = R.string.rest_recovery_title)
+                                ),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
 
-                    // DYNAMIC WORKOUT CONTENT GENERATION
                     if (currentDay == null || currentDay.exercises.isEmpty()) {
                         item {
                             Card(
@@ -117,19 +116,19 @@ fun HomeScreen(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Info,
-                                        contentDescription = "Rest",
+                                        contentDescription = stringResource(id = R.string.rest_recovery_title),
                                         tint = MaterialTheme.colorScheme.onSecondaryContainer,
                                         modifier = Modifier.size(32.dp)
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        text = "REST & RECOVERY",
+                                        text = stringResource(id = R.string.rest_recovery_title),
                                         style = MaterialTheme.typography.labelLarge,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        text = "No exercises scheduled for today. Focus on sleep, nutrition, and light mobility work.",
+                                        text = stringResource(id = R.string.rest_recovery_desc),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
                                         textAlign = TextAlign.Center,
@@ -139,7 +138,7 @@ fun HomeScreen(
                                         onClick = { viewModel.logCurrentWorkoutAsCompleted() },
                                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onSecondaryContainer)
                                     ) {
-                                        Text("Complete Rest Day", color = MaterialTheme.colorScheme.secondaryContainer)
+                                        Text(text = stringResource(id = R.string.btn_complete_rest_day), color = MaterialTheme.colorScheme.secondaryContainer)
                                     }
                                 }
                             }
@@ -157,13 +156,13 @@ fun HomeScreen(
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Text(
-                                        text = if (isCardioSession) "CARDIO BLOCK" else "STRENGTH BLOCK",
+                                        text = if (isCardioSession) stringResource(id = R.string.block_cardio) else stringResource(id = R.string.block_strength),
                                         style = MaterialTheme.typography.labelLarge,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        text = currentDay.dayName ?: "Active Session",
+                                        text = currentDay.dayName ?: stringResource(id = R.string.active_session_fallback),
                                         style = MaterialTheme.typography.headlineSmall,
                                         fontWeight = FontWeight.ExtraBold,
                                         modifier = Modifier.padding(bottom = 16.dp)
@@ -178,13 +177,13 @@ fun HomeScreen(
                                             Column(modifier = Modifier.weight(1f)) {
                                                 Text(text = exercise.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                                 Text(
-                                                    text = "${exercise.sets} Sets × ${exercise.reps}",
+                                                    text = stringResource(id = R.string.exercise_metrics_label, exercise.sets, exercise.reps),
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                                                 )
                                             }
                                             Text(
-                                                text = "RPE ${exercise.rpe}",
+                                                text = stringResource(id = R.string.exercise_rpe_label, exercise.rpe),
                                                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Black),
                                                 color = MaterialTheme.colorScheme.primary,
                                                 textAlign = TextAlign.End
@@ -210,14 +209,13 @@ fun HomeScreen(
                                             contentDescription = null,
                                             modifier = Modifier.padding(end = 8.dp)
                                         )
-                                        Text("LOG SESSION AS COMPLETED", fontWeight = FontWeight.Bold)
+                                        Text(text = stringResource(id = R.string.btn_log_session_completed), fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
                         }
                     }
 
-                    // WEEKLY PROGRESS COMPONENT
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -227,7 +225,7 @@ fun HomeScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    text = "WEEKLY PROGRESS TRACKER",
+                                    text = stringResource(id = R.string.weekly_progress_tracker_title),
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(bottom = 16.dp)
@@ -249,7 +247,7 @@ fun HomeScreen(
                                             if (state.weeklyCompletion[index]) {
                                                 Icon(
                                                     imageVector = Icons.Default.CheckCircle,
-                                                    contentDescription = "Completed",
+                                                    contentDescription = stringResource(id = R.string.cd_completed),
                                                     tint = MaterialTheme.colorScheme.primary,
                                                     modifier = Modifier.size(24.dp)
                                                 )

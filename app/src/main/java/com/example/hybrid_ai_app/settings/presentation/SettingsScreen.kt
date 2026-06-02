@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -41,7 +42,7 @@ import com.example.hybrid_ai_app.R
 @Composable
 fun SettingsScreen(
     navController: NavController, // Local bottom bar controller (for going back)
-    rootNavController: NavController, // 🟢 Global controller (for Onboarding/Auth)
+    rootNavController: NavController, // Global controller (for Onboarding/Auth)
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val currentLanguage by viewModel.currentLanguage.collectAsState(initial = "en")
@@ -54,10 +55,10 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Profile & Settings", fontWeight = FontWeight.Bold) },
+                title = { Text(text = stringResource(id = R.string.settings_header), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(id = R.string.cd_go_back))
                     }
                 }
             )
@@ -81,7 +82,7 @@ fun SettingsScreen(
                 is ProfileState.Error -> {
                     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
                         Text(
-                            text = "Error: ${state.message}",
+                            text = stringResource(id = R.string.dialog_regenerate_title) + ": ${state.message}",
                             modifier = Modifier.padding(16.dp),
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
@@ -92,7 +93,7 @@ fun SettingsScreen(
                     val context = LocalContext.current
                     val coroutineScope = rememberCoroutineScope()
 
-                    // 🟢 Observe local preferences overrides
+                    // Observe local preferences overrides
                     val localName by viewModel.localUserName.collectAsState(initial = null)
                     val localProfilePic by viewModel.localProfilePicPath.collectAsState(initial = null)
 
@@ -101,7 +102,7 @@ fun SettingsScreen(
                     var editGoal by remember(user) { mutableStateOf(user.goal ?: "") }
                     var editDays by remember(user) { mutableStateOf(user.daysAvailable?.toString() ?: "") }
 
-                    // 🟢 Safely handle URI picking and persistent internal storage copy
+                    // Safely handle URI picking and persistent internal storage copy
                     val photoPickerLauncher = rememberLauncherForActivityResult(
                         contract = ActivityResultContracts.PickVisualMedia()
                     ) { uri: Uri? ->
@@ -138,8 +139,8 @@ fun SettingsScreen(
                             ) {
                                 // Profile Image rendering with Coil
                                 AsyncImage(
-                                    model = localProfilePic ?: com.google.android.gms.location.places.R.drawable.powered_by_google_light, // Ensure you have a placeholder drawable
-                                    contentDescription = "Profile Picture",
+                                    model = localProfilePic ?: com.google.android.gms.location.places.R.drawable.powered_by_google_light,
+                                    contentDescription = stringResource(id = R.string.account_details_title),
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
                                         .size(72.dp)
@@ -152,20 +153,20 @@ fun SettingsScreen(
                                 )
 
                                 Column {
-                                    Text("Account Details", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                    Text(text = stringResource(id = R.string.account_details_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                     Text(user.email, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
 
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-                            Text("Personal Profile", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(text = stringResource(id = R.string.personal_profile_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
-                            // 🟢 Editable Display Name overrides the backend "admin" locally
+                            // Editable Display Name overrides the backend "admin" locally
                             OutlinedTextField(
                                 value = editName,
                                 onValueChange = { editName = it },
-                                label = { Text("Display Name") },
+                                label = { Text(text = stringResource(id = R.string.label_display_name)) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true
                             )
@@ -173,7 +174,7 @@ fun SettingsScreen(
                             OutlinedTextField(
                                 value = editWeight,
                                 onValueChange = { editWeight = it },
-                                label = { Text("Weight (kg)") },
+                                label = { Text(text = stringResource(id = R.string.label_weight)) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true
@@ -182,14 +183,14 @@ fun SettingsScreen(
                             OutlinedTextField(
                                 value = editGoal,
                                 onValueChange = { editGoal = it },
-                                label = { Text("Main Goal") },
+                                label = { Text(text = stringResource(id = R.string.label_main_goal)) },
                                 modifier = Modifier.fillMaxWidth()
                             )
 
                             OutlinedTextField(
                                 value = editDays,
                                 onValueChange = { editDays = it },
-                                label = { Text("Training Days Available") },
+                                label = { Text(text = stringResource(id = R.string.label_days_available)) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true
@@ -213,7 +214,7 @@ fun SettingsScreen(
                                 if (isUpdating) {
                                     CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
                                 } else {
-                                    Text("Save Changes")
+                                    Text(text = stringResource(id = R.string.btn_save_changes))
                                 }
                             }
                         }
@@ -234,12 +235,12 @@ fun SettingsScreen(
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Column {
                                     Text(
-                                        text = "Upgrade to Hybrid.AI PRO",
+                                        text = stringResource(id = R.string.upgrade_promo_title),
                                         color = androidx.compose.ui.graphics.Color.White,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        text = "Unlock unlimited AI plans & analytics",
+                                        text = stringResource(id = R.string.upgrade_promo_desc),
                                         color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.8f)
                                     )
                                 }
@@ -255,11 +256,11 @@ fun SettingsScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("App Preferences", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(id = R.string.app_preferences_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text("Language", style = MaterialTheme.typography.bodyLarge)
+                        Text(text = stringResource(id = R.string.label_language), style = MaterialTheme.typography.bodyLarge)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(selected = currentLanguage == "en", onClick = { viewModel.saveLanguage("en") }, label = { Text("EN") })
                             FilterChip(selected = currentLanguage == "es", onClick = { viewModel.saveLanguage("es") }, label = { Text("ES") })
@@ -267,7 +268,7 @@ fun SettingsScreen(
                     }
 
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text("Dark Mode", style = MaterialTheme.typography.bodyLarge)
+                        Text(text = stringResource(id = R.string.label_dark_mode), style = MaterialTheme.typography.bodyLarge)
                         Switch(checked = isDarkMode, onCheckedChange = { viewModel.toggleDarkMode(it) })
                     }
                 }
@@ -281,13 +282,12 @@ fun SettingsScreen(
                 ) {
                     Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Regenerate AI Protocol")
+                    Text(text = stringResource(id = R.string.btn_regenerate_protocol))
                 }
 
                 OutlinedButton(
                     onClick = {
                         viewModel.logout {
-                            // 🟢 Use rootNavController to break out of the MainScaffold graph
                             rootNavController.navigate(Screen.Auth.route) {
                                 popUpTo(0) { inclusive = true }
                             }
@@ -296,9 +296,9 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Icon(Icons.Default.ExitToApp, contentDescription = "Logout", modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.ExitToApp, contentDescription = stringResource(id = R.string.btn_log_out), modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Log Out")
+                    Text(text = stringResource(id = R.string.btn_log_out))
                 }
             }
         }
@@ -306,17 +306,14 @@ fun SettingsScreen(
         if (showRegenerateDialog) {
             AlertDialog(
                 onDismissRequest = { showRegenerateDialog = false },
-                shape = RoundedCornerShape(8.dp), // 🟢 Forces a square/readable shape
-                title = { Text("Regenerate Protocol?") },
-                text = {
-                    Text("This will permanently delete your current training plan and all local progress for this cycle. Are you sure you want to request a new plan from the AI?")
-                },
+                shape = RoundedCornerShape(8.dp),
+                title = { Text(text = stringResource(id = R.string.dialog_regenerate_title)) },
+                text = { Text(text = stringResource(id = R.string.dialog_regenerate_text)) },
                 confirmButton = {
                     Button(
                         onClick = {
                             showRegenerateDialog = false
                             viewModel.wipeDataAndRegenerate {
-                                // 🟢 Use rootNavController to route safely to Onboarding
                                 rootNavController.navigate(Screen.Onboarding.route) {
                                     popUpTo(0) { inclusive = true }
                                 }
@@ -324,12 +321,12 @@ fun SettingsScreen(
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                     ) {
-                        Text("Yes, Regenerate")
+                        Text(text = stringResource(id = R.string.btn_yes_regenerate))
                     }
                 },
                 dismissButton = {
                     OutlinedButton(onClick = { showRegenerateDialog = false }) {
-                        Text("Cancel")
+                        Text(text = stringResource(id = R.string.btn_cancel))
                     }
                 }
             )

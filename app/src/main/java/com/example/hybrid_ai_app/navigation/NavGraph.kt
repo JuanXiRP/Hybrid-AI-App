@@ -51,8 +51,15 @@ fun RootNavGraph(navController: NavHostController,
     ) {
         composable(route = Screen.Auth.route) {
             AuthScreen(
-                onAuthSuccess = {
-                    navController.navigate(Screen.Onboarding.route) {
+                onAuthSuccess = { hasCompletedOnboarding ->
+                    // Route dynamically based on the onboarding profile status flag
+                    val targetRoute = if (hasCompletedOnboarding) {
+                        Screen.MainContainer.route // Bypasses onboarding straight to performance routines
+                    } else {
+                        Screen.Onboarding.route // Demands biometric calibration for new users
+                    }
+
+                    navController.navigate(targetRoute) {
                         popUpTo(Screen.Auth.route) { inclusive = true }
                     }
                 }

@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.hybrid_ai_app.R
 import com.example.hybrid_ai_app.core.data.local.entity.LoggedExerciseEntity
 import com.example.hybrid_ai_app.core.data.remote.dto.ExerciseDto
 import com.example.hybrid_ai_app.tracking.LocationTrackingService
@@ -58,7 +60,7 @@ fun WorkoutExecutionScreen(
 
     val isCardio = currentDay?.workoutType == "cardio"
 
-    // 🟢 State Hoisting: Reactive map tracking inputs matching index positions
+    // State Hoisting: Reactive map tracking inputs matching index positions
     val weightInputs = remember { mutableStateMapOf<Int, String>() }
 
     // Tracking States
@@ -124,7 +126,7 @@ fun WorkoutExecutionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(currentDay?.dayName ?: "Executing Workout", fontWeight = FontWeight.Bold) }
+                title = { Text(text = currentDay?.dayName ?: stringResource(id = R.string.executing_workout_fallback), fontWeight = FontWeight.Bold) }
             )
         }
     ) { paddingValues ->
@@ -167,7 +169,7 @@ fun WorkoutExecutionScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = "TODAY'S MISSION",
+                                    text = stringResource(id = R.string.todays_mission_header),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold
@@ -179,7 +181,12 @@ fun WorkoutExecutionScreen(
                                     textAlign = TextAlign.Center
                                 )
                                 Text(
-                                    text = "${runInstruction.sets} | ${runInstruction.reps} | Target RPE: ${runInstruction.rpe}",
+                                    text = stringResource(
+                                        id = R.string.cardio_metrics_format,
+                                        runInstruction.sets,
+                                        runInstruction.reps,
+                                        runInstruction.rpe
+                                    ),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -195,15 +202,15 @@ fun WorkoutExecutionScreen(
                             horizontalArrangement = Arrangement.SpaceAround
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("TIME", style = MaterialTheme.typography.labelSmall)
+                                Text(text = stringResource(id = R.string.metric_time), style = MaterialTheme.typography.labelSmall)
                                 Text(text = formatSeconds(elapsedTimeSec), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                             }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("SPEED", style = MaterialTheme.typography.labelSmall)
+                                Text(text = stringResource(id = R.string.metric_speed), style = MaterialTheme.typography.labelSmall)
                                 Text(text = String.format("%.1f km/h", speedKmh), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                             }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("DISTANCE", style = MaterialTheme.typography.labelSmall)
+                                Text(text = stringResource(id = R.string.metric_distance), style = MaterialTheme.typography.labelSmall)
                                 Text(text = String.format("%.2f km", distanceKm), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
                             }
                         }
@@ -222,7 +229,7 @@ fun WorkoutExecutionScreen(
                                         }
                                     },
                                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                                ) { Text("PAUSE RUN") }
+                                ) { Text(text = stringResource(id = R.string.btn_pause_run)) }
                             } else {
                                 Button(
                                     onClick = {
@@ -232,7 +239,7 @@ fun WorkoutExecutionScreen(
                                         }
                                     },
                                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                                ) { Text("RESUME RUN") }
+                                ) { Text(text = stringResource(id = R.string.btn_resume_run)) }
                             }
                         }
                     }
@@ -265,7 +272,6 @@ fun WorkoutExecutionScreen(
                         }
                     }
 
-                    // 🟢 Añadido el operador Elvis ?: emptyList() al final del bloque
                     val compiledPerformanceMetrics = currentDay?.exercises?.mapIndexed { index, exercise ->
                         val finalWeight = weightInputs[index] ?: ""
                         LoggedExerciseEntity(
@@ -277,7 +283,6 @@ fun WorkoutExecutionScreen(
                         )
                     } ?: emptyList()
 
-                    // 🟢 Triggers viewmodel logging execution down to Room & preparing Mongo Sync pipelines
                     viewModel.logCurrentWorkoutAsCompleted(metrics = compiledPerformanceMetrics)
                     navController.popBackStack()
                 },
@@ -288,7 +293,7 @@ fun WorkoutExecutionScreen(
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("FINISH WORKOUT", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                Text(text = stringResource(id = R.string.btn_finish_workout), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
             }
         }
     }
@@ -330,9 +335,9 @@ fun InteractiveExerciseCard(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(text = "Sets: ${exercise.sets}", style = MaterialTheme.typography.bodyMedium, color = contentColor.copy(alpha = 0.7f))
-                    Text(text = "Reps: ${exercise.reps}", style = MaterialTheme.typography.bodyMedium, color = contentColor.copy(alpha = 0.7f))
-                    Text(text = "Target RPE: ${exercise.rpe}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    Text(text = stringResource(id = R.string.exercise_card_sets_label, exercise.sets), style = MaterialTheme.typography.bodyMedium, color = contentColor.copy(alpha = 0.7f))
+                    Text(text = stringResource(id = R.string.exercise_card_reps_label, exercise.reps), style = MaterialTheme.typography.bodyMedium, color = contentColor.copy(alpha = 0.7f))
+                    Text(text = stringResource(id = R.string.exercise_card_rpe_label, exercise.rpe), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -340,8 +345,8 @@ fun InteractiveExerciseCard(
                 OutlinedTextField(
                     value = weightValue,
                     onValueChange = { if (!isCompleted) onWeightChange(it) },
-                    label = { Text("Weight (kg)") },
-                    placeholder = { Text("0.0") },
+                    label = { Text(text = stringResource(id = R.string.label_weight)) },
+                    placeholder = { Text(text = stringResource(id = R.string.placeholder_weight)) },
                     enabled = !isCompleted,
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
@@ -369,7 +374,7 @@ fun InteractiveExerciseCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = "Log exercise completion status",
+                    contentDescription = stringResource(id = R.string.cd_log_exercise_status),
                     tint = if (isCompleted) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                 )
             }

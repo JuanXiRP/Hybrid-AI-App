@@ -21,10 +21,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.hybrid_ai_app.R
 import com.example.hybrid_ai_app.core.data.remote.dto.DayDto
 import com.example.hybrid_ai_app.home.presentation.components.HybridTopAppBar
 import com.example.hybrid_ai_app.navigation.Screen
@@ -50,7 +52,7 @@ fun WorkoutsScreen(
     Scaffold(
         topBar = {
             HybridTopAppBar(
-                title = "PROGRAM CALENDAR",
+                title = stringResource(id = R.string.workouts_title),
                 profilePicPath = profilePicPath,
                 onProfileClick = { navController.navigate(Screen.Settings.route) }
             )
@@ -79,9 +81,9 @@ fun WorkoutsScreen(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("No active plan found.")
+                        Text(text = stringResource(id = R.string.no_plan_found))
                         Button(onClick = { navController.navigate(Screen.Onboarding.route) }) {
-                            Text("Generate Plan")
+                            Text(text = stringResource(id = R.string.btn_generate_plan))
                         }
                     }
                 }
@@ -110,9 +112,13 @@ fun WorkoutsScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text("${plan.durationWeeks}-Week Hybrid Protocol", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                     Text(
-                                        text = "${(progressPercentage * 100).toInt()}% Done",
+                                        text = stringResource(id = R.string.protocol_weeks_suffix, plan.durationWeeks),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = stringResource(id = R.string.progress_done, (progressPercentage * 100).toInt()),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold
@@ -142,7 +148,7 @@ fun WorkoutsScreen(
                                 FilterChip(
                                     selected = selectedWeek == week,
                                     onClick = { selectedWeek = week },
-                                    label = { Text("Week $week", fontWeight = FontWeight.Bold) },
+                                    label = { Text(text = stringResource(id = R.string.week_indicator, week), fontWeight = FontWeight.Bold) },
                                     colors = FilterChipDefaults.filterChipColors(
                                         selectedContainerColor = MaterialTheme.colorScheme.primary,
                                         selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -297,7 +303,7 @@ fun TimelineItemRow(
                     )
                     // Simple, clean exercise count or rest day message
                     Text(
-                        text = if (day.exercises.isEmpty()) "Rest Day" else "${day.exercises.size} Exercises",
+                        text = if (day.exercises.isEmpty()) stringResource(id = R.string.rest_day_label) else stringResource(id = R.string.exercises_count_suffix, day.exercises.size),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
@@ -345,7 +351,7 @@ fun WorkoutDetailSheetContent(day: DayDto) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Rest Day: Focus completely on muscle rebuilding, mobility stretching, and proper optimal hydration.",
+                    text = stringResource(id = R.string.rest_day_detail_text),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -382,12 +388,12 @@ fun WorkoutDetailSheetContent(day: DayDto) {
                             ) {
                                 // Sets item with icon
                                 ExerciseMetricItem(
-                                    label = "${exercise.sets} Sets",
+                                    label = stringResource(id = R.string.metric_sets_suffix, exercise.sets),
                                     icon = Icons.Default.CheckCircle // Placeholder weights icon
                                 )
                                 // Reps item with icon
                                 ExerciseMetricItem(
-                                    label = "${exercise.reps} Reps",
+                                    label = stringResource(id = R.string.metric_reps_suffix, exercise.reps),
                                     icon = Icons.Default.DateRange // Placeholder repetition arrow icon
                                 )
                             }
@@ -399,7 +405,7 @@ fun WorkoutDetailSheetContent(day: DayDto) {
                                 modifier = Modifier.padding(top = 4.dp).align(Alignment.End) // Align to end for consistency
                             ) {
                                 Text(
-                                    text = "RPE ${exercise.rpe}",
+                                    text = stringResource(id = R.string.metric_rpe_prefix, exercise.rpe),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Black,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -414,7 +420,6 @@ fun WorkoutDetailSheetContent(day: DayDto) {
     }
 }
 
-// Compact component to display an exercise metric with an icon
 @Composable
 fun ExerciseMetricItem(
     label: String,

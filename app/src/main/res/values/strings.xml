@@ -5,4 +5,140 @@
     <string name="settings_title">Settings</string>
     <string name="language_label">Language / Idioma</string>
     <string name="dark_mode_label">Dark Mode</string>
+
+    <string name="exclusive_access">EXCLUSIVE ACCESS</string>
+    <string name="paywall_title">Hybrid.AI PRO</string>
+    <string name="feature_ai_generations_title">Unlimited AI Plan Generations</string>
+    <string name="feature_ai_generations_desc">Adaptive routines that evolve with your biometrics and performance.</string>
+    <string name="feature_coach_title">Real-time Chat with Gemini Coach</string>
+    <string name="feature_coach_desc">Instant advice on form and recovery powered by Gemini intelligence.</string>
+    <string name="feature_analytics_title">Advanced Progress Analytics</string>
+    <string name="feature_analytics_desc">Visualizations of muscle fatigue, VO2 max, and power output.</string>
+    <string name="pricing_label">7 DAYS FREE, THEN $14.99/MONTH</string>
+    <string name="pricing_sub_label">Cancel anytime in your app store settings.</string>
+    <string name="btn_unlock_premium">Unlock Premium - Start 7-Day Free Trial</string>
+    <string name="btn_restore_purchase">Restore Purchase</string>
+
+    <string name="workouts_title">PROGRAM CALENDAR</string>
+    <string name="no_plan_found">No active plan found.</string>
+    <string name="btn_generate_plan">Generate Plan</string>
+    <string name="week_indicator">Week %1$d</string>
+    <string name="progress_done">%1$d%% Done</string>
+    <string name="protocol_weeks_suffix">%1$d-Week Hybrid Protocol</string>
+    <string name="rest_day_label">Rest Day</string>
+    <string name="exercises_count_suffix">%1$d Exercises</string>
+
+    <string name="rest_day_detail_text">Rest Day: Focus completely on muscle rebuilding, mobility stretching, and proper optimal hydration.</string>
+    <string name="metric_sets_suffix">%1$s Sets</string>
+    <string name="metric_reps_suffix">%1$s Reps</string>
+    <string name="metric_rpe_prefix">RPE %1$s</string>
+
+    <string name="coach_title">GEMINI COACH AI</string>
+    <string name="input_placeholder_coach">Ask Gemini Coach...</string>
+    <string name="cd_voice_input">Voice Input</string>
+    <string name="cd_send_message">Send</string>
+    <string name="cd_profile_settings">Profile Settings</string>
+
+    <string name="generating_plan_msg">Generating your AI Plan...</string>
+    <string name="cd_hybrid_logo">Hybrid Icon</string>
+
+    <string name="settings_header">Profile &amp; Settings</string>
+    <string name="account_details_title">Account Details</string>
+    <string name="personal_profile_title">Personal Profile</string>
+    <string name="cd_go_back">Go back</string>
+    <string name="label_display_name">Display Name</string>
+    <string name="label_weight">Weight (kg)</string>
+    <string name="label_main_goal">Main Goal</string>
+    <string name="label_days_available">Training Days Available</string>
+    <string name="btn_save_changes">Save Changes</string>
+    <string name="app_preferences_title">App Preferences</string>
+    <string name="label_language">Language</string>
+    <string name="label_dark_mode">Dark Mode</string>
+    <string name="btn_regenerate_protocol">Regenerate AI Protocol</string>
+    <string name="btn_log_out">Log Out</string>
+
+    <string name="upgrade_promo_title">Upgrade to Hybrid.AI PRO</string>
+    <string name="upgrade_promo_desc">Unlock unlimited AI plans &amp; analytics</string>
+
+    <string name="dialog_regenerate_title">Regenerate Protocol?</string>
+    <string name="dialog_regenerate_text">This will permanently delete your current training plan and all local progress for this cycle. Are you sure you want to request a new plan from the AI?</string>
+    <string name="btn_yes_regenerate">Yes, Regenerate</string>
+    <string name="btn_cancel">Cancel</string>
+
+    <string name="empty_plan_msg">No active training plan found.\nPlease complete onboarding.</string>
+    <string name="btn_go_onboarding">Go to Onboarding</string>
+    <string name="protocol_weeks_header">%1$d-Week Hybrid Protocol</string>
+    <string name="week_day_subtitle">Week %1$d · %2$s</string>
+    <string name="rest_recovery_title">REST &amp; RECOVERY</string>
+    <string name="rest_recovery_desc">No exercises scheduled for today. Focus on sleep, nutrition, and light mobility work.</string>
+    <string name="btn_complete_rest_day">Complete Rest Day</string>
+    <string name="block_strength">STRENGTH BLOCK</string>
+    <string name="block_cardio">CARDIO BLOCK</string>
+    <string name="active_session_fallback">Active Session</string>
+    <string name="exercise_metrics_label">%1$s Sets × %2$s Reps</string>
+    <string name="exercise_rpe_label">RPE %1$s</string>
+    <string name="btn_log_session_completed">LOG SESSION AS COMPLETED</string>
+    <string name="weekly_progress_tracker_title">WEEKLY PROGRESS TRACKER</string>
+    <string name="cd_completed">Completed</string>
+
+    <string name="history_title">PERFORMANCE HISTORY</string>
+    <string name="history_empty_msg">No workouts logged yet.\nComplete sessions on the Home tab to build history.</string>
+    <string name="analytics_charts_title">Analytics &amp; Charts</string>
+    <string name="future_updates_msg">Available in future updates</string>
+    <string name="timeline_week_day_indicator">W%1$d · D%2$d</string>
+
+    <string name="performance_log_title">Performance Log</string>
+    <string name="no_metrics_recorded">No detailed metrics recorded for this session.</string>
+    <string name="metric_weight_suffix">%1$s kg</string>
+
+    <string name="cd_app_logo">App Logo</string>
+    <string name="btn_sign_in_mode">Sign In</string>
+    <string name="btn_sign_up_mode">Sign Up</string>
+    <string name="label_email">Email</string>
+    <string name="label_password">Password</string>
+    <string name="btn_forgot_password">Forgot password?</string>
+    <string name="btn_create_account">Create Account</string>
+    <string name="btn_continue_google">Continue with Google</string>
+
+    <string name="executing_workout_fallback">Executing Workout</string>
+    <string name="todays_mission_header">TODAY\'S MISSION</string>
+    <string name="cardio_metrics_format">%1$s | %2$s | Target RPE: %3$s</string>
+    <string name="metric_time">TIME</string>
+    <string name="metric_speed">SPEED</string>
+    <string name="metric_distance">DISTANCE</string>
+    <string name="btn_pause_run">PAUSE RUN</string>
+    <string name="btn_resume_run">RESUME RUN</string>
+    <string name="btn_finish_workout">FINISH WORKOUT</string>
+
+    <string name="exercise_card_sets_label">Sets: %1$s</string>
+    <string name="exercise_card_reps_label">Reps: %1$s</string>
+    <string name="exercise_card_rpe_label">Target RPE: %1$s</string>
+    <string name="placeholder_weight">0.0</string>
+    <string name="cd_log_exercise_status">Log exercise completion status</string>
+
+    <string name="loading_onboarding_msg">Calibrating your hybrid macrocycle...</string>
+    <string name="btn_back">Back</string>
+    <string name="btn_next">Next</string>
+
+    <string name="step_one_title">Your Biometrics</string>
+    <string name="label_weight_card">WEIGHT</string>
+    <string name="label_height_card">HEIGHT</string>
+    <string name="label_age_card">AGE</string>
+    <string name="unit_kg">KG</string>
+    <string name="unit_cm">CM</string>
+    <string name="biological_sex_title">Biological Sex</string>
+
+    <string name="step_two_title">Athletic Profile</string>
+    <string name="step_two_subtitle">Define your focus and baseline athletic capacity.</string>
+    <string name="primary_goal_title">Primary Fitness Goal</string>
+    <string name="current_level_title">Current Experience Level</string>
+    <string name="label_injuries">Medical History / Injuries (Optional)</string>
+    <string name="placeholder_injuries">e.g. knee tendinitis, lower back pain</string>
+    <string name="injuries_subtext">Separate multiple conditions with commas</string>
+
+    <string name="step_three_title">Training Logistics</string>
+    <string name="step_three_subtitle">Calibrate plan execution periods and availability constraints.</string>
+    <string name="weekly_availability_title">Weekly Availability: %1$d days</string>
+    <string name="macrocycle_duration_title">Macrocycle Macro Duration</string>
+    <string name="weeks_pill_format">%1$d Weeks</string>
 </resources>

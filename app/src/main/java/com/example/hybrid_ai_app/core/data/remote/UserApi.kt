@@ -3,6 +3,7 @@ package com.example.hybrid_ai_app.core.data.remote
 import com.example.hybrid_ai_app.auth.data.remote.AuthResponse
 import com.example.hybrid_ai_app.auth.data.remote.LoginRequest
 import com.example.hybrid_ai_app.auth.data.remote.RegisterRequest
+import com.example.hybrid_ai_app.core.data.remote.dto.GoogleAuthRequest
 import com.example.hybrid_ai_app.core.data.remote.dto.UserProfileResponse
 import com.example.hybrid_ai_app.core.data.remote.dto.WorkoutRunDto // 🟢 Added import
 import com.example.hybrid_ai_app.core.data.remote.dto.WorkoutStrengthDto // 🟢 Added import
@@ -35,4 +36,7 @@ interface UserApi {
 
     @POST("api/workouts/run")
     suspend fun syncRunWorkout(@Body payload: WorkoutRunDto): Response<Unit>
+
+    @POST("auth/google")
+    suspend fun googleLogin(@Body request: GoogleAuthRequest): Response<AuthResponse>
 }

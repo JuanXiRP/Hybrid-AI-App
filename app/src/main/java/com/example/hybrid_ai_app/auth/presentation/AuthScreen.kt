@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -33,151 +34,168 @@ import androidx.compose.material.icons.filled.*
 @Composable
 fun AuthScreen(
     viewModel: AuthViewModel = hiltViewModel(),
-    onAuthSuccess: () -> Unit
+    onAuthSuccess: (hasCompletedOnboarding: Boolean) -> Unit // 🟢 Signature updated
 ) {
     val scrollState = rememberScrollState()
-
-    // Required for Google Sign-In UI components
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val credentialManager = remember { CredentialManager.create(context) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 24.dp)
-            .verticalScroll(scrollState),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(60.dp))
-
-        // --- APP LOGO ---
-        Image(
-            painter = painterResource(id = R.drawable.logo_hybrid_ai), // Placeholder
-            contentDescription = "App Logo",
-            modifier = Modifier.size(200.dp)
-        )
-
-
-        Spacer(modifier = Modifier.height(48.dp))
-
-        // --- AUTH MODE SELECTOR (Pill Toggle) ---
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            shape = CircleShape
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(horizontal = 24.dp)
+                .verticalScroll(scrollState),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(modifier = Modifier.padding(4.dp)) {
-                ModeButton(
-                    text = "Sign In",
-                    isSelected = viewModel.isLoginMode,
-                    modifier = Modifier.weight(1f),
-                    onClick = { if (!viewModel.isLoginMode) viewModel.toggleAuthMode() }
-                )
-                ModeButton(
-                    text = "Sign Up",
-                    isSelected = !viewModel.isLoginMode,
-                    modifier = Modifier.weight(1f),
-                    onClick = { if (viewModel.isLoginMode) viewModel.toggleAuthMode() }
-                )
-            }
-        }
+            Spacer(modifier = Modifier.height(60.dp))
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Image(
+                painter = painterResource(id = R.drawable.logo_hybrid_ai),
+                contentDescription = stringResource(id = R.string.cd_app_logo),
+                modifier = Modifier.size(200.dp)
+            )
 
-        // --- INPUT FIELDS ---
-        OutlinedTextField(
-            value = viewModel.email, // 🟢 Conectado al estado
-            onValueChange = { viewModel.updateEmail(it) }, // 🟢 Conectado a la acción
-            label = { Text("Email") },
-            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.small,
-            enabled = !viewModel.isLoading
-        )
+            Spacer(modifier = Modifier.height(48.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = viewModel.password, // 🟢 Conectado al estado
-            onValueChange = { viewModel.updatePassword(it) }, // 🟢 Conectado a la acción
-            label = { Text("Password") },
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.small,
-            enabled = !viewModel.isLoading
-        )
-
-        if (viewModel.isLoginMode) {
-            TextButton(
-                onClick = { /* TODO: Forgot Password Flow */ },
-                modifier = Modifier.align(Alignment.End)
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = CircleShape
             ) {
-                Text("Forgot password?", color = MaterialTheme.colorScheme.primary)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // --- MAIN ACTION BUTTON ---
-        Button(
-            onClick = {
-                // 🟢 Ahora ejecuta la lógica, guarda el token y luego navega
-                viewModel.authenticate(
-                    onSuccess = { onAuthSuccess() },
-                    onError = { errorMsg ->
-                        // Aquí podrías mostrar un Snackbar o un Toast con el errorMsg
-                        Log.e("Auth", "Error de Login: $errorMsg")
-                    }
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = MaterialTheme.shapes.extraLarge,
-            enabled = !viewModel.isLoading
-        ) {
-            if (viewModel.isLoading) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
-            } else {
-                Text(
-                    text = if (viewModel.isLoginMode) "Sign In" else "Create Account",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // --- MODERN GOOGLE SIGN IN BUTTON ---
-        OutlinedButton(
-            onClick = {
-                coroutineScope.launch {
-                    handleGoogleSignIn(context, credentialManager) { googleToken ->
-                        Log.d("AuthScreen", "Google Token ready for backend: $googleToken")
-                        // TODO: viewModel.loginWithGoogle(googleToken)
-                        onAuthSuccess()
-                    }
+                Row(modifier = Modifier.padding(4.dp)) {
+                    ModeButton(
+                        text = stringResource(id = R.string.btn_sign_in_mode),
+                        isSelected = viewModel.isLoginMode,
+                        modifier = Modifier.weight(1f),
+                        onClick = { if (!viewModel.isLoginMode) viewModel.toggleAuthMode() }
+                    )
+                    ModeButton(
+                        text = stringResource(id = R.string.btn_sign_up_mode),
+                        isSelected = !viewModel.isLoginMode,
+                        modifier = Modifier.weight(1f),
+                        onClick = { if (viewModel.isLoginMode) viewModel.toggleAuthMode() }
+                    )
                 }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = MaterialTheme.shapes.extraLarge,
-            border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // TODO: Add Google vector icon here
-                Text("Continue with Google", color = MaterialTheme.colorScheme.onBackground)
             }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            OutlinedTextField(
+                value = viewModel.email,
+                onValueChange = { viewModel.updateEmail(it) },
+                label = { Text(text = stringResource(id = R.string.label_email)) },
+                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.small,
+                enabled = !viewModel.isLoading
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = viewModel.password,
+                onValueChange = { viewModel.updatePassword(it) },
+                label = { Text(text = stringResource(id = R.string.label_password)) },
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.small,
+                enabled = !viewModel.isLoading
+            )
+
+            if (viewModel.isLoginMode) {
+                TextButton(
+                    onClick = { /* TODO: Forgot Password Flow */ },
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text(text = stringResource(id = R.string.btn_forgot_password), color = MaterialTheme.colorScheme.primary)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // --- STANDARD LOGIN / REGISTER BUTTON ---
+            Button(
+                onClick = {
+                    viewModel.authenticate(
+                        onSuccess = { hasCompletedOnboarding ->
+                            onAuthSuccess(hasCompletedOnboarding)
+                        },
+                        onError = { errorMsg ->
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(errorMsg)
+                            }
+                        }
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = MaterialTheme.shapes.extraLarge,
+                enabled = !viewModel.isLoading
+            ) {
+                if (viewModel.isLoading) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
+                } else {
+                    Text(
+                        text = if (viewModel.isLoginMode) stringResource(id = R.string.btn_sign_in_mode) else stringResource(id = R.string.btn_create_account),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // --- GOOGLE SIGN IN BUTTON WITH DYNAMIC TESTING FLOWS ---
+            OutlinedButton(
+                onClick = {
+                    coroutineScope.launch {
+                        handleGoogleSignIn(
+                            context = context,
+                            credentialManager = credentialManager,
+                            onTokenReceived = { googleToken ->
+                                // If Sign In is active, mock existing user (true). If Sign Up is active, mock new user (false).
+                                viewModel.bypassGoogleAuthForTesting(
+                                    isExistingUser = viewModel.isLoginMode,
+                                    onSuccess = { hasCompletedOnboarding -> onAuthSuccess(hasCompletedOnboarding) }
+                                )
+                            },
+                            onAuthFailed = {
+                                viewModel.bypassGoogleAuthForTesting(
+                                    isExistingUser = viewModel.isLoginMode,
+                                    onSuccess = { hasCompletedOnboarding -> onAuthSuccess(hasCompletedOnboarding) }
+                                )
+                            }
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = MaterialTheme.shapes.extraLarge,
+                border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp),
+                enabled = !viewModel.isLoading
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = stringResource(id = R.string.btn_continue_google), color = MaterialTheme.colorScheme.onBackground)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
         }
 
-        Spacer(modifier = Modifier.height(40.dp))
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp)
+        )
     }
 }
+
 
 @Composable
 fun ModeButton(
@@ -196,22 +214,22 @@ fun ModeButton(
         elevation = if (isSelected) ButtonDefaults.buttonElevation(defaultElevation = 2.dp) else null,
         shape = CircleShape
     ) {
-        Text(text, fontSize = 14.sp)
+        Text(text = text, fontSize = 14.sp)
     }
 }
 
-// Handles the native Google Bottom Sheet UI and token extraction
 suspend fun handleGoogleSignIn(
     context: Context,
     credentialManager: CredentialManager,
-    onTokenReceived: (String) -> Unit
+    onTokenReceived: (String) -> Unit,
+    onAuthFailed: () -> Unit // 🟢 This parameter definition is what was missing
 ) {
-    val webClientId = "543093378504-kfijjptjpfahl605fum5i5gp99kjqlcc.apps.googleusercontent.com"
+    val webClientId = "394206999877-2s58p8hbo10res6ea7h7ggue3udnju56.apps.googleusercontent.com"
 
     val googleIdOption = GetGoogleIdOption.Builder()
-        .setFilterByAuthorizedAccounts(false) // Allows user to pick any account
+        .setFilterByAuthorizedAccounts(false)
         .setServerClientId(webClientId)
-        .setAutoSelectEnabled(true)
+        .setAutoSelectEnabled(false)
         .build()
 
     val request = GetCredentialRequest.Builder()
@@ -226,13 +244,13 @@ suspend fun handleGoogleSignIn(
 
         val credential = result.credential
         if (credential is GoogleIdTokenCredential) {
-            // Success: send this token to the backend
-            val idToken = credential.idToken
-            onTokenReceived(idToken)
+            onTokenReceived(credential.idToken)
         } else {
             Log.e("GoogleAuth", "Unexpected credential type")
+            onAuthFailed()
         }
-    } catch (e: GetCredentialException) {
+    } catch (e: Exception) {
         Log.e("GoogleAuth", "Sign In failed: ${e.message}")
+        onAuthFailed() // This triggers the bypass navigation
     }
 }

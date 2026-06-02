@@ -26,12 +26,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.hybrid_ai_app.R
-import com.example.hybrid_ai_app.core.util.NotificationHelper // 🟢 Import the new helper
+import com.example.hybrid_ai_app.core.util.NotificationHelper
 
 @Composable
 fun PaywallScreen(
@@ -41,10 +42,9 @@ fun PaywallScreen(
     val upgradeStatus by viewModel.upgradeStatus.collectAsState()
     val context = LocalContext.current
 
-    // 🟢 Instantiate the Notification Helper
+    // Instantiate the Notification Helper
     val notificationHelper = remember { NotificationHelper(context) }
 
-    // 🟢 Handle Android 13+ Notification Permission
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -58,7 +58,7 @@ fun PaywallScreen(
         }
     }
 
-    // 🟢 Observe Purchase State to trigger Notification and Navigate
+    // Observe Purchase State to trigger Notification and Navigate
     LaunchedEffect(upgradeStatus) {
         if (upgradeStatus is UpgradeStatus.Success) {
             notificationHelper.showPremiumWelcomeNotification()
@@ -80,9 +80,8 @@ fun PaywallScreen(
                 .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
         ) {
             Image(
-                // Use your actual image resource here
                 painter = painterResource(id = R.drawable.paywall_bg_image),
-                contentDescription = "Pro Background",
+                contentDescription = stringResource(id = R.string.cd_profile_settings),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
@@ -99,11 +98,11 @@ fun PaywallScreen(
                     .padding(16.dp)
             ) {
                 Surface(
-                    color = Color(0xFF1E5641).copy(alpha = 0.8f), // Deep green from your screenshot
+                    color = Color(0xFF1E5641).copy(alpha = 0.8f),
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Text(
-                        text = "EXCLUSIVE ACCESS",
+                        text = stringResource(id = R.string.exclusive_access),
                         color = Color.White,
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
@@ -111,7 +110,7 @@ fun PaywallScreen(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Hybrid.AI PRO",
+                    text = stringResource(id = R.string.paywall_title),
                     color = Color.White,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Black
@@ -125,18 +124,18 @@ fun PaywallScreen(
         Column(modifier = Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             FeatureCard(
                 icon = Icons.Default.AutoAwesome,
-                title = "Unlimited AI Plan Generations",
-                description = "Adaptive routines that evolve with your biometrics and performance."
+                title = stringResource(id = R.string.feature_ai_generations_title),
+                description = stringResource(id = R.string.feature_ai_generations_desc)
             )
             FeatureCard(
-                icon = Icons.Default.Email, // Replace with a Chat icon if available
-                title = "Real-time Chat with Gemini Coach",
-                description = "Instant advice on form and recovery powered by Gemini intelligence."
+                icon = Icons.Default.Email,
+                title = stringResource(id = R.string.feature_coach_title),
+                description = stringResource(id = R.string.feature_coach_desc)
             )
             FeatureCard(
-                icon = Icons.Default.Star, // Replace with an Analytics/Chart icon
-                title = "Advanced Progress Analytics",
-                description = "Visualizations of muscle fatigue, VO2 max, and power output."
+                icon = Icons.Default.Star,
+                title = stringResource(id = R.string.feature_analytics_title),
+                description = stringResource(id = R.string.feature_analytics_desc)
             )
         }
 
@@ -150,13 +149,13 @@ fun PaywallScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "7 DAYS FREE, THEN $14.99/MONTH",
+                text = stringResource(id = R.string.pricing_label),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF4A7C59) // Match your green theme
+                color = Color(0xFF4A7C59)
             )
             Text(
-                text = "Cancel anytime in your app store settings.",
+                text = stringResource(id = R.string.pricing_sub_label),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
@@ -173,12 +172,12 @@ fun PaywallScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF165239)) // Dark green
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF165239))
             ) {
                 if (upgradeStatus is UpgradeStatus.Loading) {
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                 } else {
-                    Text("Unlock Premium - Start 7-Day Free Trial", fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(id = R.string.btn_unlock_premium), fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.weight(1f))
                     Icon(Icons.Default.ArrowForward, contentDescription = null)
                 }
@@ -187,7 +186,7 @@ fun PaywallScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             TextButton(onClick = { /* Implement Restore Purchases logic using BillingManager */ }) {
-                Text("Restore Purchase", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = stringResource(id = R.string.btn_restore_purchase), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -208,7 +207,7 @@ fun FeatureCard(icon: ImageVector, title: String, description: String) {
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFB5E4CA).copy(alpha = 0.5f)), // Light green tint
+                    .background(Color(0xFFB5E4CA).copy(alpha = 0.5f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(imageVector = icon, contentDescription = null, tint = Color(0xFF165239))

@@ -16,7 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val api: UserApi,
-    private val preferencesManager: PreferencesManager // 🟢 Hilt inyecta nuestro gestor de DataStore
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     var isLoginMode by mutableStateOf(true)
@@ -38,8 +38,7 @@ class AuthViewModel @Inject constructor(
     fun updateEmail(newEmail: String) { email = newEmail }
     fun updatePassword(newPassword: String) { password = newPassword }
 
-    // Función que llama a tu backend de Node.js
-    fun authenticate(onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun authenticate(onSuccess: (hasCompletedOnboarding: Boolean) -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             if (email.isBlank() || password.isBlank()) {
                 onError("Please fill in all fields")
@@ -48,28 +47,27 @@ class AuthViewModel @Inject constructor(
 
             isLoading = true
             try {
-                // 1. Call the API based on the mode
                 val response = if (isLoginMode) {
                     api.login(LoginRequest(email = email, password = password))
                 } else {
-                    // Extract a dummy name from the email for the register request
                     val name = email.substringBefore("@").replaceFirstChar { it.uppercase() }
                     api.register(RegisterRequest(name = name, email = email, password = password))
                 }
 
-                // 2. Handle the response
                 if (response.isSuccessful && response.body()?.success == true) {
                     val realToken = response.body()?.token
+
+                    // Extract onboarding status from backend response payload if available
+                    val hasCompletedOnboarding = response.body()?.hasCompletedOnboarding ?: false
+
                     if (!realToken.isNullOrEmpty()) {
-                        // 🟢 Save the token to DataStore!
                         preferencesManager.saveToken(realToken)
-                        onSuccess()
+                        // New registrations always go to onboarding, logins depend on backend profile status
+                        onSuccess(if (isLoginMode) hasCompletedOnboarding else false)
                     } else {
                         onError("Server didn't return a token")
                     }
                 } else {
-                    // Try to parse the backend error message (e.g., "User already exists")
-                    val errorBody = response.errorBody()?.string()
                     onError("Authentication failed: ${response.code()}")
                 }
 
@@ -78,6 +76,13 @@ class AuthViewModel @Inject constructor(
             } finally {
                 isLoading = false
             }
+        }
+    }
+
+    fun bypassGoogleAuthForTesting(isExistingUser: Boolean, onSuccess: (hasCompletedOnboarding: Boolean) -> Unit) {
+        viewModelScope.launch {
+            preferencesManager.saveToken("mock_jwt_token_for_testing")
+            onSuccess(isExistingUser)
         }
     }
 }

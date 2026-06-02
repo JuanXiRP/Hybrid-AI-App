@@ -15,10 +15,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.hybrid_ai_app.R
 import com.example.hybrid_ai_app.home.presentation.components.HybridTopAppBar
 import com.example.hybrid_ai_app.navigation.Screen
 
@@ -26,7 +28,7 @@ data class LoggedExerciseMetric(
     val name: String,
     val sets: String,
     val reps: String,
-    val weight: String, // e.g., "80.5"
+    val weight: String,
     val rpe: String
 )
 
@@ -38,7 +40,7 @@ data class HistoryItem(
     val title: String,
     val isCardio: Boolean,
     val summary: String,
-    val loggedMetrics: List<LoggedExerciseMetric> = emptyList() // Added payload
+    val loggedMetrics: List<LoggedExerciseMetric> = emptyList()
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,7 +58,7 @@ fun HistoryScreen(
     Scaffold(
         topBar = {
             HybridTopAppBar(
-                title = "PERFORMANCE HISTORY",
+                title = stringResource(id = R.string.history_title),
                 profilePicPath = profilePicPath,
                 onProfileClick = { navController.navigate(Screen.Settings.route) }
             )
@@ -80,7 +82,7 @@ fun HistoryScreen(
                 }
                 is HistoryUiState.Empty -> {
                     Text(
-                        text = "No workouts logged yet.\nComplete sessions on the Home tab to build history.",
+                        text = stringResource(id = R.string.history_empty_msg),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.align(Alignment.Center),
@@ -110,8 +112,8 @@ fun HistoryScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.Center
                                 ) {
-                                    Text("Analytics & Charts", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                    Text("Available in future updates", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(text = stringResource(id = R.string.analytics_charts_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                    Text(text = stringResource(id = R.string.future_updates_msg), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }
@@ -119,7 +121,7 @@ fun HistoryScreen(
                         items(state.items, key = { it.logId }) { item ->
                             HistoryCard(
                                 item = item,
-                                onClick = { selectedHistoryItem = item } // 🟢 Trigger bottom sheet
+                                onClick = { selectedHistoryItem = item }
                             )
                         }
                     }
@@ -127,7 +129,6 @@ fun HistoryScreen(
             }
         }
 
-        // 🟢 Detailed Performance Sheet
         if (selectedHistoryItem != null) {
             ModalBottomSheet(
                 onDismissRequest = { selectedHistoryItem = null },
@@ -146,7 +147,7 @@ fun HistoryCard(item: HistoryItem, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }, // 🟢 Make card clickable
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = CardDefaults.outlinedCardBorder(),
         shape = RoundedCornerShape(16.dp)
@@ -191,7 +192,7 @@ fun HistoryCard(item: HistoryItem, onClick: () -> Unit) {
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = "W${item.weekNumber} · D${item.dayNumber}",
+                        text = stringResource(id = R.string.timeline_week_day_indicator, item.weekNumber, item.dayNumber),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -213,7 +214,6 @@ fun HistoryCard(item: HistoryItem, onClick: () -> Unit) {
     }
 }
 
-// 🟢 NEW: Bottom Sheet Content to display actual lifted weights/paces
 @Composable
 fun HistoryDetailSheetContent(item: HistoryItem) {
     Column(
@@ -223,7 +223,7 @@ fun HistoryDetailSheetContent(item: HistoryItem) {
             .padding(bottom = 32.dp)
     ) {
         Text(
-            text = "Performance Log",
+            text = stringResource(id = R.string.performance_log_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.ExtraBold,
             modifier = Modifier.padding(bottom = 16.dp)
@@ -232,7 +232,7 @@ fun HistoryDetailSheetContent(item: HistoryItem) {
         if (item.loggedMetrics.isEmpty()) {
             Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                 Text(
-                    text = "No detailed metrics recorded for this session.",
+                    text = stringResource(id = R.string.no_metrics_recorded),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -252,13 +252,12 @@ fun HistoryDetailSheetContent(item: HistoryItem) {
                                 Text(text = metric.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "${metric.sets} Sets × ${metric.reps} Reps",
+                                    text = stringResource(id = R.string.exercise_metrics_label, metric.sets, metric.reps),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
 
-                            // Highlighted Actual Weight
                             if (metric.weight.isNotBlank()) {
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
@@ -266,7 +265,7 @@ fun HistoryDetailSheetContent(item: HistoryItem) {
                                     modifier = Modifier.padding(start = 8.dp)
                                 ) {
                                     Text(
-                                        text = "${metric.weight} kg",
+                                        text = stringResource(id = R.string.metric_weight_suffix, metric.weight),
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.Black,
                                         color = MaterialTheme.colorScheme.onPrimary,
