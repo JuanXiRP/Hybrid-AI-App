@@ -32,7 +32,7 @@ private val LightColorScheme = lightColorScheme(
     outline = OutlineBorder
 )
 
-// Premium Dark Mode mapping (Sleek, gym-focused aesthetic)
+// Premium Dark Mode mapping
 private val DarkColorScheme = darkColorScheme(
     primary = PrimaryBrand, // Keeps brand identity
     onPrimary = Color.Black,

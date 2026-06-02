@@ -12,13 +12,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// Data mappers keeping infrastructure separate from domain business rules.
-// Converts the raw network DTO into a pure business entity.
 fun WorkoutPlanDto.toDomain(): ActivePlan {
 
-    // Note: For a strictly modern stack, consider migrating to 'java.time.Instant' (API 26+)
-    // or 'kotlinx-datetime' instead of 'SimpleDateFormat' and 'Date'.
-    // This current implementation remains solid and backward-compatible.
     val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
 
     val parsedDate = try {
@@ -28,11 +23,10 @@ fun WorkoutPlanDto.toDomain(): ActivePlan {
             Date()
         }
     } catch (e: Exception) {
-        Date() // Fallback to current date on parsing failure
+        Date()
     }
 
     return ActivePlan(
-        // Safely handles potential nulls if the DTO id was defined as nullable
         id = this.id ?: "",
         startDate = parsedDate,
         durationWeeks = this.durationWeeks,

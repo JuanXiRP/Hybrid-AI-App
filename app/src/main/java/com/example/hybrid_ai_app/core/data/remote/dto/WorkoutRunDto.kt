@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class WorkoutRunDto(
     val userId: String,
     val distance: Double,
-    val duration: Int, // in seconds
+    val duration: Int,
     val targetPace: Int,
     val actualPace: Int,
     val elevationGain: Double = 0.0,

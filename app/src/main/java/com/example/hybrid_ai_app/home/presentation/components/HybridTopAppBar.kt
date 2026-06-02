@@ -25,7 +25,7 @@ import com.example.hybrid_ai_app.R
 fun HybridTopAppBar(
     title: String,
     label: String? = null,
-    profilePicPath: String? = null, // 🟢 New parameter to receive the saved local image path
+    profilePicPath: String? = null,
     onProfileClick: () -> Unit
 ) {
     Column(
@@ -57,7 +57,6 @@ fun HybridTopAppBar(
                 )
             }
 
-            // 🟢 Profile Avatar using Coil. Falls back to default icon if path is null or invalid
             AsyncImage(
                 model = profilePicPath,
                 fallback = rememberVectorPainter(Icons.Default.Person),

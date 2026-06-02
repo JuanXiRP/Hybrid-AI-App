@@ -34,7 +34,7 @@ class HistoryViewModel @Inject constructor(
             return@combine HistoryUiState.Empty
         }
 
-        // Map database entities to UI presentation models
+        // Map database entities
         val historyItems = logs
             .sortedByDescending { it.timestamp }
             .map { log ->
@@ -63,7 +63,7 @@ class HistoryViewModel @Inject constructor(
 
                 HistoryItem(
                     logId = log.id,
-                    formattedDate = formatDate(log.timestamp), // This works because log is WorkoutLogEntity
+                    formattedDate = formatDate(log.timestamp),
                     weekNumber = log.weekNumber,
                     dayNumber = log.dayIndex + 1,
                     title = title,
@@ -85,7 +85,7 @@ class HistoryViewModel @Inject constructor(
             initialValue = HistoryUiState.Loading
         )
 
-    // Helper function to format Unix timestamps into human-readable strings
+    // Helper function to format Unix timestamps
     private fun formatDate(timestamp: Long): String {
         val sdf = SimpleDateFormat("MMM dd, yyyy - HH:mm", Locale.getDefault())
         return sdf.format(Date(timestamp))

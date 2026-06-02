@@ -168,7 +168,6 @@ fun WorkoutsScreen(
                             currentWeekData?.days?.let { dayList ->
                                 itemsIndexed(dayList) { index, day ->
 
-                                    // 🟢 1. NUEVA LÓGICA: Evaluación flexible (Acceso Aleatorio)
                                     val status = when {
                                         day.exercises.isEmpty() -> WorkoutStatus.REST
                                         selectedWeek < state.currentWeekNumber -> WorkoutStatus.COMPLETED
@@ -212,8 +211,8 @@ fun WorkoutsScreen(
                 sheetState = sheetState,
                 // Reduced rounding for better space utilization and aesthetic
                 shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-                containerColor = MaterialTheme.colorScheme.surface, // Clean separation from background
-                modifier = Modifier.fillMaxHeight(0.9f) // Allow it to occupy more screen height
+                containerColor = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.fillMaxHeight(0.9f)
             ) {
                 WorkoutDetailSheetContent(day = activeWorkoutDetailSheet!!)
             }
@@ -234,10 +233,9 @@ fun TimelineItemRow(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 🟢 Left Node Status Indicator Line (NOW INTERACTIVE)
         Box(
             modifier = Modifier
-                .size(48.dp) // Slightly larger touch target
+                .size(48.dp)
                 .clip(CircleShape)
                 .background(
                     when (status) {
@@ -247,7 +245,6 @@ fun TimelineItemRow(
                         WorkoutStatus.REST -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                     }
                 )
-                // 🟢 Added click listener specifically to the node indicator
                 .clickable(
                     enabled = status == WorkoutStatus.ACTIVE || status == WorkoutStatus.COMPLETED
                 ) {
@@ -263,13 +260,12 @@ fun TimelineItemRow(
             }
         }
 
-        // Right Card Container (Detail view trigger)
         val isCardio = day.workoutType == "cardio"
 
         Card(
             modifier = Modifier
                 .weight(1f)
-                .clickable { onItemClick() }, // 🟢 The card purely opens the detail sheet now
+                .clickable { onItemClick() },
             colors = CardDefaults.cardColors(
                 containerColor = when (status) {
                     WorkoutStatus.COMPLETED -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
@@ -301,7 +297,6 @@ fun TimelineItemRow(
                         fontWeight = FontWeight.Bold,
                         color = if (status == WorkoutStatus.LOCKED) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else Color.Unspecified
                     )
-                    // Simple, clean exercise count or rest day message
                     Text(
                         text = if (day.exercises.isEmpty()) stringResource(id = R.string.rest_day_label) else stringResource(id = R.string.exercises_count_suffix, day.exercises.size),
                         style = MaterialTheme.typography.bodySmall,
@@ -362,7 +357,6 @@ fun WorkoutDetailSheetContent(day: DayDto) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 items(day.exercises) { exercise ->
-                    // Redesigned exercise card for superior legibility
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))

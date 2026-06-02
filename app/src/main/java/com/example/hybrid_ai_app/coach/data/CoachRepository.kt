@@ -7,7 +7,7 @@ import javax.inject.Singleton
 
 @Singleton
 class CoachRepository @Inject constructor(
-    private val api: CoachApi // Hilt provides the Retrofit instance
+    private val api: CoachApi
 ) {
     suspend fun sendMessage(message: String): String? {
         return withContext(Dispatchers.IO) {
@@ -16,7 +16,6 @@ class CoachRepository @Inject constructor(
                 val response = api.sendMessage(request)
 
                 if (response.isSuccessful) {
-                    // Extract the reply from the nested JSON structure
                     response.body()?.data?.reply
                 } else {
                     null

@@ -60,7 +60,6 @@ fun WorkoutExecutionScreen(
 
     val isCardio = currentDay?.workoutType == "cardio"
 
-    // State Hoisting: Reactive map tracking inputs matching index positions
     val weightInputs = remember { mutableStateMapOf<Int, String>() }
 
     // Tracking States

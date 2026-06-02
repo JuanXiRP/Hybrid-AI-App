@@ -10,5 +10,5 @@ data class WorkoutPlanEntity(
     val id: String = "active_plan",
     val durationWeeks: Int,
     val goal: String,
-    val weeks: List<WeekDto> // Room requires a TypeConverter to store this complex list
+    val weeks: List<WeekDto>
 )

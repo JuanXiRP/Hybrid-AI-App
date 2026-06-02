@@ -41,8 +41,8 @@ import com.example.hybrid_ai_app.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    navController: NavController, // Local bottom bar controller (for going back)
-    rootNavController: NavController, // Global controller (for Onboarding/Auth)
+    navController: NavController,
+    rootNavController: NavController,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val currentLanguage by viewModel.currentLanguage.collectAsState(initial = "en")
@@ -102,7 +102,6 @@ fun SettingsScreen(
                     var editGoal by remember(user) { mutableStateOf(user.goal ?: "") }
                     var editDays by remember(user) { mutableStateOf(user.daysAvailable?.toString() ?: "") }
 
-                    // Safely handle URI picking and persistent internal storage copy
                     val photoPickerLauncher = rememberLauncherForActivityResult(
                         contract = ActivityResultContracts.PickVisualMedia()
                     ) { uri: Uri? ->
@@ -117,7 +116,6 @@ fun SettingsScreen(
                                             input.copyTo(output)
                                         }
                                     }
-                                    // Save the absolute local file path to DataStore
                                     viewModel.updateProfilePicture(profileFile.absolutePath)
                                 } catch (e: Exception) {
                                     e.printStackTrace()
@@ -137,7 +135,6 @@ fun SettingsScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                // Profile Image rendering with Coil
                                 AsyncImage(
                                     model = localProfilePic ?: com.google.android.gms.location.places.R.drawable.powered_by_google_light,
                                     contentDescription = stringResource(id = R.string.account_details_title),
@@ -162,7 +159,6 @@ fun SettingsScreen(
 
                             Text(text = stringResource(id = R.string.personal_profile_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
-                            // Editable Display Name overrides the backend "admin" locally
                             OutlinedTextField(
                                 value = editName,
                                 onValueChange = { editName = it },

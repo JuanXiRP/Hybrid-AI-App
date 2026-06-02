@@ -23,6 +23,6 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindWorkoutPlanRepository(
-        workoutPlanRepositoryImpl: WorkoutPlanRepositoryImpl // <-- Fíjate en el 'Impl'
+        workoutPlanRepositoryImpl: WorkoutPlanRepositoryImpl
     ): WorkoutPlanRepository
 }

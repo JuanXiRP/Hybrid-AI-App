@@ -26,7 +26,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "hybrid_ai_app_db"
         )
-            .fallbackToDestructiveMigration() // Wipes database if version increments during development
+            .fallbackToDestructiveMigration()
             .build()
     }
 
@@ -36,7 +36,6 @@ object DatabaseModule {
         return database.workoutPlanDao()
     }
 
-    // 🟢 Teaches Hilt how to provision ProgressDao using the AppDatabase instance
     @Provides
     @Singleton
     fun provideProgressDao(database: AppDatabase): ProgressDao {

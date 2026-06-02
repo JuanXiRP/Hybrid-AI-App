@@ -7,5 +7,5 @@ import androidx.room.PrimaryKey
 data class UserProgressEntity(
     @PrimaryKey val userId: String,
     val currentWeekNumber: Int = 1,
-    val currentDayIndex: Int = 0 // 0 to 6 mapping Mon-Sun or sequential days
+    val currentDayIndex: Int = 0
 )

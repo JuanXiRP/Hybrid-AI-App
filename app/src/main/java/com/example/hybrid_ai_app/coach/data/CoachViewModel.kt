@@ -20,7 +20,6 @@ class CoachViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
-    // Reactive list of messages displayed in the LazyColumn
     val messages = mutableStateListOf<ChatMessage>()
     val localProfilePicPath = preferencesManager.userProfilePicFlow
 
@@ -32,7 +31,7 @@ class CoachViewModel @Inject constructor(
         messages.add(
             ChatMessage(
                 id = "welcome",
-                text = "¡Hola! Soy tu Gemini Coach. Tengo cargada tu rutina de hoy (Banca y Series de Umbral en Carrera). ¿Tienes alguna duda con los RPE o necesitas adaptar algún ejercicio?",
+                text = "¡Hola! Soy tu Asistente Personal de entrenamiento. ¿Tienes alguna duda con los RPE o necesitas adaptar algún ejercicio?",
                 sender = MessageSender.COACH
             )
         )
@@ -41,7 +40,7 @@ class CoachViewModel @Inject constructor(
     fun sendUserMessage(text: String) {
         if (text.isBlank()) return
 
-        // 1. Append user message to UI immediately
+        //Append user message to UI immediately
         val userMessage = ChatMessage(
             id = System.currentTimeMillis().toString(),
             text = text,
@@ -49,13 +48,12 @@ class CoachViewModel @Inject constructor(
         )
         messages.add(userMessage)
 
-        // 2. Trigger asynchronous call to backend proxy
+        //Trigger asynchronous call to backend proxy
         viewModelScope.launch {
             _isLoading.value = true
             val response = coachRepository.sendMessage(text)
             _isLoading.value = false
 
-            // The response is now directly a String?, so we check it and use it as is
             if (!response.isNullOrBlank()) {
                 messages.add(
                     ChatMessage(
@@ -68,7 +66,7 @@ class CoachViewModel @Inject constructor(
                 messages.add(
                     ChatMessage(
                         id = System.currentTimeMillis().toString(),
-                        text = "Lo siento, he tenido un problema de conexión con mi matriz de datos. ¿Podrías repetir eso?",
+                        text = "Lo siento, he tenido un problema de conexión. ¿Podrías repetir eso?",
                         sender = MessageSender.COACH
                     )
                 )

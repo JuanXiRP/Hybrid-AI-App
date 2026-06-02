@@ -5,10 +5,9 @@ import com.example.hybrid_ai_app.core.data.remote.dto.WeekDto // Adjust to your 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-// Room TypeConverters using kotlinx.serialization for optimal performance
 class WorkoutPlanConverters {
 
-    // Configures the JSON engine to ignore unknown keys, preventing crashes on schema migrations
+    // Configures the JSON
     private val json = Json { ignoreUnknownKeys = true }
 
     @TypeConverter
@@ -22,11 +21,10 @@ class WorkoutPlanConverters {
         return try {
             json.decodeFromString(value)
         } catch (e: Exception) {
-            emptyList() // Graceful degradation if local database is corrupted
+            emptyList()
         }
     }
 
-    // Add similar converters for List<String> (e.g., for injuries) or any other complex type
     @TypeConverter
     fun fromStringList(value: List<String>?): String {
         if (value == null) return "[]"

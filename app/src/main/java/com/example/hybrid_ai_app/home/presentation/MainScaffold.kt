@@ -25,7 +25,6 @@ import com.example.hybrid_ai_app.navigation.Screen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScaffold(
-    // 🟢 1. Inject rootNavController explicitly in the signature
     rootNavController: NavHostController,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
@@ -87,7 +86,6 @@ fun MainScaffold(
         }
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
-            // 🟢 2. Render MainNavGraph ONLY ONCE inside the content box, passing both controllers
             MainNavGraph(
                 navController = bottomNavController,
                 rootNavController = rootNavController

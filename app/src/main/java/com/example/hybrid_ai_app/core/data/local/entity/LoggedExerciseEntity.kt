@@ -7,6 +7,6 @@ data class LoggedExerciseEntity(
     val name: String,
     val sets: String,
     val reps: String,
-    val weight: String, // Holds the real-world performance input from the TextField
+    val weight: String,
     val rpe: String
 )

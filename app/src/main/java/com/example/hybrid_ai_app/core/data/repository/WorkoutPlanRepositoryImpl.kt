@@ -24,7 +24,7 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
     private val database: AppDatabase,
     private val planDao: WorkoutPlanDao,
     private val progressDao: ProgressDao,
-    private val api: UserApi // Injected Retrofit API for remote sync
+    private val api: UserApi
 ) : WorkoutPlanRepository {
 
     override fun getActivePlan(): Flow<WorkoutPlanEntity?> = planDao.getActivePlan()
@@ -47,10 +47,8 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
         val existingLog = weeklyLogs.find { it.dayIndex == dayIndex }
 
         if (existingLog != null) {
-            // Uncheck action: remove log
             progressDao.deleteWorkoutLog(existingLog)
         } else {
-            // Check action: insert synthetic log (without detailed metrics)
             val newLog = WorkoutLogEntity(
                 weekNumber = weekNumber,
                 dayIndex = dayIndex,
@@ -67,13 +65,13 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
         workoutType: String,
         dayName: String
     ) {
-        // 1. Persistencia local síncrona en Room (Inmediata para la UI)
+        //Persistencia local en Room
         database.withTransaction {
             progressDao.insertWorkoutLog(log)
             progressDao.insertOrUpdateProgress(nextProgress)
         }
 
-        // 2. Fire-and-forget remote synchronization (MongoDB)
+        // remote synchronization
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 if (workoutType == "strength") {
@@ -94,8 +92,8 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
                     )
 
                     val response = api.syncStrengthWorkout(strengthPayload)
-                    if (response.isSuccessful) android.util.Log.d("MONGO_SYNC", "✅ ÉXITO: Entreno de FUERZA guardado en MongoDB")
-                    else android.util.Log.e("MONGO_SYNC", "❌ ERROR: ${response.errorBody()?.string()}")
+                    if (response.isSuccessful) android.util.Log.d("MONGO_SYNC", " ÉXITO: Entreno de FUERZA guardado en MongoDB")
+                    else android.util.Log.e("MONGO_SYNC", " ERROR: ${response.errorBody()?.string()}")
 
                 } else if (workoutType == "cardio" || workoutType == "run") {
 
@@ -103,22 +101,22 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
                     val rpeValue = log.loggedExercises.firstOrNull()?.rpe?.toIntOrNull() ?: 8
 
                     val runPayload = WorkoutRunDto(
-                        userId = "dummy", // El backend lo ignora y usa req.user._id
-                        distance = 0.0,   // TODO: Extraer de WorkoutLocationManager
-                        duration = 0,     // TODO: Extraer de WorkoutLocationManager
+                        userId = "dummy",
+                        distance = 0.0,
+                        duration = 0,
                         targetPace = 0,
                         actualPace = 0,
                         elevationGain = 0.0,
                         rpe = rpeValue,
-                        gpsPath = emptyList() // TODO: Extraer de WorkoutLocationManager
+                        gpsPath = emptyList()
                     )
 
                     val response = api.syncRunWorkout(runPayload)
-                    if (response.isSuccessful) android.util.Log.d("MONGO_SYNC", "✅ ÉXITO: Entreno de CARRERA guardado en MongoDB")
-                    else android.util.Log.e("MONGO_SYNC", "❌ ERROR: ${response.errorBody()?.string()}")
+                    if (response.isSuccessful) android.util.Log.d("MONGO_SYNC", " ÉXITO: Entreno de CARRERA guardado en MongoDB")
+                    else android.util.Log.e("MONGO_SYNC", " ERROR: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
-                android.util.Log.e("MONGO_SYNC", "❌ ERROR de Red/Código", e)
+                android.util.Log.e("MONGO_SYNC", " ERROR de Red/Código", e)
             }
         }
     }

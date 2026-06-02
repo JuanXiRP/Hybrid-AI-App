@@ -55,7 +55,6 @@ class MainActivity : ComponentActivity() {
                 config.setLocale(locale)
                 config.setLayoutDirection(locale)
 
-                // Mutamos directamente el contexto base. Hilt seguirá recibiendo su ComponentActivity.
                 @Suppress("DEPRECATION")
                 context.resources.updateConfiguration(config, context.resources.displayMetrics)
                 config
@@ -70,7 +69,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            // 🟢 Solo inyectamos la configuración para que Compose redibuje, el LocalContext original se queda intacto.
+
             CompositionLocalProvider(LocalConfiguration provides updatedConfiguration) {
                 HybridTrainingTheme(darkTheme = isDarkMode) {
                     Surface(

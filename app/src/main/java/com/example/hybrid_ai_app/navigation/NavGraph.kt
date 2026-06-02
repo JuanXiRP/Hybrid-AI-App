@@ -41,7 +41,7 @@ sealed class Screen(val route: String) {
     object Paywall : Screen("paywall")
 }
 
-// 1. GRAFO RAÍZ (Controla la entrada a la app)
+//GRAFO RAÍZ
 @Composable
 fun RootNavGraph(navController: NavHostController,
                  startDestination: String = Screen.MainContainer.route) {
@@ -52,11 +52,10 @@ fun RootNavGraph(navController: NavHostController,
         composable(route = Screen.Auth.route) {
             AuthScreen(
                 onAuthSuccess = { hasCompletedOnboarding ->
-                    // Route dynamically based on the onboarding profile status flag
                     val targetRoute = if (hasCompletedOnboarding) {
-                        Screen.MainContainer.route // Bypasses onboarding straight to performance routines
+                        Screen.MainContainer.route
                     } else {
-                        Screen.Onboarding.route // Demands biometric calibration for new users
+                        Screen.Onboarding.route
                     }
 
                     navController.navigate(targetRoute) {
@@ -69,7 +68,6 @@ fun RootNavGraph(navController: NavHostController,
         composable(route = Screen.Onboarding.route) {
             OnboardingScreen(
                 onFinishOnboarding = {
-                    // Tras el onboarding, vamos al contenedor principal (MainScaffold)
                     navController.navigate(Screen.MainContainer.route) {
                         popUpTo(Screen.Onboarding.route) { inclusive = true }
                     }
@@ -78,11 +76,9 @@ fun RootNavGraph(navController: NavHostController,
         }
 
         composable(route = Screen.MainContainer.route) {
-            // Aquí cargamos la estructura con la barra inferior
             MainScaffold(rootNavController = navController)
         }
         composable(route = Screen.Paywall.route) {
-            // Asegúrate de importar PaywallScreen arriba si no lo está
             com.example.hybrid_ai_app.home.presentation.PaywallScreen(
                 navController = navController
             )
@@ -90,7 +86,6 @@ fun RootNavGraph(navController: NavHostController,
     }
 }
 
-// 2. GRAFO PRINCIPAL (Controla las pestañas y la navegación profunda)
 @Composable
 fun MainNavGraph(
     navController: NavHostController,
@@ -113,9 +108,8 @@ fun MainNavGraph(
             HistoryScreen(navController = navController)
         }
 
-        // Ruta dinámica para iniciar un entrenamiento
         composable(
-            route = Screen.WorkoutExecution.route, // "workout_execution/{weekNumber}/{dayIndex}"
+            route = Screen.WorkoutExecution.route,
             arguments = listOf(
                 navArgument("weekNumber") { type = NavType.IntType },
                 navArgument("dayIndex") { type = NavType.IntType }

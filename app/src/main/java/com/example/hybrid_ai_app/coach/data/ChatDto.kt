@@ -3,13 +3,13 @@ package com.example.hybrid_ai_app.coach.data
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-// Request payload matching { "message": "..." }
+// Request payload matching
 @Serializable
 data class ChatRequest(
     @SerialName("message") val message: String
 )
 
-// Response payload matching your Node.js response structure
+// Response payload matching your Node.js
 @Serializable
 data class ChatResponse(
     @SerialName("success") val success: Boolean,

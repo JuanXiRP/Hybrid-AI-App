@@ -10,7 +10,7 @@ data class LoginRequest(
     @SerialName("password") val password: String
 )
 
-// Request body for Register (You can send a dummy profile first, then update it in the Onboarding)
+// Request body for Register
 @Serializable
 data class RegisterRequest(
     @SerialName("name") val name: String,
@@ -27,7 +27,6 @@ data class RegisterRequest(
     @SerialName("planDuration") val planDuration: Int = 8
 )
 
-// The response your Node.js server sends back
 @Serializable
 data class AuthResponse(
     @SerialName("success") val success: Boolean,

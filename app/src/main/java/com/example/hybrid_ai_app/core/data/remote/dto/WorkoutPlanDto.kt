@@ -1,7 +1,7 @@
 package com.example.hybrid_ai_app.core.data.remote.dto
 
 import kotlinx.serialization.Serializable
-// Represents the root JSON structure returned by the AI and your backend
+// Represents the root JSON structure returned by the AI
 @Serializable
 data class WorkoutPlanDto(
     val durationWeeks: Int = 0,
