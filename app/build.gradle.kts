@@ -113,4 +113,10 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.5.0")
     // Google Play Billing
     implementation("com.android.billingclient:billing-ktx:6.2.0") // Or latest stable
+
+    //TESTING
+    testImplementation(libs.junit)
+    testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 }
