@@ -1,3 +1,14 @@
+import java.util.Properties
+
+// Load local.properties
+val properties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    properties.load(localPropertiesFile.inputStream())
+}
+// Get the token, fallback to empty string if not found
+val apiToken = properties.getProperty("API_TOKEN") ?: ""
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
