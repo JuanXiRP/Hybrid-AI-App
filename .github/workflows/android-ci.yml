@@ -24,13 +24,10 @@ jobs:
           cache: 'gradle'
 
       - name: Generate mock local.properties for CI
-        run: |
-          # Generate file with dummy values to satisfy the Manifest Merger
-          # This prevents the CI pipeline from failing due to missing local secrets
-          echo "googleApiKey=DUMMY_MAPS_KEY_FOR_CI" > local.properties
-          
-          # If your app relies on BASE_URL from local.properties, uncomment and set it:
-          # echo "BASE_URL=\"https://mock-backend.com\"" >> local.properties
+        run:
+            # Generate file with dummy values to satisfy the Manifest Merger
+            # The variable name MUST match the one read in build.gradle.kts
+            echo "API_TOKEN=DUMMY_MAPS_KEY_FOR_CI" > local.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
