@@ -5,6 +5,10 @@ on:
     branches: [ main, master ]
   pull_request:
 
+# Force Node.js 24 to prevent GitHub Actions deprecation warnings
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -16,9 +20,27 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: 'gradle' # Optimizes build time by caching dependencies
+
+      # Inject secrets into local.properties to prevent Manifest merger failures
+      - name: Inject API Keys and Secrets
+        env:
+          MAPS_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: |
+          echo "googleApiKey=$MAPS_KEY" >> local.properties
+          # If your app relies on BASE_URL from local.properties, uncomment and set it:
+          # echo "BASE_URL=\"https://your-backend-url.onrender.com\"" >> local.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest
+
+      # Upload HTML report artifact if tests fail for easier debugging
+      - name: Upload Test Reports
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: unit-test-reports
+          path: app/build/reports/tests/testDebugUnitTest/
