@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Blocks all cleartext (HTTP) traffic app-wide. Every network call must use HTTPS,
+    preventing MITM / protocol-downgrade attacks on untrusted networks.
+    Certificate pinning is enforced separately in OkHttp (NetworkModule).
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
