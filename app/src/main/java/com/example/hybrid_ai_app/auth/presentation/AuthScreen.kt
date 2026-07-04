@@ -24,6 +24,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.hybrid_ai_app.BuildConfig
 import com.example.hybrid_ai_app.R
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -229,7 +230,7 @@ suspend fun handleGoogleSignIn(
     onTokenReceived: (String) -> Unit,
     onAuthFailed: () -> Unit
 ) {
-    val webClientId = "394206999877-a7hjgm2ofls8k3dces9m4d5rl0u71fsn.apps.googleusercontent.com"
+    val webClientId = BuildConfig.WEB_CLIENT_ID
 
     val signInWithGoogleOption = GetSignInWithGoogleOption.Builder(webClientId)
         .build()
@@ -250,20 +251,20 @@ suspend fun handleGoogleSignIn(
             val googleIdCredential = GoogleIdTokenCredential.createFrom(credential.data)
             onTokenReceived(googleIdCredential.idToken)
         } else {
-            Log.e("GoogleAuth", "Tipo de credencial inesperado: ${credential.type}")
+            if (BuildConfig.DEBUG) Log.e("GoogleAuth", "Unexpected credential type: ${credential.type}")
             onAuthFailed()
         }
     } catch (e: GetCredentialCancellationException) {
-        Log.e("GoogleAuth", "Cancelado o cerrado por el usuario: ${e.message}")
+        if (BuildConfig.DEBUG) Log.e("GoogleAuth", "Cancelled by user: ${e.message}")
         onAuthFailed()
     } catch (e: NoCredentialException) {
-        Log.e("GoogleAuth", "No hay credenciales (revisa cuentas/SHA-1): ${e.message}")
+        if (BuildConfig.DEBUG) Log.e("GoogleAuth", "No credentials (check accounts/SHA-1): ${e.message}")
         onAuthFailed()
     } catch (e: GetCredentialException) {
-        Log.e("GoogleAuth", "Error de credencial [${e.type}]: ${e.message}")
+        if (BuildConfig.DEBUG) Log.e("GoogleAuth", "Credential error [${e.type}]: ${e.message}")
         onAuthFailed()
     } catch (e: Exception) {
-        Log.e("GoogleAuth", "Error inesperado: ${e.message}")
+        if (BuildConfig.DEBUG) Log.e("GoogleAuth", "Unexpected error: ${e.message}")
         onAuthFailed()
     }
 }

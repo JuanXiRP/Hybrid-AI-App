@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
 import com.example.hybrid_ai_app.core.data.PreferencesManager
+import com.example.hybrid_ai_app.core.util.JwtUtils
 import com.example.hybrid_ai_app.navigation.RootNavGraph
 import com.example.hybrid_ai_app.navigation.Screen
 import com.example.hybrid_ai_app.ui.theme.HybridTrainingTheme
@@ -40,7 +41,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val currentLanguage by preferencesManager.languageFlow.collectAsState(initial = "en")
-            val isDarkMode by preferencesManager.darkModeFlow.collectAsState(initial = true)
+            val isDarkMode by preferencesManager.darkModeFlow.collectAsState(initial = false)
 
             val navController = rememberNavController()
             var startDestination by remember { mutableStateOf<String?>(null) }
@@ -62,7 +63,9 @@ class MainActivity : ComponentActivity() {
 
             LaunchedEffect(Unit) {
                 val token = preferencesManager.getToken()
-                startDestination = if (token.isNullOrEmpty()) {
+                startDestination = if (token.isNullOrEmpty() || JwtUtils.isExpired(token)) {
+                    // Drop an expired/invalid token so we don't fire doomed requests
+                    if (!token.isNullOrEmpty()) preferencesManager.clearToken()
                     Screen.Auth.route
                 } else {
                     Screen.MainContainer.route

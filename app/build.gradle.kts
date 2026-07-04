@@ -8,6 +8,8 @@ if (localPropertiesFile.exists()) {
 }
 // Get the token, fallback to empty string if not found
 val apiToken = properties.getProperty("API_TOKEN") ?: ""
+// Google OAuth Web Client ID — kept out of source (git-ignored local.properties)
+val webClientId = properties.getProperty("WEB_CLIENT_ID") ?: ""
 
 plugins {
     alias(libs.plugins.android.application)
@@ -35,6 +37,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         manifestPlaceholders["googleApiKey"] = apiToken
+        // Exposed via BuildConfig instead of hardcoding in source
+        buildConfigField("String", "WEB_CLIENT_ID", "\"$webClientId\"")
     }
 
     buildTypes {
@@ -55,6 +59,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -87,6 +92,9 @@ dependencies {
 
     // DataStore (Preferences)
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    // Encrypted storage for the JWT (AES256, key backed by Android Keystore)
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     // Dagger Hilt (Dependency Injection)
     implementation("com.google.dagger:hilt-android:2.51.1")
