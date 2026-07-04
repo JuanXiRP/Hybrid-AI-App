@@ -22,7 +22,9 @@ data class OnboardingState(
     val fitnessLevel: String = "beginner",
     val daysAvailable: Int = 3,
     val planDuration: Int = 8,
-    val injuriesInput: String = ""
+    val injuriesInput: String = "",
+    // ISO yyyy-MM-dd; only relevant when sex == "female", blank otherwise
+    val lastPeriodDate: String = ""
 )
 
 @HiltViewModel
@@ -46,10 +48,18 @@ class OnboardingViewModel @Inject constructor(
     fun updateAge(value: String) { uiState = uiState.copy(age = value) }
     fun updateWeight(value: String) { uiState = uiState.copy(weight = value) }
     fun updateHeight(value: String) { uiState = uiState.copy(height = value) }
-    fun updateSex(value: String) { uiState = uiState.copy(sex = value) }
+    fun updateSex(value: String) {
+        // Clear the period date if the user is no longer female, so we never send stale data
+        uiState = if (value == "female") {
+            uiState.copy(sex = value)
+        } else {
+            uiState.copy(sex = value, lastPeriodDate = "")
+        }
+    }
     fun updateGoal(value: String) { uiState = uiState.copy(goal = value) }
     fun updateFitnessLevel(value: String) { uiState = uiState.copy(fitnessLevel = value) }
     fun updateInjuries(value: String) { uiState = uiState.copy(injuriesInput = value) }
+    fun updateLastPeriodDate(value: String) { uiState = uiState.copy(lastPeriodDate = value) }
     fun updateDaysAvailable(value: Int) { uiState = uiState.copy(daysAvailable = value) }
     fun updatePlanDuration(value: Int) { uiState = uiState.copy(planDuration = value) }
 
@@ -74,6 +84,9 @@ class OnboardingViewModel @Inject constructor(
                 }
                 if (uiState.sex.isBlank()) {
                     return "Please select a biological sex."
+                }
+                if (uiState.sex == "female" && uiState.lastPeriodDate.isBlank()) {
+                    return "Please enter the start date of your last period."
                 }
                 null // Passed validation for Step 1
             }
@@ -129,7 +142,9 @@ class OnboardingViewModel @Inject constructor(
                 fitnessLevel = uiState.fitnessLevel,
                 daysAvailable = uiState.daysAvailable,
                 planDuration = uiState.planDuration,
-                injuries = parsedInjuries
+                injuries = parsedInjuries,
+                lastPeriodDate = uiState.lastPeriodDate
+                    .takeIf { uiState.sex == "female" && it.isNotBlank() }
             )
 
             // 1. Save user profile data
