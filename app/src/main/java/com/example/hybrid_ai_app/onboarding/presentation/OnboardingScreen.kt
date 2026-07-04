@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,6 +13,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,6 +42,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.hybrid_ai_app.R
 import com.example.hybrid_ai_app.ui.theme.HybridTrainingTheme
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 
 @Composable
@@ -257,7 +263,7 @@ fun StepOneMetrics(state: OnboardingState, viewModel: OnboardingViewModel) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            listOf("male", "female", "other").forEach { item ->
+            listOf("male", "female").forEach { item ->
                 PillSelectionButton(
                     text = item.replaceFirstChar { it.uppercase() },
                     isSelected = state.sex == item,
@@ -265,6 +271,102 @@ fun StepOneMetrics(state: OnboardingState, viewModel: OnboardingViewModel) {
                     onClick = { viewModel.updateSex(item) }
                 )
             }
+        }
+
+        // Cycle-aware onboarding: only females provide their last period start date
+        if (state.sex == "female") {
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                "Last Period Start Date",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            PeriodDateField(
+                value = state.lastPeriodDate,
+                onDateSelected = { viewModel.updateLastPeriodDate(it) }
+            )
+            Text(
+                "Used to adapt your plan to your menstrual cycle",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PeriodDateField(
+    value: String,
+    onDateSelected: (String) -> Unit
+) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { showDialog = true },
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 18.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = value.ifBlank { "Select date" },
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (value.isBlank()) MaterialTheme.colorScheme.onSurfaceVariant
+                else MaterialTheme.colorScheme.onSurface,
+                fontWeight = if (value.isBlank()) FontWeight.Normal else FontWeight.SemiBold
+            )
+            Icon(
+                imageVector = Icons.Default.DateRange,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+
+    if (showDialog) {
+        val datePickerState = rememberDatePickerState(
+            selectableDates = object : SelectableDates {
+                // A period can't start in the future
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+                    utcTimeMillis <= System.currentTimeMillis()
+            }
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDialog = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val isoDate = Instant.ofEpochMilli(millis)
+                                .atZone(ZoneOffset.UTC)
+                                .toLocalDate()
+                                .format(DateTimeFormatter.ISO_LOCAL_DATE)
+                            onDateSelected(isoDate)
+                        }
+                        showDialog = false
+                    }
+                ) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) { Text("Cancel") }
+            },
+            shape = RoundedCornerShape(0.dp)
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 }
