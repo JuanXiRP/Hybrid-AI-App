@@ -46,7 +46,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val currentLanguage by viewModel.currentLanguage.collectAsState(initial = "en")
-    val isDarkMode by viewModel.isDarkMode.collectAsState(initial = true)
+    val isDarkMode by viewModel.isDarkMode.collectAsState(initial = false)
     val profileState by viewModel.profileState.collectAsState()
     val isUpdating by viewModel.isUpdating.collectAsState()
 
