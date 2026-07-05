@@ -3,10 +3,14 @@ package com.example.hybrid_ai_app.coach.presentation
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.hybrid_ai_app.coach.data.ChatMessageDto
 import com.example.hybrid_ai_app.coach.data.CoachRepository
+import com.example.hybrid_ai_app.coach.data.PlanContextFormatter
 import com.example.hybrid_ai_app.coach.data.presentation.ChatMessage
 import com.example.hybrid_ai_app.coach.data.presentation.MessageSender
 import com.example.hybrid_ai_app.core.data.PreferencesManager
+import com.example.hybrid_ai_app.core.data.local.entity.WorkoutPlanEntity
+import com.example.hybrid_ai_app.core.domain.repository.WorkoutPlanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class CoachViewModel @Inject constructor(
     private val coachRepository: CoachRepository,
+    private val workoutPlanRepository: WorkoutPlanRepository,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
@@ -26,7 +31,14 @@ class CoachViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    // Latest active plan, kept in sync so we can attach it as context on every message
+    private var activePlan: WorkoutPlanEntity? = null
+
     init {
+        viewModelScope.launch {
+            workoutPlanRepository.getActivePlan().collect { plan -> activePlan = plan }
+        }
+
         // Initialize UI with a friendly greeting
         messages.add(
             ChatMessage(
@@ -40,6 +52,16 @@ class CoachViewModel @Inject constructor(
     fun sendUserMessage(text: String) {
         if (text.isBlank()) return
 
+        // Snapshot the prior conversation BEFORE adding the new turn (skip the canned greeting)
+        val history = messages
+            .filter { it.id != "welcome" }
+            .map { msg ->
+                ChatMessageDto(
+                    role = if (msg.sender == MessageSender.USER) "user" else "model",
+                    content = msg.text
+                )
+            }
+
         //Append user message to UI immediately
         val userMessage = ChatMessage(
             id = System.currentTimeMillis().toString(),
@@ -51,7 +73,8 @@ class CoachViewModel @Inject constructor(
         //Trigger asynchronous call to backend proxy
         viewModelScope.launch {
             _isLoading.value = true
-            val response = coachRepository.sendMessage(text)
+            val planContext = PlanContextFormatter.format(activePlan)
+            val response = coachRepository.sendMessage(text, planContext, history)
             _isLoading.value = false
 
             if (!response.isNullOrBlank()) {

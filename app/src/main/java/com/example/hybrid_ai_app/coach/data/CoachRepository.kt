@@ -9,10 +9,18 @@ import javax.inject.Singleton
 class CoachRepository @Inject constructor(
     private val api: CoachApi
 ) {
-    suspend fun sendMessage(message: String): String? {
+    suspend fun sendMessage(
+        message: String,
+        planContext: String?,
+        history: List<ChatMessageDto>
+    ): String? {
         return withContext(Dispatchers.IO) {
             try {
-                val request = ChatRequest(message = message)
+                val request = ChatRequest(
+                    message = message,
+                    planContext = planContext,
+                    history = history
+                )
                 val response = api.sendMessage(request)
 
                 if (response.isSuccessful) {
