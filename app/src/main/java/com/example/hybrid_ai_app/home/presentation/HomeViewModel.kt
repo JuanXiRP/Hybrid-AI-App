@@ -2,6 +2,7 @@ package com.example.hybrid_ai_app.home.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.hybrid_ai_app.core.data.EntitlementManager
 import com.example.hybrid_ai_app.core.data.PreferencesManager
 import com.example.hybrid_ai_app.core.data.local.entity.LoggedExerciseEntity
 import com.example.hybrid_ai_app.core.data.local.entity.UserProgressEntity
@@ -9,6 +10,7 @@ import com.example.hybrid_ai_app.core.data.local.entity.WorkoutLogEntity
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutPlanEntity
 import com.example.hybrid_ai_app.core.data.remote.dto.WeekDto
 import com.example.hybrid_ai_app.core.data.remote.dto.DayDto
+import com.example.hybrid_ai_app.core.domain.model.PremiumRequiredReason
 import com.example.hybrid_ai_app.core.domain.repository.WorkoutPlanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -32,10 +34,22 @@ sealed interface HomeUiState {
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repository: WorkoutPlanRepository,
+    private val entitlementManager: EntitlementManager,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     val localProfilePicPath = preferencesManager.userProfilePicFlow
+
+    /** Drives the trial countdown banner. */
+    val entitlement = entitlementManager.entitlement
+
+    /** Non-null while the paywall bottom sheet should be shown. */
+    private val _premiumPrompt = MutableStateFlow<PremiumRequiredReason?>(null)
+    val premiumPrompt: StateFlow<PremiumRequiredReason?> = _premiumPrompt.asStateFlow()
+
+    fun dismissPremiumPrompt() {
+        _premiumPrompt.value = null
+    }
     val uiState: StateFlow<HomeUiState> = repository.getActivePlan()
         .flatMapLatest { plan ->
             if (plan == null) {
@@ -79,6 +93,15 @@ class HomeViewModel @Inject constructor(
         )
 
     fun logCurrentWorkoutAsCompleted(metrics: List<LoggedExerciseEntity> = emptyList()) {
+        // Read-only after the trial expires. The client must enforce this, not just the backend:
+        // logging writes to Room first and syncs in a detached, fire-and-forget coroutine, so a
+        // 402 would be swallowed into a log line and the user would believe the session saved.
+        // Shared by all three call sites (HomeScreen's two buttons and WorkoutExecutionScreen).
+        if (entitlementManager.entitlement.value.isReadOnly) {
+            _premiumPrompt.value = PremiumRequiredReason.TRIAL_EXPIRED
+            return
+        }
+
         val currentState = uiState.value
         if (currentState is HomeUiState.Success) {
             viewModelScope.launch {

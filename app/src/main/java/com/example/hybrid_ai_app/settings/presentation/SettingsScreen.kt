@@ -49,6 +49,7 @@ fun SettingsScreen(
     val isDarkMode by viewModel.isDarkMode.collectAsState(initial = false)
     val profileState by viewModel.profileState.collectAsState()
     val isUpdating by viewModel.isUpdating.collectAsState()
+    val entitlement by viewModel.entitlement.collectAsState()
 
     var showRegenerateDialog by remember { mutableStateOf(false) }
 
@@ -215,7 +216,9 @@ fun SettingsScreen(
                             }
                         }
                     }
-                    if (user.isPremium != true) {
+                    // Read the live EntitlementManager rather than the UserDto snapshot fetched in
+                    // init, which stays stale after a purchase.
+                    if (!entitlement.isPremium) {
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()

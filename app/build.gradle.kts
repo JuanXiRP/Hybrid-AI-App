@@ -28,7 +28,14 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.hybrid_ai_app"
+        // Deliberately different from `namespace` above: Play rejects the reserved "com.example"
+        // prefix, and this is also the {packageName} the Play Developer API uses to validate
+        // purchase receipts. The Kotlin package hierarchy stays com.example.hybrid_ai_app —
+        // renaming it would touch every file for no functional gain.
+        //
+        // Changing this invalidates the GCP OAuth *Android* client (Google Sign-In) and the
+        // Maps API key restriction, both of which are keyed on packageName + SHA-1.
+        applicationId = "com.hybridai.training"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -60,6 +67,15 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    testOptions {
+        unitTests {
+            // Stubbed android.jar methods (android.util.Log, etc.) throw by default, which fails
+            // any JVM test that walks a code path containing a log statement. Return defaults
+            // instead so tests exercise error branches rather than the mocking framework.
+            isReturnDefaultValues = true
+        }
     }
 }
 
@@ -132,8 +148,8 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
 
     implementation("io.coil-kt:coil-compose:2.5.0")
-    // Google Play Billing
-    implementation("com.android.billingclient:billing-ktx:6.2.0") // Or latest stable
+    // Google Play Billing (plain Java artifact — see the note in libs.versions.toml)
+    implementation(libs.billing)
 
     //TESTING
     testImplementation(libs.junit)

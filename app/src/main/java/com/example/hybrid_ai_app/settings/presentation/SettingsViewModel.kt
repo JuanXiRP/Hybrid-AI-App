@@ -2,6 +2,7 @@ package com.example.hybrid_ai_app.settings.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.hybrid_ai_app.core.data.EntitlementManager
 import com.example.hybrid_ai_app.core.data.PreferencesManager
 import com.example.hybrid_ai_app.core.data.remote.dto.UserDto
 import com.example.hybrid_ai_app.core.domain.repository.UserRepository
@@ -25,11 +26,19 @@ sealed interface ProfileState {
 class SettingsViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
     private val userRepository: UserRepository,
+    private val entitlementManager: EntitlementManager,
     private val workoutPlanRepository: WorkoutPlanRepository
 ) : ViewModel() {
 
     val currentLanguage = preferencesManager.languageFlow
     val isDarkMode = preferencesManager.darkModeFlow
+
+    /**
+     * Source of truth for the upgrade promo card. Previously the card read `UserDto.isPremium`,
+     * which is fetched once in init — so after buying, PaywallScreen popped back to a Settings
+     * screen still showing "Go Premium".
+     */
+    val entitlement = entitlementManager.entitlement
 
     val localUserName = preferencesManager.userNameFlow
     val localProfilePicPath = preferencesManager.userProfilePicFlow
@@ -106,6 +115,8 @@ class SettingsViewModel @Inject constructor(
     fun logout(onLogoutComplete: () -> Unit) {
         viewModelScope.launch {
             preferencesManager.clearToken()
+            // Entitlement is per-account; it must not leak into the next user's session.
+            entitlementManager.clear()
             onLogoutComplete()
         }
     }

@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.hybrid_ai_app.R
+import com.example.hybrid_ai_app.core.presentation.PremiumBottomSheet
+import com.example.hybrid_ai_app.core.presentation.TrialBanner
 import com.example.hybrid_ai_app.home.presentation.components.HybridTopAppBar
 import com.example.hybrid_ai_app.navigation.Screen
 
@@ -30,10 +32,25 @@ import com.example.hybrid_ai_app.navigation.Screen
 @Composable
 fun HomeScreen(
     navController: NavController,
+    rootNavController: NavController,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val profilePicPath by viewModel.localProfilePicPath.collectAsState(initial = null)
+    val entitlement by viewModel.entitlement.collectAsState()
+    val premiumPrompt by viewModel.premiumPrompt.collectAsState()
+
+    premiumPrompt?.let { reason ->
+        PremiumBottomSheet(
+            reason = reason,
+            chatLimit = entitlement.chatLimit,
+            onDismiss = viewModel::dismissPremiumPrompt,
+            onSeePlans = {
+                viewModel.dismissPremiumPrompt()
+                rootNavController.navigate(Screen.Paywall.route)
+            },
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -45,6 +62,19 @@ fun HomeScreen(
             )
         }
     ) { paddingValues ->
+      // Sits above every UiState branch so it is visible while the plan is still loading.
+      // Renders nothing for premium users.
+      Column(
+          modifier = Modifier
+              .fillMaxSize()
+              .padding(paddingValues)
+      ) {
+        TrialBanner(
+            entitlement = entitlement,
+            onUpgradeClick = { rootNavController.navigate(Screen.Paywall.route) },
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        )
+
         when (val state = uiState) {
             is HomeUiState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -76,9 +106,9 @@ fun HomeScreen(
                 val currentDay = state.currentDay
 
                 LazyColumn(
+                    // paddingValues is now applied by the wrapping Column.
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                     contentPadding = PaddingValues(bottom = 24.dp)
@@ -268,5 +298,6 @@ fun HomeScreen(
                 }
             }
         }
+      } // Column wrapping TrialBanner + content
     }
 }

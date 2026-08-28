@@ -4,9 +4,15 @@ import com.example.hybrid_ai_app.core.data.local.dao.WorkoutPlanDao
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutPlanEntity
 import com.example.hybrid_ai_app.core.data.remote.GeneratePlanRequest
 import com.example.hybrid_ai_app.core.data.remote.UserApi
+import com.example.hybrid_ai_app.core.data.remote.dto.EntitlementDto
 import com.example.hybrid_ai_app.core.data.remote.dto.UserDto
+import com.example.hybrid_ai_app.core.data.remote.dto.VerifyPurchaseRequest
+import com.example.hybrid_ai_app.core.data.remote.premiumRequiredOrNull
+import com.example.hybrid_ai_app.core.domain.model.Entitlement
+import com.example.hybrid_ai_app.core.domain.model.EntitlementStatus
 import com.example.hybrid_ai_app.core.domain.repository.UserRepository
 import com.example.hybrid_ai_app.onboarding.data.remote.dto.ProfileUpdateRequest
+import retrofit2.Response
 import javax.inject.Inject
 
 // Implementation of the repository pattern handling API responses safely
@@ -50,8 +56,13 @@ class UserRepositoryImpl @Inject constructor(
 
                 Result.success(Unit)
             } else {
-                // Handles 503/429 errors from backend (Gemini Rate Limit)
-                Result.failure(Exception("Error generating plan: HTTP ${response.code()}"))
+                // A 402 means the free plan quota is spent — surface it typed so the UI can open
+                // the paywall sheet rather than showing a generic failure.
+                Result.failure(
+                    response.premiumRequiredOrNull()
+                        // Handles 503/429 errors from backend (Gemini Rate Limit)
+                        ?: Exception("Error generating plan: HTTP ${response.code()}")
+                )
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -72,12 +83,55 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun upgradeToPremium(purchaseToken: String): Result<Boolean> {
+    override suspend fun verifyPurchase(
+        purchaseToken: String,
+        productId: String?
+    ): Result<Entitlement> {
         return try {
-            Result.success(true)
+            val response = api.verifyPurchase(VerifyPurchaseRequest(purchaseToken, productId))
+            val body = response.body()
 
+            if (response.isSuccessful && body != null) {
+                Result.success(body.data.toDomain())
+            } else {
+                Result.failure(Exception(response.verificationErrorMessage()))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
+    override suspend fun getEntitlement(): Result<Entitlement> {
+        return try {
+            val response = api.getEntitlement()
+            val body = response.body()
+
+            if (response.isSuccessful && body != null) {
+                Result.success(body.data.toDomain())
+            } else {
+                Result.failure(Exception("Error fetching entitlement: HTTP ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // The repository is the error boundary: a Retrofit Response never escapes this layer.
+    private fun Response<*>.verificationErrorMessage(): String = when (code()) {
+        409 -> "This subscription is already linked to another account."
+        400 -> "Google Play reports this subscription is not active."
+        503 -> "Purchases are temporarily unavailable. Please try again later."
+        else -> "Could not verify the purchase (HTTP ${code()})."
+    }
+
 }
+
+private fun EntitlementDto.toDomain(): Entitlement = Entitlement(
+    status = EntitlementStatus.fromWire(status),
+    trialDaysLeft = trialDaysLeft,
+    plansUsed = plans.used,
+    plansLimit = plans.limit,
+    chatUsed = chat.used,
+    chatLimit = chat.limit,
+    chatResetsAt = chat.resetsAt,
+)

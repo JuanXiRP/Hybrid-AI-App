@@ -21,12 +21,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
+import com.example.hybrid_ai_app.core.data.EntitlementManager
 import com.example.hybrid_ai_app.core.data.PreferencesManager
 import com.example.hybrid_ai_app.core.util.JwtUtils
 import com.example.hybrid_ai_app.navigation.RootNavGraph
 import com.example.hybrid_ai_app.navigation.Screen
 import com.example.hybrid_ai_app.ui.theme.HybridTrainingTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
 
@@ -35,6 +37,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var preferencesManager: PreferencesManager
+
+    @Inject
+    lateinit var entitlementManager: EntitlementManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,12 +68,21 @@ class MainActivity : ComponentActivity() {
 
             LaunchedEffect(Unit) {
                 val token = preferencesManager.getToken()
-                startDestination = if (token.isNullOrEmpty() || JwtUtils.isExpired(token)) {
+                if (token.isNullOrEmpty() || JwtUtils.isExpired(token)) {
                     // Drop an expired/invalid token so we don't fire doomed requests
                     if (!token.isNullOrEmpty()) preferencesManager.clearToken()
-                    Screen.Auth.route
+                    entitlementManager.clear()
+                    startDestination = Screen.Auth.route
                 } else {
-                    Screen.MainContainer.route
+                    // Seed from the local cache so the trial banner and chat counter do not flash
+                    // a wrong value on a cold start.
+                    entitlementManager.loadFromCache()
+                    startDestination = Screen.MainContainer.route
+
+                    // Reconcile with the server OFF the startup path: the OkHttp timeout is 90s,
+                    // and app launch must never wait on the network. A failed refresh keeps the
+                    // cached value rather than locking the user out.
+                    launch { entitlementManager.refresh() }
                 }
             }
 

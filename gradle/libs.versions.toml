@@ -15,6 +15,15 @@ appcompat = "1.7.1"
 uiText = "1.11.2"
 material3 = "1.4.0"
 ui = "1.11.2"
+# Play requires Billing Library 8+ for new releases from Aug 31 2026.
+#
+# The plain `billing` artifact, NOT `billing-ktx`: from 8.1.0 onwards billing-ktx is compiled
+# with Kotlin 2.2 metadata and drags in kotlin-stdlib 2.2.10, which the Kotlin 2.0.21 compiler
+# pinned by this project cannot read ("binary version of its metadata is 2.2.0, expected 2.0.0").
+# We never used the -ktx suspend extensions — BillingManager wraps the callbacks in
+# suspendCancellableCoroutine itself — so the Java artifact costs us nothing and avoids a
+# Kotlin/KSP/Compose-compiler upgrade that has nothing to do with billing.
+billing = "8.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -37,6 +46,7 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 androidx-compose-ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiText" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
+billing = { group = "com.android.billingclient", name = "billing", version.ref = "billing" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

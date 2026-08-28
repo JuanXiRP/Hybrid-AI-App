@@ -8,6 +8,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import com.example.hybrid_ai_app.onboarding.data.remote.dto.ProfileUpdateRequest
+import com.example.hybrid_ai_app.core.domain.model.PremiumRequiredException
+import com.example.hybrid_ai_app.core.domain.model.PremiumRequiredReason
 import com.example.hybrid_ai_app.core.domain.repository.UserRepository
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -41,6 +43,20 @@ class OnboardingViewModel @Inject constructor(
     // Loading State
     var isLoading by mutableStateOf(false)
         private set
+
+    /**
+     * Non-null when the backend refused to generate a plan for entitlement reasons.
+     *
+     * Reachable in practice: the free tier allows one generated plan in total, and
+     * `wipeDataAndRegenerate` only clears the local Room cache — the server still counts the
+     * WorkoutPlan documents it holds, so a second pass through onboarding gets a 402.
+     */
+    var premiumPrompt by mutableStateOf<PremiumRequiredReason?>(null)
+        private set
+
+    fun dismissPremiumPrompt() {
+        premiumPrompt = null
+    }
 
     val totalSteps = 3
 
@@ -166,7 +182,13 @@ class OnboardingViewModel @Inject constructor(
                 }.onFailure { exception ->
                     isLoading = false
                     Log.e("API_ERROR", "Profile saved, but AI generation failed: ${exception.message}", exception)
-                    onError("Profile saved, but plan generation failed. You can retry later.")
+
+                    if (exception is PremiumRequiredException) {
+                        // Not a failure the user can retry away — they need to subscribe.
+                        premiumPrompt = exception.reason
+                    } else {
+                        onError("Profile saved, but plan generation failed. You can retry later.")
+                    }
                 }
 
             }.onFailure { exception ->

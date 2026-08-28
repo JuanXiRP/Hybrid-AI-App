@@ -24,6 +24,10 @@ class PreferencesManager(private val context: Context) {
         val USER_NAME_KEY = stringPreferencesKey("local_user_name")
         val USER_PROFILE_PIC_KEY = stringPreferencesKey("local_profile_pic_path")
 
+        // Serialized EntitlementDto. Purely a cache so the paywall banners and counters do not
+        // flash on a cold start; the backend re-checks every quota on every write.
+        val ENTITLEMENT_KEY = stringPreferencesKey("entitlement_cache")
+
         // The JWT is sensitive and lives in EncryptedSharedPreferences instead
         private const val SECURE_PREFS_NAME = "hybrid_secure_prefs"
         private const val JWT_TOKEN_KEY = "jwt_token"
@@ -91,6 +95,21 @@ class PreferencesManager(private val context: Context) {
 
     suspend fun saveLocalProfilePic(path: String) {
         context.dataStore.edit { preferences -> preferences[USER_PROFILE_PIC_KEY] = path }
+    }
+
+    // --- Entitlement cache (opaque JSON; EntitlementManager owns the shape) ---
+
+    val entitlementFlow: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[ENTITLEMENT_KEY]
+    }
+
+    suspend fun saveEntitlement(json: String) {
+        context.dataStore.edit { preferences -> preferences[ENTITLEMENT_KEY] = json }
+    }
+
+    /** Call on sign-out: entitlement is per-account and must not leak to the next user. */
+    suspend fun clearEntitlement() {
+        context.dataStore.edit { preferences -> preferences.remove(ENTITLEMENT_KEY) }
     }
 
     // --- JWT (encrypted) ---

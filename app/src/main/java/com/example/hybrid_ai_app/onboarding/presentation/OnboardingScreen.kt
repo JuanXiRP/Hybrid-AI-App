@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.hybrid_ai_app.R
 import com.example.hybrid_ai_app.ui.theme.HybridTrainingTheme
+import com.example.hybrid_ai_app.core.presentation.PremiumBottomSheet
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneOffset
@@ -50,8 +51,21 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun OnboardingScreen(
     viewModel: OnboardingViewModel = hiltViewModel(),
-    onFinishOnboarding: () -> Unit
+    onFinishOnboarding: () -> Unit,
+    onUpgradeRequired: () -> Unit = {}
 ) {
+    // Outside the isLoading branch: the sheet must survive the loading screen disappearing.
+    viewModel.premiumPrompt?.let { reason ->
+        PremiumBottomSheet(
+            reason = reason,
+            onDismiss = viewModel::dismissPremiumPrompt,
+            onSeePlans = {
+                viewModel.dismissPremiumPrompt()
+                onUpgradeRequired()
+            },
+        )
+    }
+
     if (viewModel.isLoading) {
         LoadingScreen(message = "Calibrating your hybrid macrocycle...")
     } else {

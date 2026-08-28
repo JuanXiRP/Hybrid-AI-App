@@ -14,10 +14,48 @@
     <string name="feature_coach_desc">Instant advice on form and recovery powered by Gemini intelligence.</string>
     <string name="feature_analytics_title">Advanced Progress Analytics</string>
     <string name="feature_analytics_desc">Visualizations of muscle fatigue, VO2 max, and power output.</string>
-    <string name="pricing_label">7 DAYS FREE, THEN $14.99/MONTH</string>
+    <!-- Price and period come from Play's ProductDetails, already localized and in the user's
+         currency. Never hardcode an amount here: it will drift from Play Console. -->
+    <string name="pricing_label">%1$s / %2$s</string>
+    <string name="pricing_label_loading">Loading price…</string>
+    <string name="pricing_label_unavailable">Price unavailable</string>
     <string name="pricing_sub_label">Cancel anytime in your app store settings.</string>
-    <string name="btn_unlock_premium">Unlock Premium - Start 7-Day Free Trial</string>
+    <string name="btn_unlock_premium">Unlock Premium</string>
     <string name="btn_restore_purchase">Restore Purchase</string>
+
+    <!-- Billing periods, resolved from the ISO-8601 duration Play returns (e.g. P1M). -->
+    <string name="period_month">month</string>
+    <string name="period_year">year</string>
+    <string name="period_week">week</string>
+    <string name="period_day">day</string>
+
+    <string name="purchase_restored">Your subscription has been restored.</string>
+    <string name="purchase_nothing_to_restore">No previous purchase found for this account.</string>
+    <string name="purchase_cancelled">Purchase cancelled.</string>
+    <string name="purchase_pending">Your purchase is pending confirmation from Google Play.</string>
+
+    <!-- Freemium: trial banner, quota counters, and the paywall bottom sheet -->
+    <plurals name="trial_days_left">
+        <item quantity="one">%1$d day left in your free trial</item>
+        <item quantity="other">%1$d days left in your free trial</item>
+    </plurals>
+    <string name="trial_expired_banner">Your free trial has ended — read only</string>
+    <string name="trial_banner_cta">Upgrade</string>
+
+    <string name="chat_messages_counter">%1$d of %2$d messages today</string>
+    <string name="chat_quota_reached">Daily limit reached</string>
+    <string name="chat_input_locked">Upgrade to keep chatting</string>
+
+    <string name="premium_sheet_title_chat">You\'ve used today\'s coach messages</string>
+    <string name="premium_sheet_body_chat">Free accounts include %1$d messages a day. Go Premium for unlimited coaching.</string>
+    <string name="premium_sheet_title_plan">Your free plan includes one routine</string>
+    <string name="premium_sheet_body_plan">Go Premium to regenerate your plan whenever your goals change.</string>
+    <string name="premium_sheet_title_trial">Your free trial has ended</string>
+    <string name="premium_sheet_body_trial">Subscribe to keep generating plans, chatting with your coach, and logging workouts.</string>
+    <string name="premium_sheet_title_generic">Premium required</string>
+    <string name="premium_sheet_body_generic">Subscribe to unlock this feature.</string>
+    <string name="premium_sheet_cta">See plans</string>
+    <string name="premium_sheet_dismiss">Not now</string>
 
     <string name="workouts_title">PROGRAM CALENDAR</string>
     <string name="no_plan_found">No active plan found.</string>

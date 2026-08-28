@@ -38,6 +38,8 @@ import androidx.navigation.NavController
 import com.example.hybrid_ai_app.R
 import com.example.hybrid_ai_app.core.data.local.entity.LoggedExerciseEntity
 import com.example.hybrid_ai_app.core.data.remote.dto.ExerciseDto
+import com.example.hybrid_ai_app.core.presentation.PremiumBottomSheet
+import com.example.hybrid_ai_app.navigation.Screen
 import com.example.hybrid_ai_app.tracking.LocationTrackingService
 import com.example.hybrid_ai_app.tracking.WorkoutLocationManager
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -50,10 +52,25 @@ fun WorkoutExecutionScreen(
     weekNumber: Int,
     dayIndex: Int,
     navController: NavController,
+    rootNavController: NavController,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    val premiumPrompt by viewModel.premiumPrompt.collectAsState()
+
+    // Shares HomeViewModel, so the read-only guard in logCurrentWorkoutAsCompleted covers the
+    // "finish session" button here too.
+    premiumPrompt?.let { reason ->
+        PremiumBottomSheet(
+            reason = reason,
+            onDismiss = viewModel::dismissPremiumPrompt,
+            onSeePlans = {
+                viewModel.dismissPremiumPrompt()
+                rootNavController.navigate(Screen.Paywall.route)
+            },
+        )
+    }
 
     val plan = (uiState as? HomeUiState.Success)?.plan
     val currentDay = plan?.weeks?.find { it.weekNumber == weekNumber }?.days?.getOrNull(dayIndex)

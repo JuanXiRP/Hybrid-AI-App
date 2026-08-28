@@ -14,10 +14,48 @@
     <string name="feature_coach_desc">Asesoramiento instantáneo sobre técnica y recuperación potenciado por la inteligencia de Gemini.</string>
     <string name="feature_analytics_title">Análisis de Progreso Avanzado</string>
     <string name="feature_analytics_desc">Visualizaciones de fatiga muscular, VO2 máx y potencia de salida.</string>
-    <string name="pricing_label">7 DÍAS GRATIS, LUEGO $14.99/MES</string>
+    <!-- El precio y el periodo vienen de ProductDetails de Play, ya localizados y en la moneda
+         del usuario. Nunca escribas aquí un importe: divergirá de Play Console. -->
+    <string name="pricing_label">%1$s / %2$s</string>
+    <string name="pricing_label_loading">Cargando precio…</string>
+    <string name="pricing_label_unavailable">Precio no disponible</string>
     <string name="pricing_sub_label">Cancela en cualquier momento desde los ajustes de la tienda de aplicaciones.</string>
-    <string name="btn_unlock_premium">Desbloquear Premium - Iniciar Prueba de 7 Días</string>
+    <string name="btn_unlock_premium">Desbloquear Premium</string>
     <string name="btn_restore_purchase">Restaurar Compra</string>
+
+    <!-- Periodos de facturación, resueltos desde la duración ISO-8601 que devuelve Play (p. ej. P1M). -->
+    <string name="period_month">mes</string>
+    <string name="period_year">año</string>
+    <string name="period_week">semana</string>
+    <string name="period_day">día</string>
+
+    <string name="purchase_restored">Tu suscripción se ha restaurado.</string>
+    <string name="purchase_nothing_to_restore">No hay ninguna compra previa en esta cuenta.</string>
+    <string name="purchase_cancelled">Compra cancelada.</string>
+    <string name="purchase_pending">Tu compra está pendiente de confirmación por Google Play.</string>
+
+    <!-- Freemium: banner de prueba, contadores de cuota y hoja del paywall -->
+    <plurals name="trial_days_left">
+        <item quantity="one">Te queda %1$d día de prueba</item>
+        <item quantity="other">Te quedan %1$d días de prueba</item>
+    </plurals>
+    <string name="trial_expired_banner">Tu prueba gratuita ha terminado: solo lectura</string>
+    <string name="trial_banner_cta">Mejorar</string>
+
+    <string name="chat_messages_counter">%1$d de %2$d mensajes hoy</string>
+    <string name="chat_quota_reached">Límite diario alcanzado</string>
+    <string name="chat_input_locked">Mejora tu plan para seguir chateando</string>
+
+    <string name="premium_sheet_title_chat">Has usado tus mensajes de hoy</string>
+    <string name="premium_sheet_body_chat">Las cuentas gratuitas incluyen %1$d mensajes al día. Hazte Premium para chatear sin límite.</string>
+    <string name="premium_sheet_title_plan">Tu plan gratuito incluye una rutina</string>
+    <string name="premium_sheet_body_plan">Hazte Premium para regenerar tu plan cuando cambien tus objetivos.</string>
+    <string name="premium_sheet_title_trial">Tu prueba gratuita ha terminado</string>
+    <string name="premium_sheet_body_trial">Suscríbete para seguir generando planes, hablando con tu entrenador y registrando entrenos.</string>
+    <string name="premium_sheet_title_generic">Necesitas Premium</string>
+    <string name="premium_sheet_body_generic">Suscríbete para desbloquear esta función.</string>
+    <string name="premium_sheet_cta">Ver planes</string>
+    <string name="premium_sheet_dismiss">Ahora no</string>
 
     <string name="workouts_title">CALENDARIO DEL PROGRAMA</string>
     <string name="no_plan_found">No se encontró ningún plan activo.</string>

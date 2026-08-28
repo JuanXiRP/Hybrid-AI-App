@@ -3,8 +3,10 @@ package com.example.hybrid_ai_app.core.data.remote
 import com.example.hybrid_ai_app.auth.data.remote.AuthResponse
 import com.example.hybrid_ai_app.auth.data.remote.LoginRequest
 import com.example.hybrid_ai_app.auth.data.remote.RegisterRequest
+import com.example.hybrid_ai_app.core.data.remote.dto.EntitlementResponse
 import com.example.hybrid_ai_app.core.data.remote.dto.GoogleAuthRequest
 import com.example.hybrid_ai_app.core.data.remote.dto.UserProfileResponse
+import com.example.hybrid_ai_app.core.data.remote.dto.VerifyPurchaseRequest
 import com.example.hybrid_ai_app.core.data.remote.dto.WorkoutRunDto // 🟢 Added import
 import com.example.hybrid_ai_app.core.data.remote.dto.WorkoutStrengthDto // 🟢 Added import
 import com.example.hybrid_ai_app.onboarding.data.remote.dto.ProfileUpdateRequest
@@ -39,4 +41,16 @@ interface UserApi {
 
     @POST("api/auth/google")
     suspend fun googleLogin(@Body request: GoogleAuthRequest): Response<AuthResponse>
+
+    /**
+     * Validates a Play purchase token server-side and grants premium.
+     *
+     * Idempotent, so "Restore Purchases" simply replays every token from
+     * [BillingManager.queryPurchases] through here. Returns the caller's fresh entitlement.
+     */
+    @POST("api/billing/verify")
+    suspend fun verifyPurchase(@Body request: VerifyPurchaseRequest): Response<EntitlementResponse>
+
+    @GET("api/billing/entitlement")
+    suspend fun getEntitlement(): Response<EntitlementResponse>
 }

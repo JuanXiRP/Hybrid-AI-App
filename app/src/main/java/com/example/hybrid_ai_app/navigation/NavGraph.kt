@@ -71,7 +71,8 @@ fun RootNavGraph(navController: NavHostController,
                     navController.navigate(Screen.MainContainer.route) {
                         popUpTo(Screen.Onboarding.route) { inclusive = true }
                     }
-                }
+                },
+                onUpgradeRequired = { navController.navigate(Screen.Paywall.route) }
             )
         }
 
@@ -96,13 +97,14 @@ fun MainNavGraph(
         startDestination = Screen.Home.route
     ) {
         composable(route = Screen.Home.route) {
-            HomeScreen(navController = navController)
+            HomeScreen(navController = navController, rootNavController = rootNavController)
         }
         composable(route = Screen.Workouts.route) {
             WorkoutsScreen(navController = navController)
         }
         composable(route = Screen.Coach.route) {
-            CoachScreen(navController = navController)
+            // rootNavController so the paywall opens full-screen, without the bottom bar.
+            CoachScreen(navController = navController, rootNavController = rootNavController)
         }
         composable(route = Screen.History.route) {
             HistoryScreen(navController = navController)
@@ -121,7 +123,8 @@ fun MainNavGraph(
             WorkoutExecutionScreen(
                 weekNumber = weekNumber,
                 dayIndex = dayIndex,
-                navController = navController
+                navController = navController,
+                rootNavController = rootNavController
             )
         }
 
@@ -131,8 +134,7 @@ fun MainNavGraph(
                 rootNavController = rootNavController // 🟢 Passed to Settings
             )
         }
-        composable(route = Screen.Paywall.route) {
-            PaywallScreen(navController = navController)
-        }
+        // Paywall is deliberately NOT registered here: it lives in RootNavGraph so it covers the
+        // bottom bar. Every entry point navigates to it via rootNavController.
     }
 }
