@@ -179,4 +179,39 @@
     <string name="weekly_availability_title">Weekly Availability: %1$d days</string>
     <string name="macrocycle_duration_title">Macrocycle Macro Duration</string>
     <string name="weeks_pill_format">%1$d Weeks</string>
+
+    <!-- Bring your own plan: optional step 4 of onboarding -->
+    <string name="existing_plan_title">Already Training?</string>
+    <string name="existing_plan_switch">I already have part of my plan</string>
+    <string name="existing_plan_switch_subtext">We will keep it as it is and only write the half you are missing.</string>
+    <string name="existing_plan_domain_title">Which part do you already have?</string>
+    <string name="domain_strength">Gym</string>
+    <string name="domain_cardio">Running</string>
+    <string name="step_four_title">Your Current Plan</string>
+    <string name="step_four_subtitle_strength">Send us your gym routine. We will reproduce it exactly and build the running around it.</string>
+    <string name="step_four_subtitle_cardio">Send us your running plan. We will reproduce it exactly and build the gym work around it.</string>
+    <string name="label_paste_plan">Paste your routine</string>
+    <string name="placeholder_paste_plan">e.g. Mon — Squat 5x5 @RPE8, Bench 4x8…</string>
+    <string name="btn_attach_plan">Attach PDF or photo</string>
+    <string name="attachments_title">Attached files (%1$d/%2$d)</string>
+    <string name="attachment_remove">Remove attachment</string>
+    <string name="btn_build_plan">Build Plan</string>
+    <string name="loading_generating_plan">Calibrating your hybrid macrocycle…</string>
+    <string name="loading_importing_plan">Reading your plan and building the half you are missing…</string>
+
+    <!-- Import failures -->
+    <string name="attachment_error_unsupported">That file type is not supported. Use a PDF or a photo.</string>
+    <string name="attachment_error_too_large">That file is too big. The limit is 8 MB in total.</string>
+    <string name="attachment_error_too_many">You can attach up to %1$d files.</string>
+    <string name="attachment_error_unreadable">We could not read that file. Try another one.</string>
+    <string name="plan_not_recognized">We could not find a routine in what you sent. Try a clearer document, or paste it as text.</string>
+
+    <!-- Provenance badge shown on sessions the user brought in themselves -->
+    <string name="badge_your_plan">YOUR PLAN</string>
+
+    <!-- Google Sign-In failures. The library reports a cancellation for ANY cancelled result from
+         Play Services, including an unregistered package/SHA-1, so the copy has to cover both. -->
+    <string name="google_signin_cancelled">Google sign-in was cancelled. If you didn\'t cancel it, this app\'s OAuth client may not be registered yet.</string>
+    <string name="google_signin_no_account">No Google account available. Add one in Settings, or check this app\'s SHA-1 registration.</string>
+    <string name="google_signin_failed_detail">Google sign-in failed (%1$s)</string>
 </resources>

@@ -1,5 +1,7 @@
 package com.example.hybrid_ai_app.onboarding.presentation
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -14,9 +16,12 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,12 +39,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.hybrid_ai_app.R
+import com.example.hybrid_ai_app.onboarding.data.MAX_PLAN_ATTACHMENTS
+import com.example.hybrid_ai_app.onboarding.data.PlanAttachmentError
 import com.example.hybrid_ai_app.ui.theme.HybridTrainingTheme
 import com.example.hybrid_ai_app.core.presentation.PremiumBottomSheet
 import kotlinx.coroutines.launch
@@ -67,7 +76,15 @@ fun OnboardingScreen(
     }
 
     if (viewModel.isLoading) {
-        LoadingScreen(message = "Calibrating your hybrid macrocycle...")
+        LoadingScreen(
+            message = stringResource(
+                id = if (viewModel.uiState.hasExistingPlan) {
+                    R.string.loading_importing_plan
+                } else {
+                    R.string.loading_generating_plan
+                }
+            )
+        )
     } else {
         val currentStep = viewModel.currentStep
         val state = viewModel.uiState
@@ -75,6 +92,34 @@ fun OnboardingScreen(
 
         val snackbarHostState = remember { SnackbarHostState() }
         val coroutineScope = rememberCoroutineScope()
+
+        // Attachment problems and an unreadable document are both "stay on this step and try
+        // again" cases, so they surface as snackbars rather than failing the whole onboarding.
+        val attachmentErrorMessage = viewModel.attachmentError?.let { error ->
+            when (error) {
+                PlanAttachmentError.UNSUPPORTED_TYPE -> stringResource(R.string.attachment_error_unsupported)
+                PlanAttachmentError.TOO_LARGE -> stringResource(R.string.attachment_error_too_large)
+                PlanAttachmentError.TOO_MANY -> stringResource(R.string.attachment_error_too_many, MAX_PLAN_ATTACHMENTS)
+                PlanAttachmentError.UNREADABLE -> stringResource(R.string.attachment_error_unreadable)
+            }
+        }
+        LaunchedEffect(attachmentErrorMessage) {
+            attachmentErrorMessage?.let {
+                snackbarHostState.showSnackbar(message = it, duration = SnackbarDuration.Short)
+                viewModel.dismissAttachmentError()
+            }
+        }
+
+        val planNotRecognizedMessage = stringResource(id = R.string.plan_not_recognized)
+        LaunchedEffect(viewModel.planNotRecognized) {
+            if (viewModel.planNotRecognized) {
+                snackbarHostState.showSnackbar(
+                    message = planNotRecognizedMessage,
+                    duration = SnackbarDuration.Long
+                )
+                viewModel.dismissPlanNotRecognized()
+            }
+        }
 
         // 1. BOX PRINCIPAL
         Box(modifier = Modifier.fillMaxSize()) {
@@ -138,6 +183,7 @@ fun OnboardingScreen(
                             1 -> StepOneMetrics(state, viewModel)
                             2 -> StepTwoProfile(state, viewModel)
                             3 -> StepThreeLogistics(state, viewModel)
+                            4 -> StepFourImportPlan(state, viewModel)
                         }
                     }
                 }
@@ -194,7 +240,13 @@ fun OnboardingScreen(
                         modifier = Modifier.height(50.dp),
                         shape = CircleShape
                     ) {
-                        Text(if (currentStep == viewModel.totalSteps) "Generate Plan" else "Next")
+                        Text(
+                            when {
+                                currentStep < viewModel.totalSteps -> "Next"
+                                state.hasExistingPlan -> stringResource(id = R.string.btn_build_plan)
+                                else -> "Generate Plan"
+                            }
+                        )
                     }
                 }
 
@@ -512,6 +564,165 @@ fun StepThreeLogistics(state: OnboardingState, viewModel: OnboardingViewModel) {
                     modifier = Modifier.weight(1f),
                     onClick = { viewModel.updatePlanDuration(weeks) }
                 )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Opt-in to the import step. Switching this on appends step 4 (see totalSteps).
+        Text(
+            text = stringResource(id = R.string.existing_plan_title),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(id = R.string.existing_plan_switch),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = stringResource(id = R.string.existing_plan_switch_subtext),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = state.hasExistingPlan,
+                onCheckedChange = { viewModel.toggleExistingPlan(it) }
+            )
+        }
+
+        if (state.hasExistingPlan) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(id = R.string.existing_plan_domain_title),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                PillSelectionButton(
+                    text = stringResource(id = R.string.domain_strength),
+                    isSelected = state.providedDomain == "strength",
+                    modifier = Modifier.weight(1f),
+                    onClick = { viewModel.updateProvidedDomain("strength") }
+                )
+                PillSelectionButton(
+                    text = stringResource(id = R.string.domain_cardio),
+                    isSelected = state.providedDomain == "cardio",
+                    modifier = Modifier.weight(1f),
+                    onClick = { viewModel.updateProvidedDomain("cardio") }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun StepFourImportPlan(state: OnboardingState, viewModel: OnboardingViewModel) {
+    // OpenDocument (rather than GetContent) gives a stable, re-readable Uri and lets us filter
+    // to exactly the types PlanAttachmentReader understands.
+    val documentPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri -> uri?.let { viewModel.addAttachment(it) } }
+
+    Column {
+        Text(
+            text = stringResource(id = R.string.step_four_title),
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = stringResource(
+                id = if (state.providedDomain == "cardio") {
+                    R.string.step_four_subtitle_cardio
+                } else {
+                    R.string.step_four_subtitle_strength
+                }
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        OutlinedTextField(
+            value = state.pastedPlanText,
+            onValueChange = { viewModel.updatePastedPlanText(it) },
+            label = { Text(stringResource(id = R.string.label_paste_plan)) },
+            placeholder = { Text(stringResource(id = R.string.placeholder_paste_plan)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 160.dp),
+            minLines = 6,
+            shape = RoundedCornerShape(16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedButton(
+            onClick = {
+                documentPickerLauncher.launch(arrayOf("application/pdf", "image/*"))
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = CircleShape,
+            enabled = state.attachments.size < MAX_PLAN_ATTACHMENTS
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(id = R.string.btn_attach_plan))
+        }
+
+        if (state.attachments.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(
+                    id = R.string.attachments_title,
+                    state.attachments.size,
+                    MAX_PLAN_ATTACHMENTS
+                ),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            state.attachments.forEachIndexed { index, attachment ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = attachment.displayName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = { viewModel.removeAttachment(index) }) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = stringResource(id = R.string.attachment_remove)
+                        )
+                    }
+                }
             }
         }
     }

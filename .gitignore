@@ -7,6 +7,11 @@
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
+# Per-user IDE state
+/.idea/appInsightsSettings.xml
+/.idea/markdown.xml
+# Kotlin 2.x compiler daemon state and crash logs
+.kotlin/
 .DS_Store
 /build
 /captures

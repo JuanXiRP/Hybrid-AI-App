@@ -3,6 +3,8 @@ package com.example.hybrid_ai_app.home.presentation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import com.example.hybrid_ai_app.core.presentation.ImportedBadge
+import com.example.hybrid_ai_app.core.presentation.isImported
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -284,12 +286,18 @@ fun TimelineItemRow(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     // Hierarchical labels for type and day number
-                    Text(
-                        text = "${if (isCardio) "CARDIO" else "STRENGTH"} DAY ${index + 1}".uppercase(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        fontWeight = FontWeight.Normal
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "${if (isCardio) "CARDIO" else "STRENGTH"} DAY ${index + 1}".uppercase(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            fontWeight = FontWeight.Normal
+                        )
+                        if (day.isImported()) ImportedBadge()
+                    }
                     // Day Name as main title
                     Text(
                         text = day.dayName,

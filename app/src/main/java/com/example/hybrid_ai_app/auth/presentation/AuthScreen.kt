@@ -172,9 +172,9 @@ fun AuthScreen(
                                     }
                                 )
                             },
-                            onAuthFailed = {
+                            onAuthFailed = { reason ->
                                 coroutineScope.launch {
-                                    snackbarHostState.showSnackbar("Google sign-in failed. Please try again.")
+                                    snackbarHostState.showSnackbar(reason)
                                 }
                             }
                         )
@@ -224,11 +224,16 @@ fun ModeButton(
     }
 }
 
+/**
+ * @param onAuthFailed receives a reason worth showing. Every branch names the exception class,
+ *   because Credential Manager's own messages are not enough to tell the cases apart — see the
+ *   cancellation branch below.
+ */
 suspend fun handleGoogleSignIn(
     context: Context,
     credentialManager: CredentialManager,
     onTokenReceived: (String) -> Unit,
-    onAuthFailed: () -> Unit
+    onAuthFailed: (String) -> Unit
 ) {
     val webClientId = BuildConfig.WEB_CLIENT_ID
 
@@ -252,19 +257,32 @@ suspend fun handleGoogleSignIn(
             onTokenReceived(googleIdCredential.idToken)
         } else {
             if (BuildConfig.DEBUG) Log.e("GoogleAuth", "Unexpected credential type: ${credential.type}")
-            onAuthFailed()
+            onAuthFailed(
+                context.getString(R.string.google_signin_failed_detail, credential.type)
+            )
         }
     } catch (e: GetCredentialCancellationException) {
-        if (BuildConfig.DEBUG) Log.e("GoogleAuth", "Cancelled by user: ${e.message}")
-        onAuthFailed()
+        // Do NOT read this as "the user pressed back". androidx.credentials raises this for any
+        // RESULT_CANCELED coming back from Play Services, and GMS cancels the activity exactly
+        // this way when it cannot match the caller against a registered Android OAuth client
+        // (package name + signing SHA-1). The copy therefore names both possibilities.
+        if (BuildConfig.DEBUG) Log.e("GoogleAuth", "Cancelled result: ${e.message}", e)
+        onAuthFailed(context.getString(R.string.google_signin_cancelled))
     } catch (e: NoCredentialException) {
-        if (BuildConfig.DEBUG) Log.e("GoogleAuth", "No credentials (check accounts/SHA-1): ${e.message}")
-        onAuthFailed()
+        if (BuildConfig.DEBUG) Log.e("GoogleAuth", "No credentials (check accounts/SHA-1): ${e.message}", e)
+        onAuthFailed(context.getString(R.string.google_signin_no_account))
     } catch (e: GetCredentialException) {
-        if (BuildConfig.DEBUG) Log.e("GoogleAuth", "Credential error [${e.type}]: ${e.message}")
-        onAuthFailed()
+        if (BuildConfig.DEBUG) Log.e("GoogleAuth", "Credential error [${e.type}]: ${e.message}", e)
+        onAuthFailed(
+            context.getString(
+                R.string.google_signin_failed_detail,
+                "${e::class.simpleName}: ${e.type}"
+            )
+        )
     } catch (e: Exception) {
-        if (BuildConfig.DEBUG) Log.e("GoogleAuth", "Unexpected error: ${e.message}")
-        onAuthFailed()
+        if (BuildConfig.DEBUG) Log.e("GoogleAuth", "Unexpected error: ${e.message}", e)
+        onAuthFailed(
+            context.getString(R.string.google_signin_failed_detail, e::class.simpleName ?: "unknown")
+        )
     }
 }

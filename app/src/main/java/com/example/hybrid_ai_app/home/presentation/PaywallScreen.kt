@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +42,9 @@ fun PaywallScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    // Strings go through LocalResources, not context.getString: LocalResources is invalidated on
+    // configuration changes, so the snackbars follow the in-app language switch.
+    val resources = LocalResources.current
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Instantiate the Notification Helper
@@ -67,18 +71,18 @@ fun PaywallScreen(
                 }
 
                 PaywallEvent.PurchaseRestored -> {
-                    snackbarHostState.showSnackbar(context.getString(R.string.purchase_restored))
+                    snackbarHostState.showSnackbar(resources.getString(R.string.purchase_restored))
                     navController.popBackStack()
                 }
 
                 PaywallEvent.NothingToRestore ->
-                    snackbarHostState.showSnackbar(context.getString(R.string.purchase_nothing_to_restore))
+                    snackbarHostState.showSnackbar(resources.getString(R.string.purchase_nothing_to_restore))
 
                 PaywallEvent.PurchaseCancelled ->
-                    snackbarHostState.showSnackbar(context.getString(R.string.purchase_cancelled))
+                    snackbarHostState.showSnackbar(resources.getString(R.string.purchase_cancelled))
 
                 PaywallEvent.PurchasePending ->
-                    snackbarHostState.showSnackbar(context.getString(R.string.purchase_pending))
+                    snackbarHostState.showSnackbar(resources.getString(R.string.purchase_pending))
 
                 is PaywallEvent.Error -> snackbarHostState.showSnackbar(event.message)
             }

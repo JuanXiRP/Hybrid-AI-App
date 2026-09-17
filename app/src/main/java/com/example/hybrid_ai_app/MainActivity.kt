@@ -53,11 +53,16 @@ class MainActivity : ComponentActivity() {
 
             // 🟢 EL FIX: Actualizamos los recursos de la Actividad original
             val context = LocalContext.current
-            val updatedConfiguration = remember(currentLanguage) {
+            // Read the system configuration through Compose rather than context.resources: it is
+            // read here, OUTSIDE the provider below, so it is the real device configuration, and
+            // Compose invalidates it on configuration changes. Keying the remember on it re-applies
+            // the chosen language on top of any such change instead of reusing a stale copy.
+            val baseConfiguration = LocalConfiguration.current
+            val updatedConfiguration = remember(currentLanguage, baseConfiguration) {
                 val locale = Locale(currentLanguage)
                 Locale.setDefault(locale)
 
-                val config = Configuration(context.resources.configuration)
+                val config = Configuration(baseConfiguration)
                 config.setLocale(locale)
                 config.setLayoutDirection(locale)
 

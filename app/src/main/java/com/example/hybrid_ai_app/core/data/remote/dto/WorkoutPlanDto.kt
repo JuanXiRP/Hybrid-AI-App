@@ -21,6 +21,9 @@ data class WeekDto(
 data class DayDto(
     val dayName: String = "Training Day",
     val workoutType: String = "rest", // "strength", "cardio", or "rest"
+    // "imported" when the session came from a plan the user brought in, "generated" when the AI
+    // wrote it. Defaults to "generated" so plans cached before this field existed still parse.
+    val source: String = "generated",
     val exercises: List<ExerciseDto> = emptyList()
 )
 

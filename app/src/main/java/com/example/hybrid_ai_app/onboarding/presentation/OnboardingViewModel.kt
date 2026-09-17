@@ -1,5 +1,6 @@
 package com.example.hybrid_ai_app.onboarding.presentation
 
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -7,7 +8,15 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import com.example.hybrid_ai_app.onboarding.data.MAX_PLAN_ATTACHMENTS
+import com.example.hybrid_ai_app.onboarding.data.MAX_PLAN_ATTACHMENT_BYTES
+import com.example.hybrid_ai_app.onboarding.data.PlanAttachment
+import com.example.hybrid_ai_app.onboarding.data.PlanAttachmentError
+import com.example.hybrid_ai_app.onboarding.data.PlanAttachmentException
+import com.example.hybrid_ai_app.onboarding.data.PlanAttachmentReader
 import com.example.hybrid_ai_app.onboarding.data.remote.dto.ProfileUpdateRequest
+import com.example.hybrid_ai_app.core.domain.model.PlanImportRejectedException
+import com.example.hybrid_ai_app.core.domain.model.PlanNotRecognizedException
 import com.example.hybrid_ai_app.core.domain.model.PremiumRequiredException
 import com.example.hybrid_ai_app.core.domain.model.PremiumRequiredReason
 import com.example.hybrid_ai_app.core.domain.repository.UserRepository
@@ -26,12 +35,20 @@ data class OnboardingState(
     val planDuration: Int = 8,
     val injuriesInput: String = "",
     // ISO yyyy-MM-dd; only relevant when sex == "female", blank otherwise
-    val lastPeriodDate: String = ""
+    val lastPeriodDate: String = "",
+    // --- Bring-your-own-plan (optional step 4) ---
+    // When true the user already follows one half of the plan and the AI only writes the other.
+    val hasExistingPlan: Boolean = false,
+    // Which half the user supplies: "strength" (gym) or "cardio" (running).
+    val providedDomain: String = "strength",
+    val pastedPlanText: String = "",
+    val attachments: List<PlanAttachment> = emptyList()
 )
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
-    private val repository: UserRepository
+    private val repository: UserRepository,
+    private val attachmentReader: PlanAttachmentReader
 ) : ViewModel() {
 
     var currentStep by mutableIntStateOf(1)
@@ -58,7 +75,28 @@ class OnboardingViewModel @Inject constructor(
         premiumPrompt = null
     }
 
-    val totalSteps = 3
+    /**
+     * Non-null when the last file the user picked could not be attached. The screen turns it into
+     * localized snackbar copy; keeping it typed avoids English strings leaking out of the VM.
+     */
+    var attachmentError by mutableStateOf<PlanAttachmentError?>(null)
+        private set
+
+    fun dismissAttachmentError() {
+        attachmentError = null
+    }
+
+    /** True once the backend read the material but found no routine in it (HTTP 422). */
+    var planNotRecognized by mutableStateOf(false)
+        private set
+
+    fun dismissPlanNotRecognized() {
+        planNotRecognized = false
+    }
+
+    // The import step only exists when the user says they already have half a plan.
+    val totalSteps: Int
+        get() = if (uiState.hasExistingPlan) 4 else 3
 
     // State Updates
     fun updateAge(value: String) { uiState = uiState.copy(age = value) }
@@ -78,6 +116,54 @@ class OnboardingViewModel @Inject constructor(
     fun updateLastPeriodDate(value: String) { uiState = uiState.copy(lastPeriodDate = value) }
     fun updateDaysAvailable(value: Int) { uiState = uiState.copy(daysAvailable = value) }
     fun updatePlanDuration(value: Int) { uiState = uiState.copy(planDuration = value) }
+
+    // --- Bring-your-own-plan ---
+
+    fun toggleExistingPlan(value: Boolean) {
+        // Turning it off discards whatever was staged, so a stale PDF can never be submitted.
+        uiState = if (value) {
+            uiState.copy(hasExistingPlan = true)
+        } else {
+            uiState.copy(hasExistingPlan = false, pastedPlanText = "", attachments = emptyList())
+        }
+    }
+
+    fun updateProvidedDomain(value: String) { uiState = uiState.copy(providedDomain = value) }
+    fun updatePastedPlanText(value: String) { uiState = uiState.copy(pastedPlanText = value) }
+
+    fun addAttachment(uri: Uri) {
+        if (uiState.attachments.size >= MAX_PLAN_ATTACHMENTS) {
+            attachmentError = PlanAttachmentError.TOO_MANY
+            return
+        }
+
+        viewModelScope.launch {
+            attachmentReader.read(uri)
+                .onSuccess { attachment ->
+                    // The backend caps the *decoded* total, so check the running sum, not just the
+                    // file we just read. Base64 carries 3 bytes per 4 characters.
+                    val decodedBytes = (uiState.attachments + attachment)
+                        .sumOf { it.dto.data.length.toLong() * 3 / 4 }
+                    if (decodedBytes > MAX_PLAN_ATTACHMENT_BYTES) {
+                        attachmentError = PlanAttachmentError.TOO_LARGE
+                        return@onSuccess
+                    }
+                    attachmentError = null
+                    uiState = uiState.copy(attachments = uiState.attachments + attachment)
+                }
+                .onFailure { exception ->
+                    Log.e("ONBOARDING", "Could not attach $uri", exception)
+                    attachmentError = (exception as? PlanAttachmentException)?.error
+                        ?: PlanAttachmentError.UNREADABLE
+                }
+        }
+    }
+
+    fun removeAttachment(index: Int) {
+        uiState = uiState.copy(
+            attachments = uiState.attachments.filterIndexed { i, _ -> i != index }
+        )
+    }
 
     // --- Validation Logic ---
     // --- Validation Logic ---
@@ -125,7 +211,17 @@ class OnboardingViewModel @Inject constructor(
                 if (uiState.planDuration !in listOf(4, 8, 12)) {
                     return "Plan duration must be 4, 8, or 12 weeks."
                 }
+                if (uiState.hasExistingPlan && uiState.providedDomain !in listOf("strength", "cardio")) {
+                    return "Tell us which part of your plan you already have."
+                }
                 null // Passed validation for Step 3
+            }
+            4 -> {
+                // Validation for Step 4: the plan the user already follows
+                if (uiState.pastedPlanText.isBlank() && uiState.attachments.isEmpty()) {
+                    return "Paste your routine or attach a PDF/photo of it."
+                }
+                null // Passed validation for Step 4
             }
             else -> null // Default fallback
         }
@@ -169,11 +265,22 @@ class OnboardingViewModel @Inject constructor(
             profileResult.onSuccess {
                 Log.d("API_SUCCESS", "Profile saved to MongoDB")
 
-                // 2. Automatically trigger AI Workout Generation
-                val aiResult = repository.generateAiPlan(
-                    planDuration = uiState.planDuration,
-                    goal = uiState.goal
-                )
+                // 2. Automatically trigger the AI workout build. When the user brought half a
+                // plan of their own we import it and the backend only writes the missing domain.
+                val aiResult = if (uiState.hasExistingPlan) {
+                    repository.importAiPlan(
+                        planDuration = uiState.planDuration,
+                        goal = uiState.goal,
+                        providedDomain = uiState.providedDomain,
+                        sourceText = uiState.pastedPlanText,
+                        attachments = uiState.attachments.map { it.dto }
+                    )
+                } else {
+                    repository.generateAiPlan(
+                        planDuration = uiState.planDuration,
+                        goal = uiState.goal
+                    )
+                }
 
                 aiResult.onSuccess {
                     Log.d("API_SUCCESS", "Gemini successfully generated and saved the workout plan")
@@ -183,11 +290,13 @@ class OnboardingViewModel @Inject constructor(
                     isLoading = false
                     Log.e("API_ERROR", "Profile saved, but AI generation failed: ${exception.message}", exception)
 
-                    if (exception is PremiumRequiredException) {
+                    when (exception) {
                         // Not a failure the user can retry away — they need to subscribe.
-                        premiumPrompt = exception.reason
-                    } else {
-                        onError("Profile saved, but plan generation failed. You can retry later.")
+                        is PremiumRequiredException -> premiumPrompt = exception.reason
+                        // User-fixable: they stay on the import step and try a clearer document.
+                        is PlanNotRecognizedException -> planNotRecognized = true
+                        is PlanImportRejectedException -> onError(exception.message)
+                        else -> onError("Profile saved, but plan generation failed. You can retry later.")
                     }
                 }
 

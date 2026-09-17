@@ -2,6 +2,8 @@ package com.example.hybrid_ai_app.home.presentation
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import com.example.hybrid_ai_app.core.presentation.ImportedBadge
+import com.example.hybrid_ai_app.core.presentation.isImported
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -152,7 +154,15 @@ fun MainScaffold(
                                                         color = if (isCardio) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                                                     )
                                                 },
-                                                supportingContent = { Text(text = "${day.exercises.size} Exercises") },
+                                                supportingContent = {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                    ) {
+                                                        Text(text = "${day.exercises.size} Exercises")
+                                                        if (day.isImported()) ImportedBadge()
+                                                    }
+                                                },
                                                 leadingContent = {
                                                     Icon(
                                                         imageVector = if (isCardio) Icons.Default.Share else Icons.Default.Build,

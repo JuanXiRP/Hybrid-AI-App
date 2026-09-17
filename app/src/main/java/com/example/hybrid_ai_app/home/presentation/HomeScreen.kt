@@ -23,8 +23,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.hybrid_ai_app.R
+import com.example.hybrid_ai_app.core.presentation.ImportedBadge
 import com.example.hybrid_ai_app.core.presentation.PremiumBottomSheet
 import com.example.hybrid_ai_app.core.presentation.TrialBanner
+import com.example.hybrid_ai_app.core.presentation.isImported
 import com.example.hybrid_ai_app.home.presentation.components.HybridTopAppBar
 import com.example.hybrid_ai_app.navigation.Screen
 
@@ -185,12 +187,18 @@ fun HomeScreen(
                                 shape = RoundedCornerShape(16.dp)
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
-                                    Text(
-                                        text = if (isCardioSession) stringResource(id = R.string.block_cardio) else stringResource(id = R.string.block_strength),
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(
+                                            text = if (isCardioSession) stringResource(id = R.string.block_cardio) else stringResource(id = R.string.block_strength),
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        if (currentDay.isImported()) ImportedBadge()
+                                    }
                                     Text(
                                         text = currentDay.dayName ?: stringResource(id = R.string.active_session_fallback),
                                         style = MaterialTheme.typography.headlineSmall,

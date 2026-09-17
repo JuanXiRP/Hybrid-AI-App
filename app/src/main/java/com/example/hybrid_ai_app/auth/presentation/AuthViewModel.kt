@@ -9,6 +9,7 @@ import com.example.hybrid_ai_app.auth.data.remote.LoginRequest
 import com.example.hybrid_ai_app.auth.data.remote.RegisterRequest
 import com.example.hybrid_ai_app.core.data.PreferencesManager
 import com.example.hybrid_ai_app.core.data.remote.UserApi
+import com.example.hybrid_ai_app.core.data.remote.serverMessageOrNull
 import com.example.hybrid_ai_app.core.data.remote.dto.GoogleAuthRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -68,7 +69,13 @@ class AuthViewModel @Inject constructor(
                         onError("Server didn't return a token")
                     }
                 } else {
-                    onError("Authentication failed: ${response.code()}")
+                    // The backend explains itself ("User already exists with that email",
+                    // "This account uses Google Sign-In"). Showing a bare status code instead is
+                    // what made a working server look like a broken app.
+                    onError(
+                        response.serverMessageOrNull()
+                            ?: "Authentication failed: ${response.code()}"
+                    )
                 }
 
             } catch (e: Exception) {
@@ -100,7 +107,10 @@ class AuthViewModel @Inject constructor(
                         onError("Server didn't return a token")
                     }
                 } else {
-                    onError("Google authentication failed: ${response.code()}")
+                    onError(
+                        response.serverMessageOrNull()
+                            ?: "Google authentication failed: ${response.code()}"
+                    )
                 }
             } catch (e: Exception) {
                 onError(e.message ?: "Network error")

@@ -19,7 +19,10 @@ object PlanContextFormatter {
             plan.weeks.forEach { week ->
                 append("Week ${week.weekNumber}:\n")
                 week.days.forEachIndexed { index, day ->
-                    val dayLabel = "Day ${index + 1} - ${day.dayName} [${day.workoutType}]"
+                    // Provenance matters to the coach: it should not offer to restructure a
+                    // session the user brought in themselves the way it would one it wrote.
+                    val dayLabel =
+                        "Day ${index + 1} - ${day.dayName} [${day.workoutType}/${day.source}]"
                     if (day.exercises.isEmpty()) {
                         append("  $dayLabel: rest\n")
                     } else {

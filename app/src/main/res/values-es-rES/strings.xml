@@ -180,4 +180,40 @@
     <string name="macrocycle_duration_title">Duración del Macrociclo</string>
     <string name="weeks_pill_format">%1$d Semanas</string>
 
+    <!-- Trae tu propio plan: paso 4 opcional del onboarding -->
+    <string name="existing_plan_title">¿Ya Entrenas?</string>
+    <string name="existing_plan_switch">Ya tengo parte de mi plan</string>
+    <string name="existing_plan_switch_subtext">Lo mantendremos tal cual y solo escribiremos la mitad que te falta.</string>
+    <string name="existing_plan_domain_title">¿Qué parte tienes ya?</string>
+    <string name="domain_strength">Gimnasio</string>
+    <string name="domain_cardio">Running</string>
+    <string name="step_four_title">Tu Plan Actual</string>
+    <string name="step_four_subtitle_strength">Envíanos tu rutina de gimnasio. La reproduciremos tal cual y construiremos el running a su alrededor.</string>
+    <string name="step_four_subtitle_cardio">Envíanos tu plan de running. Lo reproduciremos tal cual y construiremos el gimnasio a su alrededor.</string>
+    <string name="label_paste_plan">Pega tu rutina</string>
+    <string name="placeholder_paste_plan">ej. Lun — Sentadilla 5x5 @RPE8, Press banca 4x8…</string>
+    <string name="btn_attach_plan">Adjuntar PDF o foto</string>
+    <string name="attachments_title">Archivos adjuntos (%1$d/%2$d)</string>
+    <string name="attachment_remove">Eliminar adjunto</string>
+    <string name="btn_build_plan">Crear Plan</string>
+    <string name="loading_generating_plan">Calibrando tu macrociclo híbrido…</string>
+    <string name="loading_importing_plan">Leyendo tu plan y construyendo la mitad que te falta…</string>
+
+    <!-- Errores de importación -->
+    <string name="attachment_error_unsupported">Ese tipo de archivo no está soportado. Usa un PDF o una foto.</string>
+    <string name="attachment_error_too_large">Ese archivo es demasiado grande. El límite son 8 MB en total.</string>
+    <string name="attachment_error_too_many">Puedes adjuntar hasta %1$d archivos.</string>
+    <string name="attachment_error_unreadable">No pudimos leer ese archivo. Prueba con otro.</string>
+    <string name="plan_not_recognized">No encontramos una rutina en lo que enviaste. Prueba con un documento más claro, o pégala como texto.</string>
+
+    <!-- Distintivo para las sesiones que aportó el propio usuario -->
+    <string name="badge_your_plan">TU PLAN</string>
+
+    <!-- Fallos de Google Sign-In. La librería reporta cancelación ante CUALQUIER resultado
+         cancelado de Play Services, incluido un package/SHA-1 sin registrar, así que el texto
+         tiene que cubrir ambos casos. -->
+    <string name="google_signin_cancelled">Se canceló el inicio de sesión con Google. Si no lo cancelaste tú, puede que el cliente OAuth de esta app aún no esté registrado.</string>
+    <string name="google_signin_no_account">No hay ninguna cuenta de Google disponible. Añade una en Ajustes, o revisa el registro del SHA-1 de esta app.</string>
+    <string name="google_signin_failed_detail">Falló el inicio de sesión con Google (%1$s)</string>
+
 </resources>

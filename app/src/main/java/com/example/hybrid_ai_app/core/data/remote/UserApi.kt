@@ -30,6 +30,13 @@ interface UserApi {
     @POST("api/ai/generate-plan")
     suspend fun generateAiPlan(@Body request: GeneratePlanRequest): Response<GeneratePlanResponse>
 
+    /**
+     * Parses a plan the user already follows and asks the AI to author only the missing domain.
+     * Returns the same envelope as [generateAiPlan], so callers treat both paths identically.
+     */
+    @POST("api/ai/import-plan")
+    suspend fun importAiPlan(@Body request: ImportPlanRequest): Response<GeneratePlanResponse>
+
     @GET("api/users/profile")
     suspend fun getUserProfile(): Response<UserProfileResponse>
 
