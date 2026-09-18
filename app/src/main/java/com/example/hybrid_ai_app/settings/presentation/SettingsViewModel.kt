@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlinx.coroutines.flow.combine
 
 sealed interface ProfileState {
     object Loading : ProfileState
@@ -27,7 +26,7 @@ class SettingsViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
     private val userRepository: UserRepository,
     private val entitlementManager: EntitlementManager,
-    private val workoutPlanRepository: WorkoutPlanRepository
+    private val workoutPlanRepository: WorkoutPlanRepository,
 ) : ViewModel() {
 
     val currentLanguage = preferencesManager.languageFlow
@@ -88,7 +87,7 @@ class SettingsViewModel @Inject constructor(
                     fitnessLevel = currentUser.fitnessLevel ?: "",
                     daysAvailable = daysAvailable ?: currentUser.daysAvailable ?: 0,
                     planDuration = currentUser.planDuration ?: 4,
-                    injuries = currentUser.injuries
+                    injuries = currentUser.injuries,
                 )
 
                 val response = userRepository.updateProfile(request)

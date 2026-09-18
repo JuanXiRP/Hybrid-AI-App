@@ -29,7 +29,7 @@ private val LightColorScheme = lightColorScheme(
     onSurfaceVariant = OnSurfaceVariantText,
     error = ErrorRed,
     errorContainer = ErrorContainer,
-    outline = OutlineBorder
+    outline = OutlineBorder,
 )
 
 // Premium Dark Mode mapping
@@ -49,14 +49,14 @@ private val DarkColorScheme = darkColorScheme(
     onSurfaceVariant = Color(0xFFBDBDBD),
     error = ErrorRed,
     errorContainer = Color(0xFF4D0000), // Muted dark red for error cards
-    outline = Color(0xFF424242)
+    outline = Color(0xFF424242),
 )
 
 @Composable
 fun HybridTrainingTheme(
     // Added dynamic switch defaulting to system preference
     darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
     val view = LocalView.current
@@ -74,6 +74,6 @@ fun HybridTrainingTheme(
         colorScheme = colorScheme,
         typography = Typography, // Will configure Plus Jakarta Sans later
         shapes = HybridShapes,
-        content = content
+        content = content,
     )
 }

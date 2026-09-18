@@ -13,7 +13,6 @@ import java.util.Date
 import java.util.Locale
 
 fun WorkoutPlanDto.toDomain(): ActivePlan {
-
     val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
 
     val parsedDate = try {
@@ -33,23 +32,23 @@ fun WorkoutPlanDto.toDomain(): ActivePlan {
         goal = this.goal,
         // Functional programming mapping for nested lists
         weeks = this.weeks.map { it.toDomain() },
-        isActive = this.active
+        isActive = this.active,
     )
 }
 
 fun WeekDto.toDomain(): PlanWeek = PlanWeek(
     weekNumber = this.weekNumber,
-    days = this.days.map { it.toDomain() }
+    days = this.days.map { it.toDomain() },
 )
 
 fun DayDto.toDomain(): PlanDay = PlanDay(
     dayName = this.dayName,
-    exercises = this.exercises.map { it.toDomain() }
+    exercises = this.exercises.map { it.toDomain() },
 )
 
 fun ExerciseDto.toDomain(): Exercise = Exercise(
     name = this.name,
     sets = this.sets,
     reps = this.reps,
-    rpe = this.rpe
+    rpe = this.rpe,
 )

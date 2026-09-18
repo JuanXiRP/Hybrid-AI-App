@@ -19,26 +19,20 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideAppDatabase(
-        @ApplicationContext context: Context
-    ): AppDatabase {
-        return Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            "hybrid_ai_app_db"
-        )
-            .fallbackToDestructiveMigration()
-            .build()
-    }
+        @ApplicationContext context: Context,
+    ): AppDatabase = Room.databaseBuilder(
+        context,
+        AppDatabase::class.java,
+        "hybrid_ai_app_db",
+    )
+        .fallbackToDestructiveMigration()
+        .build()
 
     @Provides
     @Singleton
-    fun provideWorkoutPlanDao(database: AppDatabase): WorkoutPlanDao {
-        return database.workoutPlanDao()
-    }
+    fun provideWorkoutPlanDao(database: AppDatabase): WorkoutPlanDao = database.workoutPlanDao()
 
     @Provides
     @Singleton
-    fun provideProgressDao(database: AppDatabase): ProgressDao {
-        return database.progressDao()
-    }
+    fun provideProgressDao(database: AppDatabase): ProgressDao = database.progressDao()
 }

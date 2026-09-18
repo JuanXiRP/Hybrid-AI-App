@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,25 +23,22 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.hybrid_ai_app.BuildConfig
 import com.example.hybrid_ai_app.R
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.launch
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.credentials.CustomCredential
-import androidx.credentials.exceptions.GetCredentialCancellationException
-import androidx.credentials.exceptions.NoCredentialException
-import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 
 @Composable
 fun AuthScreen(
     viewModel: AuthViewModel = hiltViewModel(),
-    onAuthSuccess: (hasCompletedOnboarding: Boolean) -> Unit
+    onAuthSuccess: (hasCompletedOnboarding: Boolean) -> Unit,
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
@@ -54,14 +53,14 @@ fun AuthScreen(
                 .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 24.dp)
                 .verticalScroll(scrollState),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.height(60.dp))
 
             Image(
                 painter = painterResource(id = R.drawable.logo_hybrid_ai),
                 contentDescription = stringResource(id = R.string.cd_app_logo),
-                modifier = Modifier.size(200.dp)
+                modifier = Modifier.size(200.dp),
             )
 
             Spacer(modifier = Modifier.height(48.dp))
@@ -69,20 +68,20 @@ fun AuthScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.surfaceVariant,
-                shape = CircleShape
+                shape = CircleShape,
             ) {
                 Row(modifier = Modifier.padding(4.dp)) {
                     ModeButton(
                         text = stringResource(id = R.string.btn_sign_in_mode),
                         isSelected = viewModel.isLoginMode,
                         modifier = Modifier.weight(1f),
-                        onClick = { if (!viewModel.isLoginMode) viewModel.toggleAuthMode() }
+                        onClick = { if (!viewModel.isLoginMode) viewModel.toggleAuthMode() },
                     )
                     ModeButton(
                         text = stringResource(id = R.string.btn_sign_up_mode),
                         isSelected = !viewModel.isLoginMode,
                         modifier = Modifier.weight(1f),
-                        onClick = { if (viewModel.isLoginMode) viewModel.toggleAuthMode() }
+                        onClick = { if (viewModel.isLoginMode) viewModel.toggleAuthMode() },
                     )
                 }
             }
@@ -96,7 +95,7 @@ fun AuthScreen(
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.small,
-                enabled = !viewModel.isLoading
+                enabled = !viewModel.isLoading,
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -109,13 +108,13 @@ fun AuthScreen(
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.small,
-                enabled = !viewModel.isLoading
+                enabled = !viewModel.isLoading,
             )
 
             if (viewModel.isLoginMode) {
                 TextButton(
-                    onClick = {  },
-                    modifier = Modifier.align(Alignment.End)
+                    onClick = { },
+                    modifier = Modifier.align(Alignment.End),
                 ) {
                     Text(text = stringResource(id = R.string.btn_forgot_password), color = MaterialTheme.colorScheme.primary)
                 }
@@ -134,14 +133,14 @@ fun AuthScreen(
                             coroutineScope.launch {
                                 snackbarHostState.showSnackbar(errorMsg)
                             }
-                        }
+                        },
                     )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = MaterialTheme.shapes.extraLarge,
-                enabled = !viewModel.isLoading
+                enabled = !viewModel.isLoading,
             ) {
                 if (viewModel.isLoading) {
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
@@ -149,14 +148,14 @@ fun AuthScreen(
                     Text(
                         text = if (viewModel.isLoginMode) stringResource(id = R.string.btn_sign_in_mode) else stringResource(id = R.string.btn_create_account),
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            //GOOGLE SIGN IN BUTTON
+            // GOOGLE SIGN IN BUTTON
             OutlinedButton(
                 onClick = {
                     coroutineScope.launch {
@@ -169,14 +168,14 @@ fun AuthScreen(
                                     onSuccess = { hasCompletedOnboarding -> onAuthSuccess(hasCompletedOnboarding) },
                                     onError = { errorMsg ->
                                         coroutineScope.launch { snackbarHostState.showSnackbar(errorMsg) }
-                                    }
+                                    },
                                 )
                             },
                             onAuthFailed = { reason ->
                                 coroutineScope.launch {
                                     snackbarHostState.showSnackbar(reason)
                                 }
-                            }
+                            },
                         )
                     }
                 },
@@ -185,7 +184,7 @@ fun AuthScreen(
                     .height(56.dp),
                 shape = MaterialTheme.shapes.extraLarge,
                 border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp),
-                enabled = !viewModel.isLoading
+                enabled = !viewModel.isLoading,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(text = stringResource(id = R.string.btn_continue_google), color = MaterialTheme.colorScheme.onBackground)
@@ -197,28 +196,27 @@ fun AuthScreen(
 
         SnackbarHost(
             hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp)
+            modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
         )
     }
 }
-
 
 @Composable
 fun ModeButton(
     text: String,
     isSelected: Boolean,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Button(
         onClick = onClick,
         modifier = modifier,
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-            contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+            contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
         ),
         elevation = if (isSelected) ButtonDefaults.buttonElevation(defaultElevation = 2.dp) else null,
-        shape = CircleShape
+        shape = CircleShape,
     ) {
         Text(text = text, fontSize = 14.sp)
     }
@@ -233,7 +231,7 @@ suspend fun handleGoogleSignIn(
     context: Context,
     credentialManager: CredentialManager,
     onTokenReceived: (String) -> Unit,
-    onAuthFailed: (String) -> Unit
+    onAuthFailed: (String) -> Unit,
 ) {
     val webClientId = BuildConfig.WEB_CLIENT_ID
 
@@ -252,13 +250,14 @@ suspend fun handleGoogleSignIn(
 
         val credential = result.credential
         if (credential is CustomCredential &&
-            credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+            credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+        ) {
             val googleIdCredential = GoogleIdTokenCredential.createFrom(credential.data)
             onTokenReceived(googleIdCredential.idToken)
         } else {
             if (BuildConfig.DEBUG) Log.e("GoogleAuth", "Unexpected credential type: ${credential.type}")
             onAuthFailed(
-                context.getString(R.string.google_signin_failed_detail, credential.type)
+                context.getString(R.string.google_signin_failed_detail, credential.type),
             )
         }
     } catch (e: GetCredentialCancellationException) {
@@ -276,13 +275,13 @@ suspend fun handleGoogleSignIn(
         onAuthFailed(
             context.getString(
                 R.string.google_signin_failed_detail,
-                "${e::class.simpleName}: ${e.type}"
-            )
+                "${e::class.simpleName}: ${e.type}",
+            ),
         )
     } catch (e: Exception) {
         if (BuildConfig.DEBUG) Log.e("GoogleAuth", "Unexpected error: ${e.message}", e)
         onAuthFailed(
-            context.getString(R.string.google_signin_failed_detail, e::class.simpleName ?: "unknown")
+            context.getString(R.string.google_signin_failed_detail, e::class.simpleName ?: "unknown"),
         )
     }
 }

@@ -45,18 +45,17 @@ class EntitlementManager @Inject constructor(
     }
 
     /** Fetches the authoritative entitlement and caches it. Failures leave the cache in place. */
-    suspend fun refresh(): Result<Entitlement> =
-        userRepository.getEntitlement().onSuccess { entitlement ->
-            _entitlement.value = entitlement
-            // Explicit serializer: inside runCatching, inference picks the
-            // encodeToString(SerializationStrategy, value) overload instead of the reified one.
-            runCatching {
-                val encoded = json.encodeToString(EntitlementDto.serializer(), entitlement.toDto())
-                preferencesManager.saveEntitlement(encoded)
-            }.onFailure { Log.w(TAG, "Failed to cache entitlement", it) }
-        }.onFailure {
-            Log.w(TAG, "Entitlement refresh failed; keeping cached value", it)
-        }
+    suspend fun refresh(): Result<Entitlement> = userRepository.getEntitlement().onSuccess { entitlement ->
+        _entitlement.value = entitlement
+        // Explicit serializer: inside runCatching, inference picks the
+        // encodeToString(SerializationStrategy, value) overload instead of the reified one.
+        runCatching {
+            val encoded = json.encodeToString(EntitlementDto.serializer(), entitlement.toDto())
+            preferencesManager.saveEntitlement(encoded)
+        }.onFailure { Log.w(TAG, "Failed to cache entitlement", it) }
+    }.onFailure {
+        Log.w(TAG, "Entitlement refresh failed; keeping cached value", it)
+    }
 
     /** Called on sign-out. Entitlement is per-account and must not survive into the next login. */
     suspend fun clear() {

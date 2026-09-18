@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -23,7 +22,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -53,7 +51,7 @@ fun WorkoutExecutionScreen(
     dayIndex: Int,
     navController: NavController,
     rootNavController: NavController,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -100,7 +98,7 @@ fun WorkoutExecutionScreen(
                     context.startService(this)
                 }
             }
-        }
+        },
     )
 
     LaunchedEffect(isCardio) {
@@ -108,7 +106,7 @@ fun WorkoutExecutionScreen(
             WorkoutLocationManager.clearAll()
             val permissionsToRequest = mutableListOf(
                 Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
+                Manifest.permission.ACCESS_COARSE_LOCATION,
             )
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
@@ -134,7 +132,7 @@ fun WorkoutExecutionScreen(
         if (pathPoints.isNotEmpty() && isTracking) {
             cameraPositionState.animate(
                 update = CameraUpdateFactory.newLatLng(pathPoints.last()),
-                durationMs = 1000
+                durationMs = 1000,
             )
         }
     }
@@ -142,15 +140,15 @@ fun WorkoutExecutionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = currentDay?.dayName ?: stringResource(id = R.string.executing_workout_fallback), fontWeight = FontWeight.Bold) }
+                title = { Text(text = currentDay?.dayName ?: stringResource(id = R.string.executing_workout_fallback), fontWeight = FontWeight.Bold) },
             )
-        }
+        },
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             if (currentDay == null) {
                 CircularProgressIndicator()
@@ -160,7 +158,7 @@ fun WorkoutExecutionScreen(
                     modifier = Modifier.fillMaxSize(),
                     cameraPositionState = cameraPositionState,
                     properties = mapProperties,
-                    uiSettings = MapUiSettings(zoomControlsEnabled = false)
+                    uiSettings = MapUiSettings(zoomControlsEnabled = false),
                 ) {
                     if (pathPoints.isNotEmpty()) {
                         Polyline(points = pathPoints, color = MaterialTheme.colorScheme.primary, width = 12f)
@@ -171,40 +169,40 @@ fun WorkoutExecutionScreen(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .padding(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f))
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)),
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         val runInstruction = currentDay.exercises.firstOrNull()
                         if (runInstruction != null) {
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
                                 Text(
                                     text = stringResource(id = R.string.todays_mission_header),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
                                 )
                                 Text(
                                     text = runInstruction.name,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.ExtraBold,
-                                    textAlign = TextAlign.Center
+                                    textAlign = TextAlign.Center,
                                 )
                                 Text(
                                     text = stringResource(
                                         id = R.string.cardio_metrics_format,
                                         runInstruction.sets,
                                         runInstruction.reps,
-                                        runInstruction.rpe
+                                        runInstruction.rpe,
                                     ),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                             HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
@@ -215,7 +213,7 @@ fun WorkoutExecutionScreen(
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceAround
+                            horizontalArrangement = Arrangement.SpaceAround,
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(text = stringResource(id = R.string.metric_time), style = MaterialTheme.typography.labelSmall)
@@ -234,7 +232,7 @@ fun WorkoutExecutionScreen(
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             if (isTracking) {
                                 Button(
@@ -244,7 +242,7 @@ fun WorkoutExecutionScreen(
                                             context.startService(this)
                                         }
                                     },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                                 ) { Text(text = stringResource(id = R.string.btn_pause_run)) }
                             } else {
                                 Button(
@@ -254,7 +252,7 @@ fun WorkoutExecutionScreen(
                                             context.startService(this)
                                         }
                                     },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                 ) { Text(text = stringResource(id = R.string.btn_resume_run)) }
                             }
                         }
@@ -265,14 +263,14 @@ fun WorkoutExecutionScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
                     contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     itemsIndexed(currentDay.exercises) { index, exercise ->
                         val currentWeightValue = weightInputs[index] ?: ""
                         InteractiveExerciseCard(
                             exercise = exercise,
                             weightValue = currentWeightValue,
-                            onWeightChange = { newValue -> weightInputs[index] = newValue }
+                            onWeightChange = { newValue -> weightInputs[index] = newValue },
                         )
                     }
                 }
@@ -295,7 +293,7 @@ fun WorkoutExecutionScreen(
                             sets = exercise.sets,
                             reps = exercise.reps,
                             weight = finalWeight,
-                            rpe = exercise.rpe
+                            rpe = exercise.rpe,
                         )
                     } ?: emptyList()
 
@@ -307,7 +305,7 @@ fun WorkoutExecutionScreen(
                     .padding(bottom = 32.dp)
                     .fillMaxWidth(0.8f)
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             ) {
                 Text(text = stringResource(id = R.string.btn_finish_workout), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
             }
@@ -319,27 +317,27 @@ fun WorkoutExecutionScreen(
 fun InteractiveExerciseCard(
     exercise: ExerciseDto,
     weightValue: String,
-    onWeightChange: (String) -> Unit
+    onWeightChange: (String) -> Unit,
 ) {
     var isCompleted by rememberSaveable { mutableStateOf(false) }
 
     val containerColor by animateColorAsState(
         if (isCompleted) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) else MaterialTheme.colorScheme.surfaceVariant,
-        label = "containerColor"
+        label = "containerColor",
     )
     val contentColor by animateColorAsState(
         if (isCompleted) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurfaceVariant,
-        label = "contentColor"
+        label = "contentColor",
     )
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = containerColor)
+        colors = CardDefaults.cardColors(containerColor = containerColor),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -347,7 +345,7 @@ fun InteractiveExerciseCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = contentColor,
-                    textDecoration = if (isCompleted) TextDecoration.LineThrough else null
+                    textDecoration = if (isCompleted) TextDecoration.LineThrough else null,
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -367,13 +365,13 @@ fun InteractiveExerciseCard(
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                     ),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Done
+                        imeAction = ImeAction.Done,
                     ),
-                    modifier = Modifier.fillMaxWidth(0.7f).height(56.dp)
+                    modifier = Modifier.fillMaxWidth(0.7f).height(56.dp),
                 )
             }
 
@@ -384,14 +382,17 @@ fun InteractiveExerciseCard(
                     .size(40.dp)
                     .clip(CircleShape)
                     .background(
-                        if (isCompleted) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
-                    )
+                        if (isCompleted) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
+                        },
+                    ),
             ) {
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = stringResource(id = R.string.cd_log_exercise_status),
-                    tint = if (isCompleted) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                    tint = if (isCompleted) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                 )
             }
         }
@@ -405,9 +406,11 @@ private fun calculateDistanceKm(points: List<LatLng>): Float {
     for (i in 0 until points.size - 1) {
         val results = FloatArray(1)
         Location.distanceBetween(
-            points[i].latitude, points[i].longitude,
-            points[i + 1].latitude, points[i + 1].longitude,
-            results
+            points[i].latitude,
+            points[i].longitude,
+            points[i + 1].latitude,
+            points[i + 1].longitude,
+            results,
         )
         totalDistanceMeters += results[0]
     }

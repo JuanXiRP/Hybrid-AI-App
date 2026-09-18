@@ -11,19 +11,19 @@ data class WorkoutPlanDto(
     val active: Boolean = true,
     val durationWeeks: Int,
     val goal: String,
-    val weeks: List<WeekDto>
+    val weeks: List<WeekDto>,
 )
 
 @Serializable
 data class WeekDto(
     val weekNumber: Int,
-    val days: List<DayDto>
+    val days: List<DayDto>,
 )
 
 @Serializable
 data class DayDto(
     val dayName: String,
-    val exercises: List<ExerciseDto>
+    val exercises: List<ExerciseDto>,
 )
 
 @Serializable
@@ -31,5 +31,5 @@ data class ExerciseDto(
     val name: String,
     val sets: String,
     val reps: String,
-    val rpe: String
+    val rpe: String,
 )

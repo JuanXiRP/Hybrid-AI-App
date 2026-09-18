@@ -11,27 +11,25 @@ import java.io.IOException
 import javax.inject.Inject
 
 class PlanRepositoryImpl @Inject constructor(
-    private val apiService: PlanApiService
+    private val apiService: PlanApiService,
 ) : PlanRepository {
 
-    override suspend fun getActivePlan(token: String): Result<ActivePlan> {
-        return withContext(Dispatchers.IO) {
-            try {
-                val response = apiService.getActivePlan("Bearer $token")
-                val planDto = response.data
+    override suspend fun getActivePlan(token: String): Result<ActivePlan> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.getActivePlan("Bearer $token")
+            val planDto = response.data
 
-                if (response.success && planDto != null) {
-                    Result.success(planDto.toDomain())
-                } else {
-                    Result.failure(Exception("No active plan data returned from network"))
-                }
-            } catch (e: HttpException) {
-                Result.failure(Exception("Server returned code ${e.code()}: ${e.message()}"))
-            } catch (e: IOException) {
-                Result.failure(Exception("Network failure. Check internet connectivity."))
-            } catch (e: Exception) {
-                Result.failure(e)
+            if (response.success && planDto != null) {
+                Result.success(planDto.toDomain())
+            } else {
+                Result.failure(Exception("No active plan data returned from network"))
             }
+        } catch (e: HttpException) {
+            Result.failure(Exception("Server returned code ${e.code()}: ${e.message()}"))
+        } catch (e: IOException) {
+            Result.failure(Exception("Network failure. Check internet connectivity."))
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }

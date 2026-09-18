@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ChatMessageDto(
     @SerialName("role") val role: String,
-    @SerialName("content") val content: String
+    @SerialName("content") val content: String,
 )
 
 // Request payload matching
@@ -17,7 +17,7 @@ data class ChatRequest(
     // Compact summary of the user's active workout plan (null when no plan yet)
     @SerialName("plan_context") val planContext: String? = null,
     // Prior conversation turns so the coach can answer follow-ups
-    @SerialName("history") val history: List<ChatMessageDto> = emptyList()
+    @SerialName("history") val history: List<ChatMessageDto> = emptyList(),
 )
 
 // Response payload matching your Node.js
@@ -26,11 +26,11 @@ data class ChatResponse(
     @SerialName("success") val success: Boolean,
     // Defaults to null to prevent crashes if the server omits them
     @SerialName("data") val data: ChatData? = null,
-    @SerialName("message") val errorMessage: String? = null
+    @SerialName("message") val errorMessage: String? = null,
 )
 
 @Serializable
 data class ChatData(
     @SerialName("reply") val reply: String,
-    @SerialName("timestamp") val timestamp: String? = null
+    @SerialName("timestamp") val timestamp: String? = null,
 )

@@ -31,8 +31,7 @@ private val errorJson = Json { ignoreUnknownKeys = true }
  * chain it with another body-reading helper such as `premiumRequiredOrNull()` on the same object —
  * the second call sees an empty string.
  */
-fun Response<*>.serverMessageOrNull(): String? =
-    errorBody()?.string()
-        ?.let { raw -> runCatching { errorJson.decodeFromString<ApiErrorDto>(raw) }.getOrNull() }
-        ?.message
-        ?.takeIf { it.isNotBlank() }
+fun Response<*>.serverMessageOrNull(): String? = errorBody()?.string()
+    ?.let { raw -> runCatching { errorJson.decodeFromString<ApiErrorDto>(raw) }.getOrNull() }
+    ?.message
+    ?.takeIf { it.isNotBlank() }

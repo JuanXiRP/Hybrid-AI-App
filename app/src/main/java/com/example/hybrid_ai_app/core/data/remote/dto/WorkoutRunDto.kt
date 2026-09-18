@@ -11,11 +11,11 @@ data class WorkoutRunDto(
     val actualPace: Int,
     val elevationGain: Double = 0.0,
     val rpe: Int,
-    val gpsPath: List<LatLngDto> = emptyList()
+    val gpsPath: List<LatLngDto> = emptyList(),
 )
 
 @Serializable
 data class LatLngDto(
     val lat: Double,
-    val lng: Double
+    val lng: Double,
 )

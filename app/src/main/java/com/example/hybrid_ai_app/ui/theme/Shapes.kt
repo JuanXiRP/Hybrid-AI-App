@@ -9,5 +9,5 @@ val HybridShapes = Shapes(
     small = RoundedCornerShape(12.dp), // Input fields
     medium = RoundedCornerShape(16.dp), // Standard UI elements
     large = RoundedCornerShape(24.dp), // Main Cards (Level 1)
-    extraLarge = RoundedCornerShape(9999.dp) // Pill-shaped buttons
+    extraLarge = RoundedCornerShape(9999.dp), // Pill-shaped buttons
 )

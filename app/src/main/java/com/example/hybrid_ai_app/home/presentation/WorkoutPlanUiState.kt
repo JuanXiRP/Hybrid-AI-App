@@ -6,5 +6,5 @@ import com.example.hybrid_ai_app.core.data.local.entity.WorkoutPlanEntity
 data class WorkoutPlanUiState(
     val isLoading: Boolean = true,
     val plan: WorkoutPlanEntity? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
 )

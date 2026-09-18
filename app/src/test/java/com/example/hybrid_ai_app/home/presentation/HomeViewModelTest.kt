@@ -384,39 +384,38 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `the day's workout type and name are passed so the sync can route the request`() =
-        runTest {
-            // The repository sends a strength payload or a run payload depending on this string.
-            // Arrange
-            givenPlan(
-                plan = workoutPlanEntity(
-                    weeks = listOf(
-                        weekDto(
-                            days = listOf(dayDto(dayName = "Tempo Run", workoutType = "cardio")),
-                        ),
+    fun `the day's workout type and name are passed so the sync can route the request`() = runTest {
+        // The repository sends a strength payload or a run payload depending on this string.
+        // Arrange
+        givenPlan(
+            plan = workoutPlanEntity(
+                weeks = listOf(
+                    weekDto(
+                        days = listOf(dayDto(dayName = "Tempo Run", workoutType = "cardio")),
                     ),
                 ),
-            )
-            val vm = viewModel()
-            val workoutType = slot<String>()
-            val dayName = slot<String>()
-            coEvery {
-                repository.completeWorkout(any(), any(), capture(workoutType), capture(dayName))
-            } returns Unit
+            ),
+        )
+        val vm = viewModel()
+        val workoutType = slot<String>()
+        val dayName = slot<String>()
+        coEvery {
+            repository.completeWorkout(any(), any(), capture(workoutType), capture(dayName))
+        } returns Unit
 
-            // Act
-            vm.uiState.test {
-                awaitItem()
-                awaitItem()
-                vm.logCurrentWorkoutAsCompleted()
-                advanceUntilIdle()
-                cancelAndIgnoreRemainingEvents()
-            }
-
-            // Assert
-            assertEquals("cardio", workoutType.captured)
-            assertEquals("Tempo Run", dayName.captured)
+        // Act
+        vm.uiState.test {
+            awaitItem()
+            awaitItem()
+            vm.logCurrentWorkoutAsCompleted()
+            advanceUntilIdle()
+            cancelAndIgnoreRemainingEvents()
         }
+
+        // Assert
+        assertEquals("cardio", workoutType.captured)
+        assertEquals("Tempo Run", dayName.captured)
+    }
 
     @Test
     fun `a day the plan cannot resolve falls back to rest so the call still succeeds`() = runTest {
@@ -472,20 +471,19 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `the read-only check runs before the state check so it fires even with no plan`() =
-        runTest {
-            // Arrange
-            givenPlan(plan = null)
-            entitlementFlow.value = expiredEntitlement()
-            val vm = viewModel()
+    fun `the read-only check runs before the state check so it fires even with no plan`() = runTest {
+        // Arrange
+        givenPlan(plan = null)
+        entitlementFlow.value = expiredEntitlement()
+        val vm = viewModel()
 
-            // Act
-            vm.logCurrentWorkoutAsCompleted()
-            advanceUntilIdle()
+        // Act
+        vm.logCurrentWorkoutAsCompleted()
+        advanceUntilIdle()
 
-            // Assert
-            assertEquals(PremiumRequiredReason.TRIAL_EXPIRED, vm.premiumPrompt.value)
-        }
+        // Assert
+        assertEquals(PremiumRequiredReason.TRIAL_EXPIRED, vm.premiumPrompt.value)
+    }
 
     @Test
     fun `nothing is written when the dashboard has not resolved a plan yet`() = runTest {

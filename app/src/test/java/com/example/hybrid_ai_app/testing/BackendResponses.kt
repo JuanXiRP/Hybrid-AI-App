@@ -294,8 +294,7 @@ object BackendResponses {
     fun invalidCredentials(): String = error("Invalid credentials")
 
     /** 401 when the email belongs to a Google account with no local password. */
-    fun googleAccountHint(): String =
-        error("This account uses Google Sign-In. Continue with Google.")
+    fun googleAccountHint(): String = error("This account uses Google Sign-In. Continue with Google.")
 
     /** 400 from `POST /api/auth/register` on a duplicate email. */
     fun userAlreadyExists(): String = error("User already exists with that email")

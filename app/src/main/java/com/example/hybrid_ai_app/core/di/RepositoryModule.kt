@@ -17,12 +17,12 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindUserRepository(
-        userRepositoryImpl: UserRepositoryImpl
+        userRepositoryImpl: UserRepositoryImpl,
     ): UserRepository
 
     @Binds
     @Singleton
     abstract fun bindWorkoutPlanRepository(
-        workoutPlanRepositoryImpl: WorkoutPlanRepositoryImpl
+        workoutPlanRepositoryImpl: WorkoutPlanRepositoryImpl,
     ): WorkoutPlanRepository
 }

@@ -15,9 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -34,7 +32,7 @@ import com.example.hybrid_ai_app.navigation.Screen
 fun CoachScreen(
     navController: NavController,
     rootNavController: NavController,
-    viewModel: CoachViewModel = hiltViewModel()
+    viewModel: CoachViewModel = hiltViewModel(),
 ) {
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
@@ -68,14 +66,14 @@ fun CoachScreen(
             HybridTopAppBar(
                 title = stringResource(id = R.string.coach_title),
                 profilePicPath = profilePicPath,
-                onProfileClick = { navController.navigate("settings") }
+                onProfileClick = { navController.navigate("settings") },
             )
-        }
+        },
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
         ) {
             // Chat Message Feed
             LazyColumn(
@@ -85,7 +83,7 @@ fun CoachScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp)
+                contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp),
             ) {
                 items(viewModel.messages) { message ->
                     ChatBubbleRow(message = message)
@@ -95,7 +93,7 @@ fun CoachScreen(
                     item {
                         Box(
                             modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             CircularProgressIndicator(modifier = Modifier.size(24.dp))
                         }
@@ -107,7 +105,7 @@ fun CoachScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 tonalElevation = 8.dp,
-                shadowElevation = 16.dp
+                shadowElevation = 16.dp,
             ) {
                 Column {
                     ChatQuotaChip(
@@ -121,7 +119,7 @@ fun CoachScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         val canSend = entitlement.canSendChatMessage
 
@@ -135,23 +133,23 @@ fun CoachScreen(
                                             R.string.input_placeholder_coach
                                         } else {
                                             R.string.chat_input_locked
-                                        }
-                                    )
+                                        },
+                                    ),
                                 )
                             },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(24.dp),
-                            enabled = !isLoading && canSend
+                            enabled = !isLoading && canSend,
                         )
 
                         IconButton(
                             onClick = { /* Voice processing execution */ },
-                            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50))
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50)),
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
                                 contentDescription = stringResource(id = R.string.cd_voice_input),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
 
@@ -172,7 +170,7 @@ fun CoachScreen(
                             } else {
                                 MaterialTheme.colorScheme.surfaceVariant
                             },
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(48.dp),
                         ) {
                             Icon(
                                 imageVector = if (canSend) Icons.Default.PlayArrow else Icons.Default.Lock,
@@ -181,7 +179,7 @@ fun CoachScreen(
                                     MaterialTheme.colorScheme.onPrimary
                                 } else {
                                     MaterialTheme.colorScheme.onSurfaceVariant
-                                }
+                                },
                             )
                         }
                     }
@@ -203,7 +201,7 @@ private fun ChatQuotaChip(used: Int, limit: Int?, isReadOnly: Boolean) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .padding(top = 8.dp),
-        horizontalArrangement = Arrangement.Center
+        horizontalArrangement = Arrangement.Center,
     ) {
         Text(
             text = if (exhausted) {
@@ -216,7 +214,7 @@ private fun ChatQuotaChip(used: Int, limit: Int?, isReadOnly: Boolean) {
                 MaterialTheme.colorScheme.error
             } else {
                 MaterialTheme.colorScheme.onSurfaceVariant
-            }
+            },
         )
     }
 }
@@ -227,7 +225,7 @@ fun ChatBubbleRow(message: ChatMessage) {
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
+        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
     ) {
         Box(
             modifier = Modifier
@@ -238,20 +236,26 @@ fun ChatBubbleRow(message: ChatMessage) {
                         topStart = 16.dp,
                         topEnd = 16.dp,
                         bottomStart = if (isUser) 16.dp else 4.dp,
-                        bottomEnd = if (isUser) 4.dp else 16.dp
-                    )
+                        bottomEnd = if (isUser) 4.dp else 16.dp,
+                    ),
                 )
                 .background(
-                    if (isUser) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.surfaceVariant
+                    if (isUser) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    },
                 )
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
             Text(
                 text = message.text,
-                color = if (isUser) MaterialTheme.colorScheme.onPrimary
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyLarge
+                color = if (isUser) {
+                    MaterialTheme.colorScheme.onPrimary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                style = MaterialTheme.typography.bodyLarge,
             )
         }
     }

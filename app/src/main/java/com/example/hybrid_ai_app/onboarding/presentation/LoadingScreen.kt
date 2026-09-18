@@ -23,7 +23,7 @@ import com.example.hybrid_ai_app.ui.theme.HybridTrainingTheme
 
 @Composable
 fun LoadingScreen(
-    message: String = stringResource(id = R.string.generating_plan_msg)
+    message: String = stringResource(id = R.string.generating_plan_msg),
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "pulse_transition")
     val alpha by infiniteTransition.animateFloat(
@@ -31,27 +31,27 @@ fun LoadingScreen(
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
+            repeatMode = RepeatMode.Reverse,
         ),
-        label = "text_alpha"
+        label = "text_alpha",
     )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(32.dp)
+            modifier = Modifier.padding(32.dp),
         ) {
             Image(
                 painter = painterResource(id = R.drawable.logo_hybrid_ai),
                 contentDescription = stringResource(id = R.string.cd_hybrid_logo),
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.height(110.dp)
+                modifier = Modifier.height(110.dp),
             )
 
             Spacer(modifier = Modifier.height(56.dp))
@@ -61,7 +61,7 @@ fun LoadingScreen(
                     .fillMaxWidth(0.6f)
                     .height(6.dp),
                 color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -71,7 +71,7 @@ fun LoadingScreen(
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.alpha(alpha)
+                modifier = Modifier.alpha(alpha),
             )
         }
     }

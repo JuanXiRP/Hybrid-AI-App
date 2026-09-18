@@ -22,13 +22,13 @@ sealed interface HistoryUiState {
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
     private val repository: WorkoutPlanRepository,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
 ) : ViewModel() {
 
     val localProfilePicPath = preferencesManager.userProfilePicFlow
     val uiState: StateFlow<HistoryUiState> = combine(
         repository.getAllWorkoutLogs(),
-        repository.getActivePlan()
+        repository.getActivePlan(),
     ) { logs, plan ->
         if (logs.isEmpty() || plan == null) {
             return@combine HistoryUiState.Empty
@@ -50,7 +50,7 @@ class HistoryViewModel @Inject constructor(
                         sets = entity.sets,
                         reps = entity.reps,
                         weight = entity.weight,
-                        rpe = entity.rpe
+                        rpe = entity.rpe,
                     )
                 }
 
@@ -69,12 +69,11 @@ class HistoryViewModel @Inject constructor(
                     title = title,
                     isCardio = isCardio,
                     summary = summary,
-                    loggedMetrics = mappedMetrics
+                    loggedMetrics = mappedMetrics,
                 )
             }
 
         HistoryUiState.Success(historyItems)
-
     }
         .catch { exception ->
             emit(HistoryUiState.Error(exception.message ?: "Error loading performance history"))
@@ -82,7 +81,7 @@ class HistoryViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = HistoryUiState.Loading
+            initialValue = HistoryUiState.Loading,
         )
 
     // Helper function to format Unix timestamps

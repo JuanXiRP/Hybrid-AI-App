@@ -246,24 +246,23 @@ class WorkoutPlanRepositoryImplTest {
     }
 
     @Test
-    fun `the strength payload sends no userId because the backend reads it from the JWT`() =
-        runTest {
-            // Arrange
-            server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)
+    fun `the strength payload sends no userId because the backend reads it from the JWT`() = runTest {
+        // Arrange
+        server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)
 
-            // Act
-            repository(this).completeWorkout(
-                workoutLogEntity(),
-                userProgressEntity(),
-                workoutType = "strength",
-                dayName = "Push",
-            )
-            advanceUntilIdle()
+        // Act
+        repository(this).completeWorkout(
+            workoutLogEntity(),
+            userProgressEntity(),
+            workoutType = "strength",
+            dayName = "Push",
+        )
+        advanceUntilIdle()
 
-            // Assert
-            val body = server.takeRequest().body.readUtf8()
-            assertTrue("userId must be omitted, got: $body", !body.contains("\"userId\""))
-        }
+        // Assert
+        val body = server.takeRequest().body.readUtf8()
+        assertTrue("userId must be omitted, got: $body", !body.contains("\"userId\""))
+    }
 
     @Test
     fun `non-numeric logged values fall back rather than failing the sync`() = runTest {
@@ -431,29 +430,28 @@ class WorkoutPlanRepositoryImplTest {
     }
 
     @Test
-    fun `a 402 during sync is swallowed, which is why the client checks entitlement first`() =
-        runTest {
-            // The reason HomeViewModel enforces read-only mode itself: a 402 here reaches only a
-            // log line, so without the client-side guard the user would believe the session saved.
-            // Arrange
-            server.enqueueJson(
-                BackendResponses.trialExpired(),
-                code = HttpURLConnection.HTTP_PAYMENT_REQUIRED,
-            )
-            val log = workoutLogEntity()
+    fun `a 402 during sync is swallowed, which is why the client checks entitlement first`() = runTest {
+        // The reason HomeViewModel enforces read-only mode itself: a 402 here reaches only a
+        // log line, so without the client-side guard the user would believe the session saved.
+        // Arrange
+        server.enqueueJson(
+            BackendResponses.trialExpired(),
+            code = HttpURLConnection.HTTP_PAYMENT_REQUIRED,
+        )
+        val log = workoutLogEntity()
 
-            // Act
-            repository(this).completeWorkout(
-                log,
-                userProgressEntity(),
-                workoutType = "strength",
-                dayName = "Push",
-            )
-            advanceUntilIdle()
+        // Act
+        repository(this).completeWorkout(
+            log,
+            userProgressEntity(),
+            workoutType = "strength",
+            dayName = "Push",
+        )
+        advanceUntilIdle()
 
-            // Assert
-            coVerify(exactly = 1) { progressDao.insertWorkoutLog(log) }
-        }
+        // Assert
+        coVerify(exactly = 1) { progressDao.insertWorkoutLog(log) }
+    }
 
     // ------------------------------------------------------------------------------------
     // clearActivePlanAndProgress

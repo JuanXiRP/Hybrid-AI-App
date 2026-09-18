@@ -17,12 +17,10 @@ class WorkoutPlanConverters {
     }
 
     @TypeConverter
-    fun toWeekList(value: String): List<WeekDto> {
-        return try {
-            json.decodeFromString(value)
-        } catch (e: Exception) {
-            emptyList()
-        }
+    fun toWeekList(value: String): List<WeekDto> = try {
+        json.decodeFromString(value)
+    } catch (e: Exception) {
+        emptyList()
     }
 
     @TypeConverter
@@ -32,11 +30,9 @@ class WorkoutPlanConverters {
     }
 
     @TypeConverter
-    fun toStringList(value: String): List<String> {
-        return try {
-            json.decodeFromString(value)
-        } catch (e: Exception) {
-            emptyList()
-        }
+    fun toStringList(value: String): List<String> = try {
+        json.decodeFromString(value)
+    } catch (e: Exception) {
+        emptyList()
     }
 }

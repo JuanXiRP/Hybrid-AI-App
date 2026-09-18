@@ -13,7 +13,6 @@ import com.example.hybrid_ai_app.core.data.remote.dto.DayDto
 import com.example.hybrid_ai_app.core.data.remote.dto.EntitlementDto
 import com.example.hybrid_ai_app.core.data.remote.dto.EntitlementResponse
 import com.example.hybrid_ai_app.core.data.remote.dto.ExerciseDto
-import com.example.hybrid_ai_app.core.data.remote.dto.QuotaDto
 import com.example.hybrid_ai_app.core.data.remote.dto.UserDto
 import com.example.hybrid_ai_app.core.data.remote.dto.UserProfileResponse
 import com.example.hybrid_ai_app.core.data.remote.dto.VerifyPurchaseRequest
@@ -52,11 +51,9 @@ import com.example.hybrid_ai_app.home.data.remote.dto.WorkoutPlanDto as HomeWork
 @OptIn(ExperimentalSerializationApi::class)
 class SerialNameContractTest {
 
-    private fun wireNames(serializer: KSerializer<*>): List<String> =
-        serializer.descriptor.elementNamesInOrder()
+    private fun wireNames(serializer: KSerializer<*>): List<String> = serializer.descriptor.elementNamesInOrder()
 
-    private fun SerialDescriptor.elementNamesInOrder(): List<String> =
-        (0 until elementsCount).map { getElementName(it) }
+    private fun SerialDescriptor.elementNamesInOrder(): List<String> = (0 until elementsCount).map { getElementName(it) }
 
     private fun assertWireNames(
         serializer: KSerializer<*>,

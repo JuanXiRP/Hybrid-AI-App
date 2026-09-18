@@ -7,11 +7,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -36,32 +36,29 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.hybrid_ai_app.R
+import com.example.hybrid_ai_app.core.presentation.PremiumBottomSheet
 import com.example.hybrid_ai_app.onboarding.data.MAX_PLAN_ATTACHMENTS
 import com.example.hybrid_ai_app.onboarding.data.PlanAttachmentError
-import com.example.hybrid_ai_app.ui.theme.HybridTrainingTheme
-import com.example.hybrid_ai_app.core.presentation.PremiumBottomSheet
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-
 @Composable
 fun OnboardingScreen(
     viewModel: OnboardingViewModel = hiltViewModel(),
     onFinishOnboarding: () -> Unit,
-    onUpgradeRequired: () -> Unit = {}
+    onUpgradeRequired: () -> Unit = {},
 ) {
     // Outside the isLoading branch: the sheet must survive the loading screen disappearing.
     viewModel.premiumPrompt?.let { reason ->
@@ -82,8 +79,8 @@ fun OnboardingScreen(
                     R.string.loading_importing_plan
                 } else {
                     R.string.loading_generating_plan
-                }
-            )
+                },
+            ),
         )
     } else {
         val currentStep = viewModel.currentStep
@@ -115,7 +112,7 @@ fun OnboardingScreen(
             if (viewModel.planNotRecognized) {
                 snackbarHostState.showSnackbar(
                     message = planNotRecognizedMessage,
-                    duration = SnackbarDuration.Long
+                    duration = SnackbarDuration.Long,
                 )
                 viewModel.dismissPlanNotRecognized()
             }
@@ -123,40 +120,39 @@ fun OnboardingScreen(
 
         // 1. BOX PRINCIPAL
         Box(modifier = Modifier.fillMaxSize()) {
-
             // 2. COLUMNA DE CONTENIDO
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background)
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = 24.dp),
             ) {
                 Spacer(modifier = Modifier.height(50.dp))
 
-                //HEADER
+                // HEADER
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 24.dp)
+                        .padding(bottom = 24.dp),
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.only_logo),
                         contentDescription = "Hybrid Icon",
                         contentScale = ContentScale.Fit,
-                        modifier = Modifier.height(100.dp)
+                        modifier = Modifier.height(100.dp),
                     )
                     Spacer(modifier = Modifier.width(30.dp))
                     Image(
                         painter = painterResource(id = R.drawable.only_text),
                         contentDescription = "Hybrid Wordmark",
                         contentScale = ContentScale.Fit,
-                        modifier = Modifier.height(100.dp)
+                        modifier = Modifier.height(100.dp),
                     )
                 }
 
-                //STEPPER PROGRESS BAR
+                // STEPPER PROGRESS BAR
                 LinearProgressIndicator(
                     progress = { currentStep.toFloat() / viewModel.totalSteps },
                     modifier = Modifier
@@ -168,16 +164,16 @@ fun OnboardingScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                //DYNAMIC MULTI-STEP FORM
+                // DYNAMIC MULTI-STEP FORM
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
-                        .verticalScroll(scrollState)
+                        .verticalScroll(scrollState),
                 ) {
                     AnimatedContent(
                         targetState = currentStep,
-                        label = "OnboardingStepTransition"
+                        label = "OnboardingStepTransition",
                     ) { step ->
                         when (step) {
                             1 -> StepOneMetrics(state, viewModel)
@@ -190,16 +186,16 @@ fun OnboardingScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                //BOTTOM NAVIGATION CONTROLS
+                // BOTTOM NAVIGATION CONTROLS
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     if (currentStep > 1) {
                         OutlinedButton(
                             onClick = { viewModel.previousStep() },
                             modifier = Modifier.height(50.dp),
-                            shape = CircleShape
+                            shape = CircleShape,
                         ) {
                             Text("Back")
                         }
@@ -216,7 +212,7 @@ fun OnboardingScreen(
                                     snackbarHostState.currentSnackbarData?.dismiss()
                                     snackbarHostState.showSnackbar(
                                         message = errorMessage,
-                                        duration = SnackbarDuration.Short
+                                        duration = SnackbarDuration.Short,
                                     )
                                 }
                             } else {
@@ -229,23 +225,23 @@ fun OnboardingScreen(
                                             coroutineScope.launch {
                                                 snackbarHostState.showSnackbar(
                                                     message = errorMsg,
-                                                    duration = SnackbarDuration.Long
+                                                    duration = SnackbarDuration.Long,
                                                 )
                                             }
-                                        }
+                                        },
                                     )
                                 }
                             }
                         },
                         modifier = Modifier.height(50.dp),
-                        shape = CircleShape
+                        shape = CircleShape,
                     ) {
                         Text(
                             when {
                                 currentStep < viewModel.totalSteps -> "Next"
                                 state.hasExistingPlan -> stringResource(id = R.string.btn_build_plan)
                                 else -> "Generate Plan"
-                            }
+                            },
                         )
                     }
                 }
@@ -258,18 +254,18 @@ fun OnboardingScreen(
                 hostState = snackbarHostState,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 80.dp, start = 16.dp, end = 16.dp)
+                    .padding(bottom = 80.dp, start = 16.dp, end = 16.dp),
             ) { data ->
                 Snackbar(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.medium,
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 ) {
                     Text(
                         text = data.visuals.message,
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
@@ -284,26 +280,26 @@ fun StepOneMetrics(state: OnboardingState, viewModel: OnboardingViewModel) {
             text = "Your Biometrics",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(vertical = 16.dp)
+            modifier = Modifier.padding(vertical = 16.dp),
         )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             MetricInputCard(
                 label = "WEIGHT",
                 value = state.weight,
                 unit = "KG",
                 modifier = Modifier.weight(1f),
-                onValueChange = { viewModel.updateWeight(it) }
+                onValueChange = { viewModel.updateWeight(it) },
             )
             MetricInputCard(
                 label = "HEIGHT",
                 value = state.height,
                 unit = "CM",
                 modifier = Modifier.weight(1f),
-                onValueChange = { viewModel.updateHeight(it) }
+                onValueChange = { viewModel.updateHeight(it) },
             )
         }
 
@@ -314,7 +310,7 @@ fun StepOneMetrics(state: OnboardingState, viewModel: OnboardingViewModel) {
             value = state.age,
             unit = "",
             modifier = Modifier.fillMaxWidth(),
-            onValueChange = { viewModel.updateAge(it) }
+            onValueChange = { viewModel.updateAge(it) },
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -322,19 +318,19 @@ fun StepOneMetrics(state: OnboardingState, viewModel: OnboardingViewModel) {
         Text(
             "Biological Sex",
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             listOf("male", "female").forEach { item ->
                 PillSelectionButton(
                     text = item.replaceFirstChar { it.uppercase() },
                     isSelected = state.sex == item,
                     modifier = Modifier.weight(1f),
-                    onClick = { viewModel.updateSex(item) }
+                    onClick = { viewModel.updateSex(item) },
                 )
             }
         }
@@ -345,18 +341,18 @@ fun StepOneMetrics(state: OnboardingState, viewModel: OnboardingViewModel) {
             Text(
                 "Last Period Start Date",
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(8.dp))
             PeriodDateField(
                 value = state.lastPeriodDate,
-                onDateSelected = { viewModel.updateLastPeriodDate(it) }
+                onDateSelected = { viewModel.updateLastPeriodDate(it) },
             )
             Text(
                 "Used to adapt your plan to your menstrual cycle",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                modifier = Modifier.padding(start = 4.dp, top = 4.dp),
             )
         }
     }
@@ -366,7 +362,7 @@ fun StepOneMetrics(state: OnboardingState, viewModel: OnboardingViewModel) {
 @Composable
 fun PeriodDateField(
     value: String,
-    onDateSelected: (String) -> Unit
+    onDateSelected: (String) -> Unit,
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
@@ -378,27 +374,30 @@ fun PeriodDateField(
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-        )
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+        ),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 18.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = value.ifBlank { "Select date" },
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (value.isBlank()) MaterialTheme.colorScheme.onSurfaceVariant
-                else MaterialTheme.colorScheme.onSurface,
-                fontWeight = if (value.isBlank()) FontWeight.Normal else FontWeight.SemiBold
+                color = if (value.isBlank()) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+                fontWeight = if (value.isBlank()) FontWeight.Normal else FontWeight.SemiBold,
             )
             Icon(
                 imageVector = Icons.Default.DateRange,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.primary,
             )
         }
     }
@@ -407,9 +406,8 @@ fun PeriodDateField(
         val datePickerState = rememberDatePickerState(
             selectableDates = object : SelectableDates {
                 // A period can't start in the future
-                override fun isSelectableDate(utcTimeMillis: Long): Boolean =
-                    utcTimeMillis <= System.currentTimeMillis()
-            }
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean = utcTimeMillis <= System.currentTimeMillis()
+            },
         )
         DatePickerDialog(
             onDismissRequest = { showDialog = false },
@@ -424,13 +422,13 @@ fun PeriodDateField(
                             onDateSelected(isoDate)
                         }
                         showDialog = false
-                    }
+                    },
                 ) { Text("OK") }
             },
             dismissButton = {
                 TextButton(onClick = { showDialog = false }) { Text("Cancel") }
             },
-            shape = RoundedCornerShape(0.dp)
+            shape = RoundedCornerShape(0.dp),
         ) {
             DatePicker(state = datePickerState)
         }
@@ -444,12 +442,12 @@ fun StepTwoProfile(state: OnboardingState, viewModel: OnboardingViewModel) {
             "Athletic Profile",
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
         Text(
             "Define your focus and baseline athletic capacity.",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -457,19 +455,19 @@ fun StepTwoProfile(state: OnboardingState, viewModel: OnboardingViewModel) {
         Text(
             "Primary Fitness Goal",
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             listOf("endurance", "strength", "both").forEach { goalItem ->
                 PillSelectionButton(
                     text = if (goalItem == "both") "Hybrid" else goalItem.replaceFirstChar { it.uppercase() },
                     isSelected = state.goal == goalItem,
                     modifier = Modifier.weight(1f),
-                    onClick = { viewModel.updateGoal(goalItem) }
+                    onClick = { viewModel.updateGoal(goalItem) },
                 )
             }
         }
@@ -479,7 +477,7 @@ fun StepTwoProfile(state: OnboardingState, viewModel: OnboardingViewModel) {
         Text(
             "Current Experience Level",
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -488,7 +486,7 @@ fun StepTwoProfile(state: OnboardingState, viewModel: OnboardingViewModel) {
                     text = levelItem.replaceFirstChar { it.uppercase() },
                     isSelected = state.fitnessLevel == levelItem,
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = { viewModel.updateFitnessLevel(levelItem) }
+                    onClick = { viewModel.updateFitnessLevel(levelItem) },
                 )
             }
         }
@@ -501,13 +499,13 @@ fun StepTwoProfile(state: OnboardingState, viewModel: OnboardingViewModel) {
             label = { Text("Medical History / Injuries (Optional)") },
             placeholder = { Text("e.g. knee tendinitis, lower back pain") },
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.small
+            shape = MaterialTheme.shapes.small,
         )
         Text(
             "Separate multiple conditions with commas",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+            modifier = Modifier.padding(start = 4.dp, top = 4.dp),
         )
     }
 }
@@ -519,12 +517,12 @@ fun StepThreeLogistics(state: OnboardingState, viewModel: OnboardingViewModel) {
             "Training Logistics",
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
         Text(
             "Calibrate plan execution periods and availability constraints.",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -532,7 +530,7 @@ fun StepThreeLogistics(state: OnboardingState, viewModel: OnboardingViewModel) {
         Text(
             "Weekly Availability: ${state.daysAvailable} days",
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Slider(
             value = state.daysAvailable.toFloat(),
@@ -541,8 +539,8 @@ fun StepThreeLogistics(state: OnboardingState, viewModel: OnboardingViewModel) {
             steps = 5,
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colorScheme.primary,
-                activeTrackColor = MaterialTheme.colorScheme.primary
-            )
+                activeTrackColor = MaterialTheme.colorScheme.primary,
+            ),
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -550,19 +548,19 @@ fun StepThreeLogistics(state: OnboardingState, viewModel: OnboardingViewModel) {
         Text(
             "Macrocycle Macro Duration",
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             listOf(4, 8, 12).forEach { weeks ->
                 PillSelectionButton(
                     text = "$weeks Weeks",
                     isSelected = state.planDuration == weeks,
                     modifier = Modifier.weight(1f),
-                    onClick = { viewModel.updatePlanDuration(weeks) }
+                    onClick = { viewModel.updatePlanDuration(weeks) },
                 )
             }
         }
@@ -573,28 +571,28 @@ fun StepThreeLogistics(state: OnboardingState, viewModel: OnboardingViewModel) {
         Text(
             text = stringResource(id = R.string.existing_plan_title),
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = stringResource(id = R.string.existing_plan_switch),
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
                 )
                 Text(
                     text = stringResource(id = R.string.existing_plan_switch_subtext),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Switch(
                 checked = state.hasExistingPlan,
-                onCheckedChange = { viewModel.toggleExistingPlan(it) }
+                onCheckedChange = { viewModel.toggleExistingPlan(it) },
             )
         }
 
@@ -603,24 +601,24 @@ fun StepThreeLogistics(state: OnboardingState, viewModel: OnboardingViewModel) {
             Text(
                 text = stringResource(id = R.string.existing_plan_domain_title),
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 PillSelectionButton(
                     text = stringResource(id = R.string.domain_strength),
                     isSelected = state.providedDomain == "strength",
                     modifier = Modifier.weight(1f),
-                    onClick = { viewModel.updateProvidedDomain("strength") }
+                    onClick = { viewModel.updateProvidedDomain("strength") },
                 )
                 PillSelectionButton(
                     text = stringResource(id = R.string.domain_cardio),
                     isSelected = state.providedDomain == "cardio",
                     modifier = Modifier.weight(1f),
-                    onClick = { viewModel.updateProvidedDomain("cardio") }
+                    onClick = { viewModel.updateProvidedDomain("cardio") },
                 )
             }
         }
@@ -632,7 +630,7 @@ fun StepFourImportPlan(state: OnboardingState, viewModel: OnboardingViewModel) {
     // OpenDocument (rather than GetContent) gives a stable, re-readable Uri and lets us filter
     // to exactly the types PlanAttachmentReader understands.
     val documentPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
+        contract = ActivityResultContracts.OpenDocument(),
     ) { uri -> uri?.let { viewModel.addAttachment(it) } }
 
     Column {
@@ -640,7 +638,7 @@ fun StepFourImportPlan(state: OnboardingState, viewModel: OnboardingViewModel) {
             text = stringResource(id = R.string.step_four_title),
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
         Text(
             text = stringResource(
@@ -648,10 +646,10 @@ fun StepFourImportPlan(state: OnboardingState, viewModel: OnboardingViewModel) {
                     R.string.step_four_subtitle_cardio
                 } else {
                     R.string.step_four_subtitle_strength
-                }
+                },
             ),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -665,7 +663,7 @@ fun StepFourImportPlan(state: OnboardingState, viewModel: OnboardingViewModel) {
                 .fillMaxWidth()
                 .heightIn(min = 160.dp),
             minLines = 6,
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(16.dp),
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -678,12 +676,12 @@ fun StepFourImportPlan(state: OnboardingState, viewModel: OnboardingViewModel) {
                 .fillMaxWidth()
                 .height(50.dp),
             shape = CircleShape,
-            enabled = state.attachments.size < MAX_PLAN_ATTACHMENTS
+            enabled = state.attachments.size < MAX_PLAN_ATTACHMENTS,
         ) {
             Icon(
                 imageVector = Icons.Filled.Add,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(18.dp),
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(stringResource(id = R.string.btn_attach_plan))
@@ -695,10 +693,10 @@ fun StepFourImportPlan(state: OnboardingState, viewModel: OnboardingViewModel) {
                 text = stringResource(
                     id = R.string.attachments_title,
                     state.attachments.size,
-                    MAX_PLAN_ATTACHMENTS
+                    MAX_PLAN_ATTACHMENTS,
                 ),
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -707,19 +705,19 @@ fun StepFourImportPlan(state: OnboardingState, viewModel: OnboardingViewModel) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = attachment.displayName,
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                     IconButton(onClick = { viewModel.removeAttachment(index) }) {
                         Icon(
                             imageVector = Icons.Filled.Close,
-                            contentDescription = stringResource(id = R.string.attachment_remove)
+                            contentDescription = stringResource(id = R.string.attachment_remove),
                         )
                     }
                 }
@@ -733,7 +731,7 @@ fun PillSelectionButton(
     text: String,
     isSelected: Boolean,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     OutlinedButton(
         onClick = onClick,
@@ -741,19 +739,23 @@ fun PillSelectionButton(
         shape = CircleShape,
         border = BorderStroke(
             width = 1.dp,
-            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(
-                alpha = 0.4f
-            )
+            color = if (isSelected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outline.copy(
+                    alpha = 0.4f,
+                )
+            },
         ),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f) else Color.Transparent,
-            contentColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-        )
+            contentColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        ),
     ) {
         Text(
             text,
             fontSize = 14.sp,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
         )
     }
 }
@@ -764,7 +766,7 @@ fun MetricInputCard(
     value: String,
     unit: String,
     modifier: Modifier = Modifier,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
 ) {
     var isFocused by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
@@ -774,7 +776,7 @@ fun MetricInputCard(
         modifier = modifier
             .clickable(
                 interactionSource = interactionSource,
-                indication = null
+                indication = null,
             ) {
                 focusRequester.requestFocus()
             },
@@ -782,20 +784,24 @@ fun MetricInputCard(
         color = if (isFocused) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.05f) else MaterialTheme.colorScheme.surface,
         border = BorderStroke(
             width = if (isFocused) 2.dp else 1.dp,
-            color = if (isFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(
-                alpha = 0.2f
-            )
-        )
+            color = if (isFocused) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outline.copy(
+                    alpha = 0.2f,
+                )
+            },
+        ),
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(vertical = 28.dp, horizontal = 16.dp)
+            modifier = Modifier.padding(vertical = 28.dp, horizontal = 16.dp),
         ) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
                 color = if (isFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
 
             Row(
@@ -803,7 +809,7 @@ fun MetricInputCard(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .padding(top = 12.dp)
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
             ) {
                 BasicTextField(
                     value = value,
@@ -817,14 +823,14 @@ fun MetricInputCard(
                         fontSize = 40.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     ),
                     modifier = Modifier
                         .focusRequester(focusRequester)
                         .onFocusChanged { isFocused = it.isFocused }
                         .width(85.dp),
                     singleLine = true,
-                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                 )
 
                 if (unit.isNotEmpty()) {
@@ -833,11 +839,10 @@ fun MetricInputCard(
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 6.dp, bottom = 8.dp),
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 }
             }
         }
     }
 }
-

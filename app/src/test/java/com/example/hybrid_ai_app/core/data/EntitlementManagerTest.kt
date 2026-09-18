@@ -140,22 +140,21 @@ class EntitlementManagerTest {
     }
 
     @Test
-    fun `a failed refresh keeps the last known value rather than downgrading the user`() =
-        runTest {
-            // Arrange
-            val known = trialEntitlement(trialDaysLeft = 9)
-            coEvery { userRepository.getEntitlement() } returns Result.success(known)
-            manager.refresh()
+    fun `a failed refresh keeps the last known value rather than downgrading the user`() = runTest {
+        // Arrange
+        val known = trialEntitlement(trialDaysLeft = 9)
+        coEvery { userRepository.getEntitlement() } returns Result.success(known)
+        manager.refresh()
 
-            // Act
-            coEvery { userRepository.getEntitlement() } returns
-                Result.failure(Exception("offline"))
-            val result = manager.refresh()
+        // Act
+        coEvery { userRepository.getEntitlement() } returns
+            Result.failure(Exception("offline"))
+        val result = manager.refresh()
 
-            // Assert
-            assertTrue(result.isFailure)
-            assertEquals(known, manager.entitlement.value)
-        }
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals(known, manager.entitlement.value)
+    }
 
     @Test
     fun `a failed refresh does not overwrite the cache with a guess`() = runTest {

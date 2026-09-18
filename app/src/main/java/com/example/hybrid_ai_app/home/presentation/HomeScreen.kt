@@ -35,7 +35,7 @@ import com.example.hybrid_ai_app.navigation.Screen
 fun HomeScreen(
     navController: NavController,
     rootNavController: NavController,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val profilePicPath by viewModel.localProfilePicPath.collectAsState(initial = null)
@@ -60,249 +60,250 @@ fun HomeScreen(
                 title = stringResource(id = R.string.today_focus),
                 label = stringResource(id = R.string.performance_dashboard),
                 profilePicPath = profilePicPath,
-                onProfileClick = { navController.navigate(Screen.Settings.route) }
+                onProfileClick = { navController.navigate(Screen.Settings.route) },
             )
-        }
+        },
     ) { paddingValues ->
-      // Sits above every UiState branch so it is visible while the plan is still loading.
-      // Renders nothing for premium users.
-      Column(
-          modifier = Modifier
-              .fillMaxSize()
-              .padding(paddingValues)
-      ) {
-        TrialBanner(
-            entitlement = entitlement,
-            onUpgradeClick = { rootNavController.navigate(Screen.Paywall.route) },
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        )
+        // Sits above every UiState branch so it is visible while the plan is still loading.
+        // Renders nothing for premium users.
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+        ) {
+            TrialBanner(
+                entitlement = entitlement,
+                onUpgradeClick = { rootNavController.navigate(Screen.Paywall.route) },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
 
-        when (val state = uiState) {
-            is HomeUiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                }
-            }
-            is HomeUiState.Empty -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = stringResource(id = R.string.empty_plan_msg),
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-                        // Onboarding lives in the ROOT graph; the inner (bottom-bar) navController
-                        // cannot resolve it and throws. Clear MainContainer like Settings does, so
-                        // finishing onboarding does not leave a stale home under the new one.
-                        Button(onClick = {
-                            rootNavController.navigate(Screen.Onboarding.route) {
-                                popUpTo(Screen.MainContainer.route) { inclusive = true }
-                            }
-                        }) {
-                            Text(text = stringResource(id = R.string.btn_go_onboarding))
-                        }
+            when (val state = uiState) {
+                is HomeUiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     }
                 }
-            }
-            is HomeUiState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "Error: ${state.message}", color = MaterialTheme.colorScheme.error)
-                }
-            }
-            is HomeUiState.Success -> {
-                val plan = state.plan
-                val currentDay = state.currentDay
-
-                LazyColumn(
-                    // paddingValues is now applied by the wrapping Column.
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp),
-                    contentPadding = PaddingValues(bottom = 24.dp)
-                ) {
-                    item {
-                        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                is HomeUiState.Empty -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = stringResource(id = R.string.protocol_weeks_header, plan.durationWeeks),
+                                text = stringResource(id = R.string.empty_plan_msg),
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(bottom = 16.dp),
                             )
-                            Text(
-                                text = stringResource(
-                                    id = R.string.week_day_subtitle,
-                                    state.currentWeekNumber,
-                                    currentDay?.dayName ?: stringResource(id = R.string.rest_recovery_title)
-                                ),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    if (currentDay == null || currentDay.exercises.isEmpty()) {
-                        item {
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                                shape = RoundedCornerShape(16.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Info,
-                                        contentDescription = stringResource(id = R.string.rest_recovery_title),
-                                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                                        modifier = Modifier.size(32.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = stringResource(id = R.string.rest_recovery_title),
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = stringResource(id = R.string.rest_recovery_desc),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.padding(vertical = 12.dp)
-                                    )
-                                    Button(
-                                        onClick = { viewModel.logCurrentWorkoutAsCompleted() },
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onSecondaryContainer)
-                                    ) {
-                                        Text(text = stringResource(id = R.string.btn_complete_rest_day), color = MaterialTheme.colorScheme.secondaryContainer)
-                                    }
+                            // Onboarding lives in the ROOT graph; the inner (bottom-bar) navController
+                            // cannot resolve it and throws. Clear MainContainer like Settings does, so
+                            // finishing onboarding does not leave a stale home under the new one.
+                            Button(onClick = {
+                                rootNavController.navigate(Screen.Onboarding.route) {
+                                    popUpTo(Screen.MainContainer.route) { inclusive = true }
                                 }
+                            }) {
+                                Text(text = stringResource(id = R.string.btn_go_onboarding))
                             }
                         }
-                    } else {
-                        val isCardioSession = currentDay.workoutType == "cardio"
+                    }
+                }
+                is HomeUiState.Error -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = "Error: ${state.message}", color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                is HomeUiState.Success -> {
+                    val plan = state.plan
+                    val currentDay = state.currentDay
 
+                    LazyColumn(
+                        // paddingValues is now applied by the wrapping Column.
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp),
+                        contentPadding = PaddingValues(bottom = 24.dp),
+                    ) {
                         item {
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = if (isCardioSession) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-                                ),
-                                shape = RoundedCornerShape(16.dp)
-                            ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Text(
-                                            text = if (isCardioSession) stringResource(id = R.string.block_cardio) else stringResource(id = R.string.block_strength),
-                                            style = MaterialTheme.typography.labelLarge,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        if (currentDay.isImported()) ImportedBadge()
-                                    }
-                                    Text(
-                                        text = currentDay.dayName ?: stringResource(id = R.string.active_session_fallback),
-                                        style = MaterialTheme.typography.headlineSmall,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        modifier = Modifier.padding(bottom = 16.dp)
-                                    )
+                            Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                                Text(
+                                    text = stringResource(id = R.string.protocol_weeks_header, plan.durationWeeks),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    text = stringResource(
+                                        id = R.string.week_day_subtitle,
+                                        state.currentWeekNumber,
+                                        currentDay?.dayName ?: stringResource(id = R.string.rest_recovery_title),
+                                    ),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
 
-                                    currentDay.exercises.forEachIndexed { index, exercise ->
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Text(text = exercise.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                                Text(
-                                                    text = stringResource(id = R.string.exercise_metrics_label, exercise.sets, exercise.reps),
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                                                )
-                                            }
-                                            Text(
-                                                text = stringResource(id = R.string.exercise_rpe_label, exercise.rpe),
-                                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Black),
-                                                color = MaterialTheme.colorScheme.primary,
-                                                textAlign = TextAlign.End
-                                            )
-                                        }
-
-                                        if (index < currentDay.exercises.size - 1) {
-                                            HorizontalDivider(
-                                                modifier = Modifier.padding(vertical = 8.dp),
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.height(20.dp))
-
-                                    Button(
-                                        onClick = { viewModel.logCurrentWorkoutAsCompleted() },
-                                        modifier = Modifier.fillMaxWidth()
+                        if (currentDay == null || currentDay.exercises.isEmpty()) {
+                            item {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                                    shape = RoundedCornerShape(16.dp),
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(16.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = null,
-                                            modifier = Modifier.padding(end = 8.dp)
+                                            imageVector = Icons.Default.Info,
+                                            contentDescription = stringResource(id = R.string.rest_recovery_title),
+                                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            modifier = Modifier.size(32.dp),
                                         )
-                                        Text(text = stringResource(id = R.string.btn_log_session_completed), fontWeight = FontWeight.Bold)
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = stringResource(id = R.string.rest_recovery_title),
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                        Text(
+                                            text = stringResource(id = R.string.rest_recovery_desc),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(vertical = 12.dp),
+                                        )
+                                        Button(
+                                            onClick = { viewModel.logCurrentWorkoutAsCompleted() },
+                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onSecondaryContainer),
+                                        ) {
+                                            Text(text = stringResource(id = R.string.btn_complete_rest_day), color = MaterialTheme.colorScheme.secondaryContainer)
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            val isCardioSession = currentDay.workoutType == "cardio"
+
+                            item {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = if (isCardioSession) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                                    ),
+                                    shape = RoundedCornerShape(16.dp),
+                                ) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        ) {
+                                            Text(
+                                                text = if (isCardioSession) stringResource(id = R.string.block_cardio) else stringResource(id = R.string.block_strength),
+                                                style = MaterialTheme.typography.labelLarge,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                fontWeight = FontWeight.Bold,
+                                            )
+                                            if (currentDay.isImported()) ImportedBadge()
+                                        }
+                                        Text(
+                                            text = currentDay.dayName ?: stringResource(id = R.string.active_session_fallback),
+                                            style = MaterialTheme.typography.headlineSmall,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            modifier = Modifier.padding(bottom = 16.dp),
+                                        )
+
+                                        currentDay.exercises.forEachIndexed { index, exercise ->
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(text = exercise.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                                    Text(
+                                                        text = stringResource(id = R.string.exercise_metrics_label, exercise.sets, exercise.reps),
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                                    )
+                                                }
+                                                Text(
+                                                    text = stringResource(id = R.string.exercise_rpe_label, exercise.rpe),
+                                                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Black),
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    textAlign = TextAlign.End,
+                                                )
+                                            }
+
+                                            if (index < currentDay.exercises.size - 1) {
+                                                HorizontalDivider(
+                                                    modifier = Modifier.padding(vertical = 8.dp),
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f),
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(20.dp))
+
+                                        Button(
+                                            onClick = { viewModel.logCurrentWorkoutAsCompleted() },
+                                            modifier = Modifier.fillMaxWidth(),
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Check,
+                                                contentDescription = null,
+                                                modifier = Modifier.padding(end = 8.dp),
+                                            )
+                                            Text(text = stringResource(id = R.string.btn_log_session_completed), fontWeight = FontWeight.Bold)
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            shape = RoundedCornerShape(16.dp),
-                            border = CardDefaults.outlinedCardBorder()
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(
-                                    text = stringResource(id = R.string.weekly_progress_tracker_title),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                )
+                        item {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                shape = RoundedCornerShape(16.dp),
+                                border = CardDefaults.outlinedCardBorder(),
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text(
+                                        text = stringResource(id = R.string.weekly_progress_tracker_title),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(bottom = 16.dp),
+                                    )
 
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    val dayLabels = listOf("M", "T", "W", "T", "F", "S", "S")
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                    ) {
+                                        val dayLabels = listOf("M", "T", "W", "T", "F", "S", "S")
 
-                                    dayLabels.forEachIndexed { index, label ->
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            Text(text = label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                        dayLabels.forEachIndexed { index, label ->
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                            ) {
+                                                Text(text = label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
 
-                                            if (state.weeklyCompletion[index]) {
-                                                Icon(
-                                                    imageVector = Icons.Default.CheckCircle,
-                                                    contentDescription = stringResource(id = R.string.cd_completed),
-                                                    tint = MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier.size(24.dp)
-                                                )
-                                            } else {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(24.dp)
-                                                        .clip(CircleShape)
-                                                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                                                )
+                                                if (state.weeklyCompletion[index]) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.CheckCircle,
+                                                        contentDescription = stringResource(id = R.string.cd_completed),
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(24.dp),
+                                                    )
+                                                } else {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(24.dp)
+                                                            .clip(CircleShape)
+                                                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -312,7 +313,6 @@ fun HomeScreen(
                     }
                 }
             }
-        }
-      } // Column wrapping TrialBanner + content
+        } // Column wrapping TrialBanner + content
     }
 }

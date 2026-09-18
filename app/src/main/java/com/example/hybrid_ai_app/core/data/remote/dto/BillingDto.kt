@@ -3,7 +3,6 @@ package com.example.hybrid_ai_app.core.data.remote.dto
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-
 @Serializable
 data class VerifyPurchaseRequest(
     val purchaseToken: String,

@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class GeneratePlanRequest(
     val planDuration: Int,
-    val goal: String
+    val goal: String,
 )
 
 /**
@@ -25,18 +25,18 @@ data class ImportPlanRequest(
     val goal: String,
     val providedDomain: String,
     val sourceText: String? = null,
-    val attachments: List<PlanAttachmentDto> = emptyList()
+    val attachments: List<PlanAttachmentDto> = emptyList(),
 )
 
 /** A single file handed to Gemini, base64-encoded. Mirrors the SDK's `inlineData` part. */
 @Serializable
 data class PlanAttachmentDto(
     val mimeType: String,
-    val data: String
+    val data: String,
 )
 
 @Serializable
 data class GeneratePlanResponse(
     val success: Boolean,
-    val data: WorkoutPlanDto? = null
+    val data: WorkoutPlanDto? = null,
 )

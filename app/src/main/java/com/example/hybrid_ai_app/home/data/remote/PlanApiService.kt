@@ -7,6 +7,6 @@ import retrofit2.http.Header
 interface PlanApiService {
     @GET("api/plans/active")
     suspend fun getActivePlan(
-        @Header("Authorization") token: String
+        @Header("Authorization") token: String,
     ): ActivePlanResponseDto
 }

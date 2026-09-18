@@ -14,5 +14,5 @@ data class ProfileUpdateRequest(
     val injuries: List<String>,
     // ISO yyyy-MM-dd start date of the user's last menstrual period.
     // Only sent for female users; omitted from the JSON otherwise (kotlinx skips defaults).
-    @SerialName("last_period_date") val lastPeriodDate: String? = null
+    @SerialName("last_period_date") val lastPeriodDate: String? = null,
 )

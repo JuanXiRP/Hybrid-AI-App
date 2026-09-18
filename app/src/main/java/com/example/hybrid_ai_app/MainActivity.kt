@@ -91,12 +91,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-
             CompositionLocalProvider(LocalConfiguration provides updatedConfiguration) {
                 HybridTrainingTheme(darkTheme = isDarkMode) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
+                        color = MaterialTheme.colorScheme.background,
                     ) {
                         if (startDestination == null) {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -105,7 +104,7 @@ class MainActivity : ComponentActivity() {
                         } else {
                             RootNavGraph(
                                 navController = navController,
-                                startDestination = startDestination!!
+                                startDestination = startDestination!!,
                             )
                         }
                     }

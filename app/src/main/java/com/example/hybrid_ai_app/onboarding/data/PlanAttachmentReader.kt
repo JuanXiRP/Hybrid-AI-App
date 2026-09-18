@@ -29,7 +29,7 @@ private const val IMAGE_JPEG_QUALITY = 85
 /** A file the user attached, ready to send plus the label the chip shows. */
 data class PlanAttachment(
     val dto: PlanAttachmentDto,
-    val displayName: String
+    val displayName: String,
 )
 
 /** Why a file could not be attached. The UI maps these to localized copy. */
@@ -37,7 +37,7 @@ enum class PlanAttachmentError {
     UNSUPPORTED_TYPE,
     TOO_LARGE,
     TOO_MANY,
-    UNREADABLE
+    UNREADABLE,
 }
 
 class PlanAttachmentException(val error: PlanAttachmentError) : Exception(error.name)
@@ -50,7 +50,7 @@ class PlanAttachmentException(val error: PlanAttachmentError) : Exception(error.
  */
 @Singleton
 class PlanAttachmentReader @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) {
 
     suspend fun read(uri: Uri): Result<PlanAttachment> = withContext(Dispatchers.IO) {
@@ -84,10 +84,10 @@ class PlanAttachmentReader @Inject constructor(
             PlanAttachment(
                 dto = PlanAttachmentDto(
                     mimeType = if (mimeType == PDF_MIME) PDF_MIME else JPEG_MIME,
-                    data = Base64.encodeToString(bytes, Base64.NO_WRAP)
+                    data = Base64.encodeToString(bytes, Base64.NO_WRAP),
                 ),
                 displayName = queryString(uri, OpenableColumns.DISPLAY_NAME)
-                    ?: uri.lastPathSegment.orEmpty().substringAfterLast('/')
+                    ?: uri.lastPathSegment.orEmpty().substringAfterLast('/'),
             )
         }
     }
@@ -119,13 +119,11 @@ class PlanAttachmentReader @Inject constructor(
         }
     }
 
-    private fun queryString(uri: Uri, column: String): String? =
-        context.contentResolver.query(uri, arrayOf(column), null, null, null)?.use { cursor ->
-            if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getString(0) else null
-        }
+    private fun queryString(uri: Uri, column: String): String? = context.contentResolver.query(uri, arrayOf(column), null, null, null)?.use { cursor ->
+        if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getString(0) else null
+    }
 
-    private fun queryLong(uri: Uri, column: String): Long? =
-        context.contentResolver.query(uri, arrayOf(column), null, null, null)?.use { cursor ->
-            if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getLong(0) else null
-        }
+    private fun queryLong(uri: Uri, column: String): Long? = context.contentResolver.query(uri, arrayOf(column), null, null, null)?.use { cursor ->
+        if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getLong(0) else null
+    }
 }

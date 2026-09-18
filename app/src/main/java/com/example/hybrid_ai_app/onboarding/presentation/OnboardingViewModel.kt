@@ -1,13 +1,18 @@
 package com.example.hybrid_ai_app.onboarding.presentation
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.example.hybrid_ai_app.core.domain.model.PlanImportRejectedException
+import com.example.hybrid_ai_app.core.domain.model.PlanNotRecognizedException
+import com.example.hybrid_ai_app.core.domain.model.PremiumRequiredException
+import com.example.hybrid_ai_app.core.domain.model.PremiumRequiredReason
+import com.example.hybrid_ai_app.core.domain.repository.UserRepository
 import com.example.hybrid_ai_app.onboarding.data.MAX_PLAN_ATTACHMENTS
 import com.example.hybrid_ai_app.onboarding.data.MAX_PLAN_ATTACHMENT_BYTES
 import com.example.hybrid_ai_app.onboarding.data.PlanAttachment
@@ -15,14 +20,9 @@ import com.example.hybrid_ai_app.onboarding.data.PlanAttachmentError
 import com.example.hybrid_ai_app.onboarding.data.PlanAttachmentException
 import com.example.hybrid_ai_app.onboarding.data.PlanAttachmentReader
 import com.example.hybrid_ai_app.onboarding.data.remote.dto.ProfileUpdateRequest
-import com.example.hybrid_ai_app.core.domain.model.PlanImportRejectedException
-import com.example.hybrid_ai_app.core.domain.model.PlanNotRecognizedException
-import com.example.hybrid_ai_app.core.domain.model.PremiumRequiredException
-import com.example.hybrid_ai_app.core.domain.model.PremiumRequiredReason
-import com.example.hybrid_ai_app.core.domain.repository.UserRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import android.util.Log
 
 data class OnboardingState(
     val age: String = "",
@@ -42,13 +42,13 @@ data class OnboardingState(
     // Which half the user supplies: "strength" (gym) or "cardio" (running).
     val providedDomain: String = "strength",
     val pastedPlanText: String = "",
-    val attachments: List<PlanAttachment> = emptyList()
+    val attachments: List<PlanAttachment> = emptyList(),
 )
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
     private val repository: UserRepository,
-    private val attachmentReader: PlanAttachmentReader
+    private val attachmentReader: PlanAttachmentReader,
 ) : ViewModel() {
 
     var currentStep by mutableIntStateOf(1)
@@ -99,9 +99,15 @@ class OnboardingViewModel @Inject constructor(
         get() = if (uiState.hasExistingPlan) 4 else 3
 
     // State Updates
-    fun updateAge(value: String) { uiState = uiState.copy(age = value) }
-    fun updateWeight(value: String) { uiState = uiState.copy(weight = value) }
-    fun updateHeight(value: String) { uiState = uiState.copy(height = value) }
+    fun updateAge(value: String) {
+        uiState = uiState.copy(age = value)
+    }
+    fun updateWeight(value: String) {
+        uiState = uiState.copy(weight = value)
+    }
+    fun updateHeight(value: String) {
+        uiState = uiState.copy(height = value)
+    }
     fun updateSex(value: String) {
         // Clear the period date if the user is no longer female, so we never send stale data
         uiState = if (value == "female") {
@@ -110,12 +116,24 @@ class OnboardingViewModel @Inject constructor(
             uiState.copy(sex = value, lastPeriodDate = "")
         }
     }
-    fun updateGoal(value: String) { uiState = uiState.copy(goal = value) }
-    fun updateFitnessLevel(value: String) { uiState = uiState.copy(fitnessLevel = value) }
-    fun updateInjuries(value: String) { uiState = uiState.copy(injuriesInput = value) }
-    fun updateLastPeriodDate(value: String) { uiState = uiState.copy(lastPeriodDate = value) }
-    fun updateDaysAvailable(value: Int) { uiState = uiState.copy(daysAvailable = value) }
-    fun updatePlanDuration(value: Int) { uiState = uiState.copy(planDuration = value) }
+    fun updateGoal(value: String) {
+        uiState = uiState.copy(goal = value)
+    }
+    fun updateFitnessLevel(value: String) {
+        uiState = uiState.copy(fitnessLevel = value)
+    }
+    fun updateInjuries(value: String) {
+        uiState = uiState.copy(injuriesInput = value)
+    }
+    fun updateLastPeriodDate(value: String) {
+        uiState = uiState.copy(lastPeriodDate = value)
+    }
+    fun updateDaysAvailable(value: Int) {
+        uiState = uiState.copy(daysAvailable = value)
+    }
+    fun updatePlanDuration(value: Int) {
+        uiState = uiState.copy(planDuration = value)
+    }
 
     // --- Bring-your-own-plan ---
 
@@ -128,8 +146,12 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    fun updateProvidedDomain(value: String) { uiState = uiState.copy(providedDomain = value) }
-    fun updatePastedPlanText(value: String) { uiState = uiState.copy(pastedPlanText = value) }
+    fun updateProvidedDomain(value: String) {
+        uiState = uiState.copy(providedDomain = value)
+    }
+    fun updatePastedPlanText(value: String) {
+        uiState = uiState.copy(pastedPlanText = value)
+    }
 
     fun addAttachment(uri: Uri) {
         if (uiState.attachments.size >= MAX_PLAN_ATTACHMENTS) {
@@ -161,7 +183,7 @@ class OnboardingViewModel @Inject constructor(
 
     fun removeAttachment(index: Int) {
         uiState = uiState.copy(
-            attachments = uiState.attachments.filterIndexed { i, _ -> i != index }
+            attachments = uiState.attachments.filterIndexed { i, _ -> i != index },
         )
     }
 
@@ -256,7 +278,7 @@ class OnboardingViewModel @Inject constructor(
                 planDuration = uiState.planDuration,
                 injuries = parsedInjuries,
                 lastPeriodDate = uiState.lastPeriodDate
-                    .takeIf { uiState.sex == "female" && it.isNotBlank() }
+                    .takeIf { uiState.sex == "female" && it.isNotBlank() },
             )
 
             // 1. Save user profile data
@@ -273,12 +295,12 @@ class OnboardingViewModel @Inject constructor(
                         goal = uiState.goal,
                         providedDomain = uiState.providedDomain,
                         sourceText = uiState.pastedPlanText,
-                        attachments = uiState.attachments.map { it.dto }
+                        attachments = uiState.attachments.map { it.dto },
                     )
                 } else {
                     repository.generateAiPlan(
                         planDuration = uiState.planDuration,
-                        goal = uiState.goal
+                        goal = uiState.goal,
                     )
                 }
 
@@ -299,7 +321,6 @@ class OnboardingViewModel @Inject constructor(
                         else -> onError("Profile saved, but plan generation failed. You can retry later.")
                     }
                 }
-
             }.onFailure { exception ->
                 isLoading = false
                 Log.e("API_ERROR", "Failed to connect to backend: ${exception.message}", exception)

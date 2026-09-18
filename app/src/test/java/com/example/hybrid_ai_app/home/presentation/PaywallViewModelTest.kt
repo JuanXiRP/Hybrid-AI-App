@@ -92,25 +92,24 @@ class PaywallViewModelTest {
     // ==================== PURCHASE ====================
 
     @Test
-    fun `a completed purchase is verified with the backend before success is reported`() =
-        runTest {
-            // Arrange
-            val token = TestIds.uniquePurchaseToken()
-            coEvery { userRepository.verifyPurchase(token, monthlyProduct) } returns
-                Result.success(premiumEntitlement())
+    fun `a completed purchase is verified with the backend before success is reported`() = runTest {
+        // Arrange
+        val token = TestIds.uniquePurchaseToken()
+        coEvery { userRepository.verifyPurchase(token, monthlyProduct) } returns
+            Result.success(premiumEntitlement())
 
-            // Act & Assert
-            viewModel.events.test {
-                purchaseEvents.emit(PurchaseEvent.Purchased(token, listOf(monthlyProduct)))
-                advanceUntilIdle()
+        // Act & Assert
+        viewModel.events.test {
+            purchaseEvents.emit(PurchaseEvent.Purchased(token, listOf(monthlyProduct)))
+            advanceUntilIdle()
 
-                assertEquals(PaywallEvent.PurchaseSucceeded, awaitItem())
-                cancelAndIgnoreRemainingEvents()
-            }
-            coVerify(exactly = 1) { userRepository.verifyPurchase(token, monthlyProduct) }
-            coVerify { entitlementManager.refresh() }
-            assertFalse(viewModel.uiState.value.isPurchasing)
+            assertEquals(PaywallEvent.PurchaseSucceeded, awaitItem())
+            cancelAndIgnoreRemainingEvents()
         }
+        coVerify(exactly = 1) { userRepository.verifyPurchase(token, monthlyProduct) }
+        coVerify { entitlementManager.refresh() }
+        assertFalse(viewModel.uiState.value.isPurchasing)
+    }
 
     @Test
     fun `a purchase the backend rejects does not report success`() = runTest {
@@ -266,25 +265,24 @@ class PaywallViewModelTest {
     }
 
     @Test
-    fun `restore does not grant premium when the backend returns a non-premium entitlement`() =
-        runTest {
-            // The server is authoritative: a token it accepts but does not treat as premium (an
-            // expired subscription, say) must not unlock the app.
-            // Arrange
-            coEvery { billingManager.queryPurchases() } returns
-                listOf(purchase(TestIds.uniquePurchaseToken()))
-            coEvery { userRepository.verifyPurchase(any(), any()) } returns
-                Result.success(trialEntitlement())
+    fun `restore does not grant premium when the backend returns a non-premium entitlement`() = runTest {
+        // The server is authoritative: a token it accepts but does not treat as premium (an
+        // expired subscription, say) must not unlock the app.
+        // Arrange
+        coEvery { billingManager.queryPurchases() } returns
+            listOf(purchase(TestIds.uniquePurchaseToken()))
+        coEvery { userRepository.verifyPurchase(any(), any()) } returns
+            Result.success(trialEntitlement())
 
-            // Act & Assert
-            viewModel.events.test {
-                viewModel.restorePurchases()
-                advanceUntilIdle()
+        // Act & Assert
+        viewModel.events.test {
+            viewModel.restorePurchases()
+            advanceUntilIdle()
 
-                assertEquals(PaywallEvent.NothingToRestore, awaitItem())
-                cancelAndIgnoreRemainingEvents()
-            }
+            assertEquals(PaywallEvent.NothingToRestore, awaitItem())
+            cancelAndIgnoreRemainingEvents()
         }
+    }
 
     @Test
     fun `restore succeeds when any one of several tokens verifies`() = runTest {
@@ -392,19 +390,18 @@ class PaywallViewModelTest {
     }
 
     @Test
-    fun `a billing connection failure surfaces as an offer error, not a silent dead button`() =
-        runTest {
-            // Arrange & Act
-            connectionState.value = ConnectionState.Error("Product not found in Play Console.")
-            advanceUntilIdle()
+    fun `a billing connection failure surfaces as an offer error, not a silent dead button`() = runTest {
+        // Arrange & Act
+        connectionState.value = ConnectionState.Error("Product not found in Play Console.")
+        advanceUntilIdle()
 
-            // Assert
-            assertEquals(
-                "Product not found in Play Console.",
-                viewModel.uiState.value.offerError,
-            )
-            assertFalse(viewModel.uiState.value.isOfferLoading)
-        }
+        // Assert
+        assertEquals(
+            "Product not found in Play Console.",
+            viewModel.uiState.value.offerError,
+        )
+        assertFalse(viewModel.uiState.value.isOfferLoading)
+    }
 
     @Test
     fun `the busy flag covers both purchasing and restoring`() = runTest {

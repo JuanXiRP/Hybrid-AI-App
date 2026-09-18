@@ -119,7 +119,7 @@ class LocationTrackingService : Service() {
         val channel = NotificationChannel(
             NOTIFICATION_CHANNEL_ID,
             "Workout Tracking",
-            NotificationManager.IMPORTANCE_LOW
+            NotificationManager.IMPORTANCE_LOW,
         )
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(channel)

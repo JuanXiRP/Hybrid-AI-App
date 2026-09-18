@@ -17,19 +17,13 @@ object HomeModule {
 
     @Provides
     @Singleton
-    fun providePlanApiService(retrofit: Retrofit): PlanApiService {
-        return retrofit.create(PlanApiService::class.java)
-    }
+    fun providePlanApiService(retrofit: Retrofit): PlanApiService = retrofit.create(PlanApiService::class.java)
 
     @Provides
     @Singleton
-    fun providePlanRepository(apiService: PlanApiService): PlanRepository {
-        return PlanRepositoryImpl(apiService)
-    }
+    fun providePlanRepository(apiService: PlanApiService): PlanRepository = PlanRepositoryImpl(apiService)
 
     @Provides
     @Singleton
-    fun provideGetActivePlanUseCase(repository: PlanRepository): GetActivePlanUseCase {
-        return GetActivePlanUseCase(repository)
-    }
+    fun provideGetActivePlanUseCase(repository: PlanRepository): GetActivePlanUseCase = GetActivePlanUseCase(repository)
 }

@@ -6,14 +6,14 @@ import kotlinx.serialization.Serializable
 data class WorkoutPlanDto(
     val durationWeeks: Int = 0,
     val goal: String,
-    val weeks: List<WeekDto>
+    val weeks: List<WeekDto>,
 )
 
 // Represents a single week within the macrocycle
 @Serializable
 data class WeekDto(
     val weekNumber: Int,
-    val days: List<DayDto>
+    val days: List<DayDto>,
 )
 
 // Represents a specific training day
@@ -24,7 +24,7 @@ data class DayDto(
     // "imported" when the session came from a plan the user brought in, "generated" when the AI
     // wrote it. Defaults to "generated" so plans cached before this field existed still parse.
     val source: String = "generated",
-    val exercises: List<ExerciseDto> = emptyList()
+    val exercises: List<ExerciseDto> = emptyList(),
 )
 
 // Represents the lowest level component: the exercise parameters
@@ -33,5 +33,5 @@ data class ExerciseDto(
     val name: String = "Unknown Exercise",
     val sets: String = "-",
     val reps: String = "-",
-    val rpe: String = "-"
+    val rpe: String = "-",
 )

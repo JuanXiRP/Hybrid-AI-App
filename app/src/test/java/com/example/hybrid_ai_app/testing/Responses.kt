@@ -23,12 +23,10 @@ private const val JSON = "application/json"
  * Generic in the body type so it can stand in for any `...Api` return type — the body is never
  * deserialised on the failure path, but the compiler still needs the types to line up.
  */
-fun <T> errorResponse(code: Int, body: String): Response<T> =
-    Response.error(code, body.toResponseBody(JSON.toMediaType()))
+fun <T> errorResponse(code: Int, body: String): Response<T> = Response.error(code, body.toResponseBody(JSON.toMediaType()))
 
 /** A non-2xx response with a completely empty body, which the backend does send on some paths. */
-fun <T> emptyErrorResponse(code: Int): Response<T> =
-    Response.error(code, "".toResponseBody(JSON.toMediaType()))
+fun <T> emptyErrorResponse(code: Int): Response<T> = Response.error(code, "".toResponseBody(JSON.toMediaType()))
 
 /** A 2xx response carrying an already-deserialised body. */
 fun <T> successResponse(body: T): Response<T> = Response.success(body)

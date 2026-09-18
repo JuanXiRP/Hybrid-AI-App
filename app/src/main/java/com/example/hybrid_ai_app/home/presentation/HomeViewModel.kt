@@ -8,8 +8,8 @@ import com.example.hybrid_ai_app.core.data.local.entity.LoggedExerciseEntity
 import com.example.hybrid_ai_app.core.data.local.entity.UserProgressEntity
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutLogEntity
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutPlanEntity
-import com.example.hybrid_ai_app.core.data.remote.dto.WeekDto
 import com.example.hybrid_ai_app.core.data.remote.dto.DayDto
+import com.example.hybrid_ai_app.core.data.remote.dto.WeekDto
 import com.example.hybrid_ai_app.core.domain.model.PremiumRequiredReason
 import com.example.hybrid_ai_app.core.domain.repository.WorkoutPlanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +26,7 @@ sealed interface HomeUiState {
         val currentDay: DayDto?,
         val weeklyCompletion: List<Boolean>,
         val currentWeekNumber: Int,
-        val currentDayIndex: Int
+        val currentDayIndex: Int,
     ) : HomeUiState
     data class Error(val message: String) : HomeUiState
 }
@@ -35,7 +35,7 @@ sealed interface HomeUiState {
 class HomeViewModel @Inject constructor(
     private val repository: WorkoutPlanRepository,
     private val entitlementManager: EntitlementManager,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
 ) : ViewModel() {
 
     val localProfilePicPath = preferencesManager.userProfilePicFlow
@@ -76,7 +76,7 @@ class HomeViewModel @Inject constructor(
                                 currentDay = dayData,
                                 weeklyCompletion = completionList,
                                 currentWeekNumber = weekNum,
-                                currentDayIndex = dayIdx
+                                currentDayIndex = dayIdx,
                             )
                         } else {
                             HomeUiState.Empty
@@ -89,7 +89,7 @@ class HomeViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = HomeUiState.Loading
+            initialValue = HomeUiState.Loading,
         )
 
     fun logCurrentWorkoutAsCompleted(metrics: List<LoggedExerciseEntity> = emptyList()) {
@@ -110,7 +110,7 @@ class HomeViewModel @Inject constructor(
                     dayIndex = currentState.currentDayIndex,
                     timestamp = System.currentTimeMillis(),
                     isCompleted = true,
-                    loggedExercises = metrics
+                    loggedExercises = metrics,
                 )
 
                 val isLastDayOfWeek = currentState.currentDayIndex == 6
@@ -120,7 +120,7 @@ class HomeViewModel @Inject constructor(
                 val updatedProgress = UserProgressEntity(
                     userId = "active_plan",
                     currentWeekNumber = nextWeek,
-                    currentDayIndex = nextDay
+                    currentDayIndex = nextDay,
                 )
 
                 // Pass context to the repository to route the network request
@@ -142,5 +142,4 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
-
 }

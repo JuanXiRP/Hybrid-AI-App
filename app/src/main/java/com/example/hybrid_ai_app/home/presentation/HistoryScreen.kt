@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,7 +28,7 @@ data class LoggedExerciseMetric(
     val sets: String,
     val reps: String,
     val weight: String,
-    val rpe: String
+    val rpe: String,
 )
 
 data class HistoryItem(
@@ -40,14 +39,14 @@ data class HistoryItem(
     val title: String,
     val isCardio: Boolean,
     val summary: String,
-    val loggedMetrics: List<LoggedExerciseMetric> = emptyList()
+    val loggedMetrics: List<LoggedExerciseMetric> = emptyList(),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
     navController: NavController,
-    viewModel: HistoryViewModel = hiltViewModel()
+    viewModel: HistoryViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -60,14 +59,14 @@ fun HistoryScreen(
             HybridTopAppBar(
                 title = stringResource(id = R.string.history_title),
                 profilePicPath = profilePicPath,
-                onProfileClick = { navController.navigate(Screen.Settings.route) }
+                onProfileClick = { navController.navigate(Screen.Settings.route) },
             )
-        }
+        },
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
         ) {
             when (val state = uiState) {
                 is HistoryUiState.Loading -> {
@@ -77,7 +76,7 @@ fun HistoryScreen(
                     Text(
                         text = "Error: ${state.message}",
                         color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier.align(Alignment.Center),
                     )
                 }
                 is HistoryUiState.Empty -> {
@@ -86,7 +85,7 @@ fun HistoryScreen(
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.align(Alignment.Center),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     )
                 }
                 is HistoryUiState.Success -> {
@@ -95,7 +94,7 @@ fun HistoryScreen(
                             .fillMaxSize()
                             .padding(horizontal = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
+                        contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp),
                     ) {
                         item {
                             Card(
@@ -103,14 +102,14 @@ fun HistoryScreen(
                                     .fillMaxWidth()
                                     .padding(bottom = 8.dp),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                                shape = RoundedCornerShape(16.dp)
+                                shape = RoundedCornerShape(16.dp),
                             ) {
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(24.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
+                                    verticalArrangement = Arrangement.Center,
                                 ) {
                                     Text(text = stringResource(id = R.string.analytics_charts_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                     Text(text = stringResource(id = R.string.future_updates_msg), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -121,7 +120,7 @@ fun HistoryScreen(
                         items(state.items, key = { it.logId }) { item ->
                             HistoryCard(
                                 item = item,
-                                onClick = { selectedHistoryItem = item }
+                                onClick = { selectedHistoryItem = item },
                             )
                         }
                     }
@@ -134,7 +133,7 @@ fun HistoryScreen(
                 onDismissRequest = { selectedHistoryItem = null },
                 sheetState = sheetState,
                 shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = MaterialTheme.colorScheme.surface,
             ) {
                 HistoryDetailSheetContent(item = selectedHistoryItem!!)
             }
@@ -150,33 +149,36 @@ fun HistoryCard(item: HistoryItem, onClick: () -> Unit) {
             .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = CardDefaults.outlinedCardBorder(),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Top,
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 ) {
                     Box(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(
-                                if (item.isCardio) MaterialTheme.colorScheme.primaryContainer
-                                else MaterialTheme.colorScheme.secondaryContainer
+                                if (item.isCardio) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.secondaryContainer
+                                },
                             ),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = if (item.isCardio) Icons.Default.Share else Icons.Default.Build,
                             contentDescription = null,
-                            tint = if (item.isCardio) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
+                            tint = if (item.isCardio) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
                         )
                     }
                     Column {
@@ -189,13 +191,13 @@ fun HistoryCard(item: HistoryItem, onClick: () -> Unit) {
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                 ) {
                     Text(
                         text = stringResource(id = R.string.timeline_week_day_indicator, item.weekNumber, item.dayNumber),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -208,7 +210,7 @@ fun HistoryCard(item: HistoryItem, onClick: () -> Unit) {
                 text = item.summary,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
         }
     }
@@ -220,20 +222,20 @@ fun HistoryDetailSheetContent(item: HistoryItem) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(bottom = 32.dp)
+            .padding(bottom = 32.dp),
     ) {
         Text(
             text = stringResource(id = R.string.performance_log_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.ExtraBold,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(bottom = 16.dp),
         )
 
         if (item.loggedMetrics.isEmpty()) {
             Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                 Text(
                     text = stringResource(id = R.string.no_metrics_recorded),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         } else {
@@ -241,12 +243,12 @@ fun HistoryDetailSheetContent(item: HistoryItem) {
                 items(item.loggedMetrics) { metric ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(text = metric.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -254,7 +256,7 @@ fun HistoryDetailSheetContent(item: HistoryItem) {
                                 Text(
                                     text = stringResource(id = R.string.exercise_metrics_label, metric.sets, metric.reps),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
 
@@ -262,14 +264,14 @@ fun HistoryDetailSheetContent(item: HistoryItem) {
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
                                     color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(start = 8.dp)
+                                    modifier = Modifier.padding(start = 8.dp),
                                 ) {
                                     Text(
                                         text = stringResource(id = R.string.metric_weight_suffix, metric.weight),
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.Black,
                                         color = MaterialTheme.colorScheme.onPrimary,
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                                     )
                                 }
                             }

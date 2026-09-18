@@ -2,8 +2,6 @@ package com.example.hybrid_ai_app.home.presentation
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import com.example.hybrid_ai_app.core.presentation.ImportedBadge
-import com.example.hybrid_ai_app.core.presentation.isImported
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +21,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.hybrid_ai_app.R
+import com.example.hybrid_ai_app.core.presentation.ImportedBadge
+import com.example.hybrid_ai_app.core.presentation.isImported
 import com.example.hybrid_ai_app.navigation.MainNavGraph
 import com.example.hybrid_ai_app.navigation.Screen
 
@@ -30,7 +30,7 @@ import com.example.hybrid_ai_app.navigation.Screen
 @Composable
 fun MainScaffold(
     rootNavController: NavHostController,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val bottomNavController = rememberNavController()
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
@@ -50,25 +50,25 @@ fun MainScaffold(
                     icon = { Icon(Icons.Default.Home, contentDescription = null) },
                     label = { Text(stringResource(id = R.string.nav_home)) },
                     selected = currentRoute == Screen.Home.route,
-                    onClick = { bottomNavController.navigate(Screen.Home.route) { launchSingleTop = true } }
+                    onClick = { bottomNavController.navigate(Screen.Home.route) { launchSingleTop = true } },
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.DateRange, contentDescription = null) },
                     label = { Text(stringResource(id = R.string.nav_workouts)) },
                     selected = currentRoute == Screen.Workouts.route,
-                    onClick = { bottomNavController.navigate(Screen.Workouts.route) { launchSingleTop = true } }
+                    onClick = { bottomNavController.navigate(Screen.Workouts.route) { launchSingleTop = true } },
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Face, contentDescription = null) },
                     label = { Text(stringResource(id = R.string.nav_coach)) },
                     selected = currentRoute == Screen.Coach.route,
-                    onClick = { bottomNavController.navigate(Screen.Coach.route) { launchSingleTop = true } }
+                    onClick = { bottomNavController.navigate(Screen.Coach.route) { launchSingleTop = true } },
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.List, contentDescription = null) },
                     label = { Text(stringResource(id = R.string.nav_history)) },
                     selected = currentRoute == Screen.History.route,
-                    onClick = { bottomNavController.navigate(Screen.History.route) { launchSingleTop = true } }
+                    onClick = { bottomNavController.navigate(Screen.History.route) { launchSingleTop = true } },
                 )
             }
         },
@@ -80,21 +80,21 @@ fun MainScaffold(
             if (!isCoachScreen && !isExecutionScreen && !isOnboarding) {
                 FloatingActionButton(
                     onClick = { showWorkoutSelector = true },
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = MaterialTheme.colorScheme.primary,
                 ) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = "Quick Start Workout",
-                        tint = MaterialTheme.colorScheme.onPrimary
+                        tint = MaterialTheme.colorScheme.onPrimary,
                     )
                 }
             }
-        }
+        },
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
             MainNavGraph(
                 navController = bottomNavController,
-                rootNavController = rootNavController
+                rootNavController = rootNavController,
             )
         }
 
@@ -103,7 +103,7 @@ fun MainScaffold(
                 onDismissRequest = { showWorkoutSelector = false },
                 sheetState = sheetState,
                 shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = MaterialTheme.colorScheme.surface,
             ) {
                 when (val state = uiState) {
                     is HomeUiState.Success -> {
@@ -112,7 +112,7 @@ fun MainScaffold(
                                 text = "Select Session · Week ${state.currentWeekNumber}",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(bottom = 16.dp)
+                                modifier = Modifier.padding(bottom = 16.dp),
                             )
 
                             val pendingWorkouts = state.currentWeek.days.mapIndexedNotNull { index, day ->
@@ -122,7 +122,9 @@ fun MainScaffold(
 
                                 if (!isCompleted && !isRestDay) {
                                     Triple(index, day, isCardio)
-                                } else null
+                                } else {
+                                    null
+                                }
                             }
 
                             if (pendingWorkouts.isEmpty()) {
@@ -130,7 +132,7 @@ fun MainScaffold(
                                     Text(
                                         text = "All active sessions for this week are completed! Enjoy your recovery.",
                                         color = MaterialTheme.colorScheme.primary,
-                                        textAlign = TextAlign.Center
+                                        textAlign = TextAlign.Center,
                                     )
                                 }
                             } else {
@@ -142,12 +144,12 @@ fun MainScaffold(
                                                 .clickable {
                                                     showWorkoutSelector = false
                                                     bottomNavController.navigate(
-                                                        Screen.WorkoutExecution.createRoute(state.currentWeekNumber, originalDayIndex)
+                                                        Screen.WorkoutExecution.createRoute(state.currentWeekNumber, originalDayIndex),
                                                     )
                                                 },
                                             colors = CardDefaults.cardColors(
-                                                containerColor = if (isCardio) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                                            )
+                                                containerColor = if (isCardio) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                            ),
                                         ) {
                                             ListItem(
                                                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
@@ -155,13 +157,13 @@ fun MainScaffold(
                                                     Text(
                                                         text = day.dayName,
                                                         fontWeight = FontWeight.Bold,
-                                                        color = if (isCardio) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                                        color = if (isCardio) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                                                     )
                                                 },
                                                 supportingContent = {
                                                     Row(
                                                         verticalAlignment = Alignment.CenterVertically,
-                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                                                     ) {
                                                         Text(text = "${day.exercises.size} Exercises")
                                                         if (day.isImported()) ImportedBadge()
@@ -171,9 +173,9 @@ fun MainScaffold(
                                                     Icon(
                                                         imageVector = if (isCardio) Icons.Default.Share else Icons.Default.Build,
                                                         contentDescription = null,
-                                                        tint = if (isCardio) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                                        tint = if (isCardio) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                                                     )
-                                                }
+                                                },
                                             )
                                         }
                                     }

@@ -10,5 +10,5 @@ data class WorkoutLogEntity(
     val dayIndex: Int,
     val timestamp: Long,
     val isCompleted: Boolean,
-    val loggedExercises: List<LoggedExerciseEntity> = emptyList()
+    val loggedExercises: List<LoggedExerciseEntity> = emptyList(),
 )

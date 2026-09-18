@@ -8,7 +8,7 @@ import javax.inject.Singleton
 
 @Singleton
 class CoachRepository @Inject constructor(
-    private val api: CoachApi
+    private val api: CoachApi,
 ) {
     /**
      * @return the coach's reply, or a failure. A spent daily quota arrives as a
@@ -18,28 +18,26 @@ class CoachRepository @Inject constructor(
     suspend fun sendMessage(
         message: String,
         planContext: String?,
-        history: List<ChatMessageDto>
-    ): Result<String> {
-        return withContext(Dispatchers.IO) {
-            try {
-                val request = ChatRequest(
-                    message = message,
-                    planContext = planContext,
-                    history = history
-                )
-                val response = api.sendMessage(request)
-                val reply = response.body()?.data?.reply
+        history: List<ChatMessageDto>,
+    ): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val request = ChatRequest(
+                message = message,
+                planContext = planContext,
+                history = history,
+            )
+            val response = api.sendMessage(request)
+            val reply = response.body()?.data?.reply
 
-                when {
-                    response.isSuccessful && !reply.isNullOrBlank() -> Result.success(reply)
-                    else -> Result.failure(
-                        response.premiumRequiredOrNull()
-                            ?: Exception("Coach error: HTTP ${response.code()}")
-                    )
-                }
-            } catch (e: Exception) {
-                Result.failure(e)
+            when {
+                response.isSuccessful && !reply.isNullOrBlank() -> Result.success(reply)
+                else -> Result.failure(
+                    response.premiumRequiredOrNull()
+                        ?: Exception("Coach error: HTTP ${response.code()}"),
+                )
             }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }

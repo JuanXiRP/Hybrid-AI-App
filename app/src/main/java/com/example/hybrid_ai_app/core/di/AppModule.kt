@@ -15,9 +15,5 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun providePreferencesManager(@ApplicationContext context: Context): PreferencesManager {
-        return PreferencesManager(context)
-    }
-
-
+    fun providePreferencesManager(@ApplicationContext context: Context): PreferencesManager = PreferencesManager(context)
 }

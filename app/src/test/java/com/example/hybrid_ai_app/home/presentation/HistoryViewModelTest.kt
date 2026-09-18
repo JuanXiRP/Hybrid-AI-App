@@ -62,8 +62,7 @@ class HistoryViewModelTest {
     }
 
     /** What the ViewModel's own SimpleDateFormat produces, so assertions are zone-independent. */
-    private fun expectedDate(timestamp: Long): String =
-        SimpleDateFormat("MMM dd, yyyy - HH:mm", Locale.getDefault()).format(Date(timestamp))
+    private fun expectedDate(timestamp: Long): String = SimpleDateFormat("MMM dd, yyyy - HH:mm", Locale.getDefault()).format(Date(timestamp))
 
     // ------------------------------------------------------------------------------------
     // Empty and error
@@ -231,32 +230,31 @@ class HistoryViewModelTest {
     }
 
     @Test
-    fun `a fourth exercise is elided with an ellipsis rather than overflowing the card`() =
-        runTest {
-            // Arrange
-            val vm = viewModel(
-                logs = listOf(
-                    workoutLogEntity(
-                        loggedExercises = listOf(
-                            loggedExerciseEntity(name = "Squat"),
-                            loggedExerciseEntity(name = "Bench"),
-                            loggedExerciseEntity(name = "Row"),
-                            loggedExerciseEntity(name = "Curl"),
-                        ),
+    fun `a fourth exercise is elided with an ellipsis rather than overflowing the card`() = runTest {
+        // Arrange
+        val vm = viewModel(
+            logs = listOf(
+                workoutLogEntity(
+                    loggedExercises = listOf(
+                        loggedExerciseEntity(name = "Squat"),
+                        loggedExerciseEntity(name = "Bench"),
+                        loggedExerciseEntity(name = "Row"),
+                        loggedExerciseEntity(name = "Curl"),
                     ),
                 ),
-                plan = workoutPlanEntity(),
-            )
+            ),
+            plan = workoutPlanEntity(),
+        )
 
-            // Act & Assert
-            vm.uiState.test {
-                awaitItem()
-                val item = (awaitItem() as HistoryUiState.Success).items.single()
-                assertEquals("Squat, Bench, Row...", item.summary)
-                assertEquals(4, item.loggedMetrics.size)
-                cancelAndIgnoreRemainingEvents()
-            }
+        // Act & Assert
+        vm.uiState.test {
+            awaitItem()
+            val item = (awaitItem() as HistoryUiState.Success).items.single()
+            assertEquals("Squat, Bench, Row...", item.summary)
+            assertEquals(4, item.loggedMetrics.size)
+            cancelAndIgnoreRemainingEvents()
         }
+    }
 
     @Test
     fun `every logged metric is carried through for the expanded card`() = runTest {
@@ -293,28 +291,27 @@ class HistoryViewModelTest {
     }
 
     @Test
-    fun `the day number is one-based for display while the log stores a zero-based index`() =
-        runTest {
-            // Arrange
-            val plan = workoutPlanEntity(
-                weeks = listOf(
-                    weekDto(days = listOf(dayDto(dayName = "A"), dayDto(dayName = "B"))),
-                ),
-            )
-            val vm = viewModel(
-                logs = listOf(workoutLogEntity(dayIndex = 1)),
-                plan = plan,
-            )
+    fun `the day number is one-based for display while the log stores a zero-based index`() = runTest {
+        // Arrange
+        val plan = workoutPlanEntity(
+            weeks = listOf(
+                weekDto(days = listOf(dayDto(dayName = "A"), dayDto(dayName = "B"))),
+            ),
+        )
+        val vm = viewModel(
+            logs = listOf(workoutLogEntity(dayIndex = 1)),
+            plan = plan,
+        )
 
-            // Act & Assert
-            vm.uiState.test {
-                awaitItem()
-                val item = (awaitItem() as HistoryUiState.Success).items.single()
-                assertEquals(2, item.dayNumber)
-                assertEquals("B", item.title)
-                cancelAndIgnoreRemainingEvents()
-            }
+        // Act & Assert
+        vm.uiState.test {
+            awaitItem()
+            val item = (awaitItem() as HistoryUiState.Success).items.single()
+            assertEquals(2, item.dayNumber)
+            assertEquals("B", item.title)
+            cancelAndIgnoreRemainingEvents()
         }
+    }
 
     @Test
     fun `sessions are listed newest first`() = runTest {

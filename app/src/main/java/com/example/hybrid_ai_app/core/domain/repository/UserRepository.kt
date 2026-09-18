@@ -24,7 +24,7 @@ interface UserRepository {
         goal: String,
         providedDomain: String,
         sourceText: String?,
-        attachments: List<PlanAttachmentDto>
+        attachments: List<PlanAttachmentDto>,
     ): Result<Unit>
 
     suspend fun getUserProfile(): Result<UserDto>

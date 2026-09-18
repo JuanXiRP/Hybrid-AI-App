@@ -8,5 +8,5 @@ data class LoggedExerciseEntity(
     val sets: String,
     val reps: String,
     val weight: String,
-    val rpe: String
+    val rpe: String,
 )

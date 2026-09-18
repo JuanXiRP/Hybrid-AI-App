@@ -27,15 +27,14 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
     private val api: UserApi,
     // Injected rather than built inline so the fire-and-forget sync below runs on a scheduler
     // tests control. See CoroutinesModule.
-    @ApplicationScope private val syncScope: CoroutineScope
+    @ApplicationScope private val syncScope: CoroutineScope,
 ) : WorkoutPlanRepository {
 
     override fun getActivePlan(): Flow<WorkoutPlanEntity?> = planDao.getActivePlan()
 
     override fun getUserProgress(): Flow<UserProgressEntity?> = progressDao.getUserProgress()
 
-    override fun getLogsForWeek(weekNumber: Int): Flow<List<WorkoutLogEntity>> =
-        progressDao.getLogsForWeek(weekNumber)
+    override fun getLogsForWeek(weekNumber: Int): Flow<List<WorkoutLogEntity>> = progressDao.getLogsForWeek(weekNumber)
 
     override fun getAllWorkoutLogs(): Flow<List<WorkoutLogEntity>> = progressDao.getAllWorkoutLogs()
 
@@ -56,7 +55,7 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
                 weekNumber = weekNumber,
                 dayIndex = dayIndex,
                 timestamp = System.currentTimeMillis(),
-                isCompleted = true
+                isCompleted = true,
             )
             progressDao.insertWorkoutLog(newLog)
         }
@@ -66,9 +65,9 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
         log: WorkoutLogEntity,
         nextProgress: UserProgressEntity,
         workoutType: String,
-        dayName: String
+        dayName: String,
     ) {
-        //Persistencia local en Room
+        // Persistencia local en Room
         database.withTransaction {
             progressDao.insertWorkoutLog(log)
             progressDao.insertOrUpdateProgress(nextProgress)
@@ -91,17 +90,18 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
                                 targetWeight = 0.0,
                                 actualWeight = entity.weight.toDoubleOrNull() ?: 0.0,
                                 targetRpe = entity.rpe.toIntOrNull() ?: 8,
-                                actualRpe = entity.rpe.toIntOrNull() ?: 8
+                                actualRpe = entity.rpe.toIntOrNull() ?: 8,
                             )
-                        }
+                        },
                     )
 
                     val response = api.syncStrengthWorkout(strengthPayload)
-                    if (response.isSuccessful) android.util.Log.d("MONGO_SYNC", " ÉXITO: Entreno de FUERZA guardado en MongoDB")
-                    else android.util.Log.e("MONGO_SYNC", " ERROR: ${response.errorBody()?.string()}")
-
+                    if (response.isSuccessful) {
+                        android.util.Log.d("MONGO_SYNC", " ÉXITO: Entreno de FUERZA guardado en MongoDB")
+                    } else {
+                        android.util.Log.e("MONGO_SYNC", " ERROR: ${response.errorBody()?.string()}")
+                    }
                 } else if (workoutType == "cardio" || workoutType == "run") {
-
                     // Extraemos el RPE si el usuario lo introdujo, o mandamos 8 por defecto
                     val rpeValue = log.loggedExercises.firstOrNull()?.rpe?.toIntOrNull() ?: 8
 
@@ -113,12 +113,15 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
                         actualPace = 0,
                         elevationGain = 0.0,
                         rpe = rpeValue,
-                        gpsPath = emptyList()
+                        gpsPath = emptyList(),
                     )
 
                     val response = api.syncRunWorkout(runPayload)
-                    if (response.isSuccessful) android.util.Log.d("MONGO_SYNC", " ÉXITO: Entreno de CARRERA guardado en MongoDB")
-                    else android.util.Log.e("MONGO_SYNC", " ERROR: ${response.errorBody()?.string()}")
+                    if (response.isSuccessful) {
+                        android.util.Log.d("MONGO_SYNC", " ÉXITO: Entreno de CARRERA guardado en MongoDB")
+                    } else {
+                        android.util.Log.e("MONGO_SYNC", " ERROR: ${response.errorBody()?.string()}")
+                    }
                 }
             } catch (e: Exception) {
                 android.util.Log.e("MONGO_SYNC", " ERROR de Red/Código", e)
@@ -128,9 +131,9 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
     override suspend fun clearActivePlanAndProgress() {
         // withTransaction guarantees all tables are cleared simultaneously
         database.withTransaction {
-            planDao.clearPlan()          // Uses your existing method in WorkoutPlanDao
+            planDao.clearPlan() // Uses your existing method in WorkoutPlanDao
             progressDao.clearAllProgress() // Uses the new method
-            progressDao.clearAllLogs()     // Uses the new method
+            progressDao.clearAllLogs() // Uses the new method
         }
     }
 }

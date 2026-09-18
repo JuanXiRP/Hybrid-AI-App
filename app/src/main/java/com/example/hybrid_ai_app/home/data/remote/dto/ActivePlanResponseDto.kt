@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ActivePlanResponseDto(
     @SerialName("success") val success: Boolean,
-    @SerialName("data") val data: WorkoutPlanDto?
+    @SerialName("data") val data: WorkoutPlanDto?,
 )

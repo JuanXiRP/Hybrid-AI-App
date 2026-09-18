@@ -15,10 +15,10 @@ import com.example.hybrid_ai_app.core.data.local.entity.WorkoutPlanEntity
     entities = [
         WorkoutPlanEntity::class,
         UserProgressEntity::class,
-        WorkoutLogEntity::class
+        WorkoutLogEntity::class,
     ],
     version = 3,
-    exportSchema = false
+    exportSchema = false,
 )
 @TypeConverters(WorkoutPlanConverters::class, WorkoutLogConverters::class)
 abstract class AppDatabase : RoomDatabase() {

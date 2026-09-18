@@ -27,7 +27,7 @@ class CoachViewModel @Inject constructor(
     private val coachRepository: CoachRepository,
     private val workoutPlanRepository: WorkoutPlanRepository,
     private val entitlementManager: EntitlementManager,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
 ) : ViewModel() {
 
     val messages = mutableStateListOf<ChatMessage>()
@@ -60,8 +60,8 @@ class CoachViewModel @Inject constructor(
             ChatMessage(
                 id = "welcome",
                 text = "¡Hola! Soy tu Asistente Personal de entrenamiento. ¿Tienes alguna duda con los RPE o necesitas adaptar algún ejercicio?",
-                sender = MessageSender.COACH
-            )
+                sender = MessageSender.COACH,
+            ),
         )
     }
 
@@ -95,19 +95,19 @@ class CoachViewModel @Inject constructor(
             .map { msg ->
                 ChatMessageDto(
                     role = if (msg.sender == MessageSender.USER) "user" else "model",
-                    content = msg.text
+                    content = msg.text,
                 )
             }
 
-        //Append user message to UI immediately
+        // Append user message to UI immediately
         val userMessage = ChatMessage(
             id = System.currentTimeMillis().toString(),
             text = text,
-            sender = MessageSender.USER
+            sender = MessageSender.USER,
         )
         messages.add(userMessage)
 
-        //Trigger asynchronous call to backend proxy
+        // Trigger asynchronous call to backend proxy
         viewModelScope.launch {
             _isLoading.value = true
             val planContext = PlanContextFormatter.format(activePlan)
@@ -120,8 +120,8 @@ class CoachViewModel @Inject constructor(
                         ChatMessage(
                             id = System.currentTimeMillis().toString(),
                             text = reply,
-                            sender = MessageSender.COACH
-                        )
+                            sender = MessageSender.COACH,
+                        ),
                     )
                     // The message just sent counts against today's quota.
                     entitlementManager.refresh()
@@ -139,8 +139,8 @@ class CoachViewModel @Inject constructor(
                             ChatMessage(
                                 id = System.currentTimeMillis().toString(),
                                 text = "Lo siento, he tenido un problema de conexión. ¿Podrías repetir eso?",
-                                sender = MessageSender.COACH
-                            )
+                                sender = MessageSender.COACH,
+                            ),
                         )
                     }
                 }

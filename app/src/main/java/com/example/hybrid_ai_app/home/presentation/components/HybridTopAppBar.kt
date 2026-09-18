@@ -26,12 +26,12 @@ fun HybridTopAppBar(
     title: String,
     label: String? = null,
     profilePicPath: String? = null,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background),
     ) {
         // Brand & Profile Row
         Row(
@@ -39,21 +39,21 @@ fun HybridTopAppBar(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(
                     painter = painterResource(id = R.drawable.only_logo),
                     contentDescription = "Hybrid Icon",
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier.height(100.dp)
+                    modifier = Modifier.height(100.dp),
                 )
                 Spacer(modifier = Modifier.width(30.dp))
                 Image(
                     painter = painterResource(id = R.drawable.only_text),
                     contentDescription = "Hybrid Wordmark",
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier.height(100.dp)
+                    modifier = Modifier.height(100.dp),
                 )
             }
 
@@ -67,7 +67,7 @@ fun HybridTopAppBar(
                     .size(40.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .clickable { onProfileClick() }
+                    .clickable { onProfileClick() },
             )
         }
 
@@ -75,7 +75,7 @@ fun HybridTopAppBar(
         Column(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .padding(bottom = 12.dp)
+                .padding(bottom = 12.dp),
         ) {
             if (label != null) {
                 Text(
@@ -83,13 +83,13 @@ fun HybridTopAppBar(
                     style = MaterialTheme.typography.labelMedium.copy(
                         letterSpacing = 1.5.sp,
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                    )
+                        fontWeight = FontWeight.Bold,
+                    ),
                 )
             }
             Text(
                 text = title,
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black)
+                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black),
             )
         }
     }

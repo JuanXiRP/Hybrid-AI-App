@@ -18,15 +18,16 @@ data class UserDto(
     val daysAvailable: Int? = null,
     val planDuration: Int? = null,
     val injuries: List<String> = emptyList(),
-    val isPremium: Boolean = false
+    val isPremium: Boolean = false,
 )
 
 @Serializable
 data class UserProfileResponse(
     val success: Boolean,
-    val data: UserDto
+    val data: UserDto,
 )
+
 @Serializable
 data class GoogleAuthRequest(
-    @SerialName("idToken") val idToken: String
+    @SerialName("idToken") val idToken: String,
 )

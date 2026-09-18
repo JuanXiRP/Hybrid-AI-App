@@ -16,7 +16,7 @@ import okhttp3.Route
  * and the failed request retried with the new credential.
  */
 class TokenAuthenticator(
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
 ) : Authenticator {
 
     override fun authenticate(route: Route?, response: Response): Request? {

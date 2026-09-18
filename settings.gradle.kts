@@ -21,4 +21,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Hybrid-AI-App"
 include(":app")
- 

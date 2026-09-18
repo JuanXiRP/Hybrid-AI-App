@@ -7,5 +7,5 @@ import androidx.room.PrimaryKey
 data class UserProgressEntity(
     @PrimaryKey val userId: String,
     val currentWeekNumber: Int = 1,
-    val currentDayIndex: Int = 0
+    val currentDayIndex: Int = 0,
 )

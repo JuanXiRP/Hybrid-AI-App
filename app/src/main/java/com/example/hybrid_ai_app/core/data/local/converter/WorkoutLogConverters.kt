@@ -8,16 +8,12 @@ import kotlinx.serialization.json.Json
 class WorkoutLogConverters {
 
     @TypeConverter
-    fun fromLoggedExerciseList(value: List<LoggedExerciseEntity>): String {
-        return Json.encodeToString(value)
-    }
+    fun fromLoggedExerciseList(value: List<LoggedExerciseEntity>): String = Json.encodeToString(value)
 
     @TypeConverter
-    fun toLoggedExerciseList(value: String): List<LoggedExerciseEntity> {
-        return try {
-            Json.decodeFromString(value)
-        } catch (e: Exception) {
-            emptyList()
-        }
+    fun toLoggedExerciseList(value: String): List<LoggedExerciseEntity> = try {
+        Json.decodeFromString(value)
+    } catch (e: Exception) {
+        emptyList()
     }
 }

@@ -14,7 +14,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -22,7 +21,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -32,18 +30,18 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.hybrid_ai_app.R
 import com.example.hybrid_ai_app.navigation.Screen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
-import com.example.hybrid_ai_app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     navController: NavController,
     rootNavController: NavController,
-    viewModel: SettingsViewModel = hiltViewModel()
+    viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val currentLanguage by viewModel.currentLanguage.collectAsState(initial = "en")
     val isDarkMode by viewModel.isDarkMode.collectAsState(initial = false)
@@ -61,9 +59,9 @@ fun SettingsScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(id = R.string.cd_go_back))
                     }
-                }
+                },
             )
-        }
+        },
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -71,9 +69,8 @@ fun SettingsScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-
             when (val state = profileState) {
                 is ProfileState.Loading -> {
                     Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
@@ -85,7 +82,7 @@ fun SettingsScreen(
                         Text(
                             text = stringResource(id = R.string.dialog_regenerate_title) + ": ${state.message}",
                             modifier = Modifier.padding(16.dp),
-                            color = MaterialTheme.colorScheme.onErrorContainer
+                            color = MaterialTheme.colorScheme.onErrorContainer,
                         )
                     }
                 }
@@ -104,7 +101,7 @@ fun SettingsScreen(
                     var editDays by remember(user) { mutableStateOf(user.daysAvailable?.toString() ?: "") }
 
                     val photoPickerLauncher = rememberLauncherForActivityResult(
-                        contract = ActivityResultContracts.PickVisualMedia()
+                        contract = ActivityResultContracts.PickVisualMedia(),
                     ) { uri: Uri? ->
                         uri?.let { validUri ->
                             coroutineScope.launch(Dispatchers.IO) {
@@ -127,14 +124,13 @@ fun SettingsScreen(
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                     ) {
                         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
                             ) {
                                 AsyncImage(
                                     model = localProfilePic ?: com.google.android.gms.location.places.R.drawable.powered_by_google_light,
@@ -145,9 +141,9 @@ fun SettingsScreen(
                                         .clip(CircleShape)
                                         .clickable {
                                             photoPickerLauncher.launch(
-                                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
                                             )
-                                        }
+                                        },
                                 )
 
                                 Column {
@@ -165,7 +161,7 @@ fun SettingsScreen(
                                 onValueChange = { editName = it },
                                 label = { Text(text = stringResource(id = R.string.label_display_name)) },
                                 modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
+                                singleLine = true,
                             )
 
                             OutlinedTextField(
@@ -174,14 +170,14 @@ fun SettingsScreen(
                                 label = { Text(text = stringResource(id = R.string.label_weight)) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
+                                singleLine = true,
                             )
 
                             OutlinedTextField(
                                 value = editGoal,
                                 onValueChange = { editGoal = it },
                                 label = { Text(text = stringResource(id = R.string.label_main_goal)) },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
                             )
 
                             OutlinedTextField(
@@ -190,7 +186,7 @@ fun SettingsScreen(
                                 label = { Text(text = stringResource(id = R.string.label_days_available)) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
+                                singleLine = true,
                             )
 
                             Button(
@@ -202,11 +198,11 @@ fun SettingsScreen(
                                     viewModel.updateProfileMetrics(
                                         weight = editWeight.toDoubleOrNull(),
                                         goal = editGoal,
-                                        daysAvailable = editDays.toIntOrNull()
+                                        daysAvailable = editDays.toIntOrNull(),
                                     )
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                enabled = !isUpdating
+                                enabled = !isUpdating,
                             ) {
                                 if (isUpdating) {
                                     CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
@@ -223,24 +219,24 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { rootNavController.navigate(Screen.Paywall.route) },
-                            colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color(0xFF165239))
+                            colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color(0xFF165239)),
                         ) {
                             Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = Icons.Default.Star,
                                     contentDescription = null,
-                                    tint = androidx.compose.ui.graphics.Color.Yellow
+                                    tint = androidx.compose.ui.graphics.Color.Yellow,
                                 )
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Column {
                                     Text(
                                         text = stringResource(id = R.string.upgrade_promo_title),
                                         color = androidx.compose.ui.graphics.Color.White,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
                                     )
                                     Text(
                                         text = stringResource(id = R.string.upgrade_promo_desc),
-                                        color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.8f)
+                                        color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.8f),
                                     )
                                 }
                             }
@@ -249,10 +245,9 @@ fun SettingsScreen(
                 }
             }
 
-
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(text = stringResource(id = R.string.app_preferences_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -277,7 +272,7 @@ fun SettingsScreen(
                 Button(
                     onClick = { showRegenerateDialog = true },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                 ) {
                     Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
@@ -293,7 +288,7 @@ fun SettingsScreen(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
                 ) {
                     Icon(Icons.Default.ExitToApp, contentDescription = stringResource(id = R.string.btn_log_out), modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
@@ -318,7 +313,7 @@ fun SettingsScreen(
                                 }
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                     ) {
                         Text(text = stringResource(id = R.string.btn_yes_regenerate))
                     }
@@ -327,7 +322,7 @@ fun SettingsScreen(
                     OutlinedButton(onClick = { showRegenerateDialog = false }) {
                         Text(text = stringResource(id = R.string.btn_cancel))
                     }
-                }
+                },
             )
         }
     }

@@ -1,24 +1,20 @@
 package com.example.hybrid_ai_app.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.hybrid_ai_app.auth.presentation.AuthScreen
-import com.example.hybrid_ai_app.onboarding.presentation.OnboardingScreen
-import com.example.hybrid_ai_app.home.presentation.MainScaffold
-import com.example.hybrid_ai_app.home.presentation.HomeScreen
-import com.example.hybrid_ai_app.home.presentation.WorkoutsScreen
 import com.example.hybrid_ai_app.home.presentation.CoachScreen
 import com.example.hybrid_ai_app.home.presentation.HistoryScreen
+import com.example.hybrid_ai_app.home.presentation.HomeScreen
+import com.example.hybrid_ai_app.home.presentation.MainScaffold
 import com.example.hybrid_ai_app.home.presentation.PaywallScreen
 import com.example.hybrid_ai_app.home.presentation.WorkoutExecutionScreen
+import com.example.hybrid_ai_app.home.presentation.WorkoutsScreen
+import com.example.hybrid_ai_app.onboarding.presentation.OnboardingScreen
 import com.example.hybrid_ai_app.settings.presentation.SettingsScreen
 
 sealed class Screen(val route: String) {
@@ -33,21 +29,21 @@ sealed class Screen(val route: String) {
     object Coach : Screen("coach")
     object History : Screen("history")
     object WorkoutExecution : Screen("workout_execution/{weekNumber}/{dayIndex}") {
-        fun createRoute(weekNumber: Int, dayIndex: Int): String {
-            return "workout_execution/$weekNumber/$dayIndex"
-        }
+        fun createRoute(weekNumber: Int, dayIndex: Int): String = "workout_execution/$weekNumber/$dayIndex"
     }
     object Settings : Screen("settings")
     object Paywall : Screen("paywall")
 }
 
-//GRAFO RAÍZ
+// GRAFO RAÍZ
 @Composable
-fun RootNavGraph(navController: NavHostController,
-                 startDestination: String = Screen.MainContainer.route) {
+fun RootNavGraph(
+    navController: NavHostController,
+    startDestination: String = Screen.MainContainer.route,
+) {
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = startDestination,
     ) {
         composable(route = Screen.Auth.route) {
             AuthScreen(
@@ -61,7 +57,7 @@ fun RootNavGraph(navController: NavHostController,
                     navController.navigate(targetRoute) {
                         popUpTo(Screen.Auth.route) { inclusive = true }
                     }
-                }
+                },
             )
         }
 
@@ -72,7 +68,7 @@ fun RootNavGraph(navController: NavHostController,
                         popUpTo(Screen.Onboarding.route) { inclusive = true }
                     }
                 },
-                onUpgradeRequired = { navController.navigate(Screen.Paywall.route) }
+                onUpgradeRequired = { navController.navigate(Screen.Paywall.route) },
             )
         }
 
@@ -81,7 +77,7 @@ fun RootNavGraph(navController: NavHostController,
         }
         composable(route = Screen.Paywall.route) {
             com.example.hybrid_ai_app.home.presentation.PaywallScreen(
-                navController = navController
+                navController = navController,
             )
         }
     }
@@ -90,11 +86,11 @@ fun RootNavGraph(navController: NavHostController,
 @Composable
 fun MainNavGraph(
     navController: NavHostController,
-    rootNavController: NavHostController
+    rootNavController: NavHostController,
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route
+        startDestination = Screen.Home.route,
     ) {
         composable(route = Screen.Home.route) {
             HomeScreen(navController = navController, rootNavController = rootNavController)
@@ -114,8 +110,8 @@ fun MainNavGraph(
             route = Screen.WorkoutExecution.route,
             arguments = listOf(
                 navArgument("weekNumber") { type = NavType.IntType },
-                navArgument("dayIndex") { type = NavType.IntType }
-            )
+                navArgument("dayIndex") { type = NavType.IntType },
+            ),
         ) { backStackEntry ->
             val weekNumber = backStackEntry.arguments?.getInt("weekNumber") ?: 1
             val dayIndex = backStackEntry.arguments?.getInt("dayIndex") ?: 0
@@ -124,14 +120,14 @@ fun MainNavGraph(
                 weekNumber = weekNumber,
                 dayIndex = dayIndex,
                 navController = navController,
-                rootNavController = rootNavController
+                rootNavController = rootNavController,
             )
         }
 
         composable(route = Screen.Settings.route) {
             SettingsScreen(
                 navController = navController,
-                rootNavController = rootNavController // 🟢 Passed to Settings
+                rootNavController = rootNavController, // 🟢 Passed to Settings
             )
         }
         // Paywall is deliberately NOT registered here: it lives in RootNavGraph so it covers the

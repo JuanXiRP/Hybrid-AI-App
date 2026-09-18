@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class LoginRequest(
     @SerialName("email") val email: String,
-    @SerialName("password") val password: String
+    @SerialName("password") val password: String,
 )
 
 // Request body for Register
@@ -24,7 +24,7 @@ data class RegisterRequest(
     @SerialName("goal") val goal: String = "both",
     @SerialName("fitnessLevel") val fitnessLevel: String = "beginner",
     @SerialName("daysAvailable") val daysAvailable: Int = 3,
-    @SerialName("planDuration") val planDuration: Int = 8
+    @SerialName("planDuration") val planDuration: Int = 8,
 )
 
 @Serializable
@@ -33,5 +33,5 @@ data class AuthResponse(
     // Provide explicit null defaults to avoid crashes if the backend omits these fields
     @SerialName("token") val token: String? = null,
     @SerialName("message") val message: String? = null,
-    @SerialName("has_completed_onboarding") val hasCompletedOnboarding: Boolean = false
+    @SerialName("has_completed_onboarding") val hasCompletedOnboarding: Boolean = false,
 )

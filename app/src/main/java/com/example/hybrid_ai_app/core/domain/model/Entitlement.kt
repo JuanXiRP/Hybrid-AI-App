@@ -51,7 +51,8 @@ data class Entitlement(
 enum class EntitlementStatus {
     PREMIUM,
     TRIAL,
-    EXPIRED;
+    EXPIRED,
+    ;
 
     companion object {
         fun fromWire(value: String?): EntitlementStatus = when (value) {
@@ -70,7 +71,8 @@ enum class PremiumRequiredReason {
     TRIAL_EXPIRED,
     PLAN_LIMIT_REACHED,
     CHAT_QUOTA_EXCEEDED,
-    UNKNOWN;
+    UNKNOWN,
+    ;
 
     companion object {
         fun fromCode(code: String?): PremiumRequiredReason = when (code) {

@@ -48,7 +48,7 @@ import kotlin.coroutines.resume
  */
 @Singleton
 class BillingManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) : PurchasesUpdatedListener {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -58,7 +58,7 @@ class BillingManager @Inject constructor(
         // The no-arg overload was removed in Billing 8. One-time products are enabled to match
         // the previous behaviour, even though we currently only sell a subscription.
         .enablePendingPurchases(
-            PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
+            PendingPurchasesParams.newBuilder().enableOneTimeProducts().build(),
         )
         .build()
 
@@ -66,7 +66,7 @@ class BillingManager @Inject constructor(
     private val _purchaseEvents = MutableSharedFlow<PurchaseEvent>(
         replay = 0,
         extraBufferCapacity = 8,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
     val purchaseEvents: SharedFlow<PurchaseEvent> = _purchaseEvents.asSharedFlow()
 
@@ -128,8 +128,8 @@ class BillingManager @Inject constructor(
                     QueryProductDetailsParams.Product.newBuilder()
                         .setProductId(SUBSCRIPTION_ID)
                         .setProductType(BillingClient.ProductType.SUBS)
-                        .build()
-                )
+                        .build(),
+                ),
             )
             .build()
 
@@ -177,8 +177,8 @@ class BillingManager @Inject constructor(
                         BillingFlowParams.ProductDetailsParams.newBuilder()
                             .setProductDetails(details)
                             .setOfferToken(offerToken)
-                            .build()
-                    )
+                            .build(),
+                    ),
                 )
                 .build()
 
@@ -247,7 +247,7 @@ class BillingManager @Inject constructor(
                     _purchaseEvents.emit(PurchaseEvent.AlreadyOwned)
 
                 else -> _purchaseEvents.emit(
-                    PurchaseEvent.Failed(billingResult.debugMessage.ifBlank { "Purchase failed." })
+                    PurchaseEvent.Failed(billingResult.debugMessage.ifBlank { "Purchase failed." }),
                 )
             }
         }

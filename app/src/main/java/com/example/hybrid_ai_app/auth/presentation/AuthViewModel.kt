@@ -9,8 +9,8 @@ import com.example.hybrid_ai_app.auth.data.remote.LoginRequest
 import com.example.hybrid_ai_app.auth.data.remote.RegisterRequest
 import com.example.hybrid_ai_app.core.data.PreferencesManager
 import com.example.hybrid_ai_app.core.data.remote.UserApi
-import com.example.hybrid_ai_app.core.data.remote.serverMessageOrNull
 import com.example.hybrid_ai_app.core.data.remote.dto.GoogleAuthRequest
+import com.example.hybrid_ai_app.core.data.remote.serverMessageOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -18,7 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val api: UserApi,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
 ) : ViewModel() {
 
     var isLoginMode by mutableStateOf(true)
@@ -37,8 +37,12 @@ class AuthViewModel @Inject constructor(
         isLoginMode = !isLoginMode
     }
 
-    fun updateEmail(newEmail: String) { email = newEmail }
-    fun updatePassword(newPassword: String) { password = newPassword }
+    fun updateEmail(newEmail: String) {
+        email = newEmail
+    }
+    fun updatePassword(newPassword: String) {
+        password = newPassword
+    }
 
     fun authenticate(onSuccess: (hasCompletedOnboarding: Boolean) -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
@@ -74,10 +78,9 @@ class AuthViewModel @Inject constructor(
                     // what made a working server look like a broken app.
                     onError(
                         response.serverMessageOrNull()
-                            ?: "Authentication failed: ${response.code()}"
+                            ?: "Authentication failed: ${response.code()}",
                     )
                 }
-
             } catch (e: Exception) {
                 onError(e.message ?: "Network error")
             } finally {
@@ -89,7 +92,7 @@ class AuthViewModel @Inject constructor(
     fun loginWithGoogle(
         idToken: String,
         onSuccess: (hasCompletedOnboarding: Boolean) -> Unit,
-        onError: (String) -> Unit
+        onError: (String) -> Unit,
     ) {
         viewModelScope.launch {
             isLoading = true
@@ -109,7 +112,7 @@ class AuthViewModel @Inject constructor(
                 } else {
                     onError(
                         response.serverMessageOrNull()
-                            ?: "Google authentication failed: ${response.code()}"
+                            ?: "Google authentication failed: ${response.code()}",
                     )
                 }
             } catch (e: Exception) {

@@ -8,22 +8,22 @@ data class ActivePlan(
     val durationWeeks: Int,
     val goal: String,
     val weeks: List<PlanWeek>,
-    val isActive: Boolean
+    val isActive: Boolean,
 )
 
 data class PlanWeek(
     val weekNumber: Int,
-    val days: List<PlanDay>
+    val days: List<PlanDay>,
 )
 
 data class PlanDay(
     val dayName: String,
-    val exercises: List<Exercise>
+    val exercises: List<Exercise>,
 )
 
 data class Exercise(
     val name: String,
     val sets: String,
     val reps: String,
-    val rpe: String
+    val rpe: String,
 )

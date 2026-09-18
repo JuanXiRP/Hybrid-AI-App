@@ -9,7 +9,7 @@ data class WorkoutStrengthDto(
     val userId: String? = null,
     val date: String? = null,
     val routineType: String,
-    val exercises: List<StrengthExerciseDto> = emptyList()
+    val exercises: List<StrengthExerciseDto> = emptyList(),
 )
 
 @Serializable
@@ -20,5 +20,5 @@ data class StrengthExerciseDto(
     val targetWeight: Double,
     val actualWeight: Double? = null,
     val targetRpe: Int,
-    val actualRpe: Int? = null
+    val actualRpe: Int? = null,
 )

@@ -19,7 +19,7 @@ object JwtUtils {
             if (parts.size < 2) return true
 
             val payloadJson = String(
-                Base64.decode(parts[1], Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+                Base64.decode(parts[1], Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING),
             )
 
             val exp = Regex("\"exp\"\\s*:\\s*(\\d+)")

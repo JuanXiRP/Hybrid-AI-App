@@ -1,8 +1,8 @@
 package com.example.hybrid_ai_app.core.domain.repository
 
-import com.example.hybrid_ai_app.core.data.local.entity.WorkoutPlanEntity
 import com.example.hybrid_ai_app.core.data.local.entity.UserProgressEntity
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutLogEntity
+import com.example.hybrid_ai_app.core.data.local.entity.WorkoutPlanEntity
 import kotlinx.coroutines.flow.Flow
 
 interface WorkoutPlanRepository {
@@ -22,7 +22,7 @@ interface WorkoutPlanRepository {
         log: WorkoutLogEntity,
         nextProgress: UserProgressEntity,
         workoutType: String,
-        dayName: String
+        dayName: String,
     )
     suspend fun clearActivePlanAndProgress()
 }

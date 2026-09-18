@@ -38,7 +38,7 @@ import com.example.hybrid_ai_app.core.util.NotificationHelper
 @Composable
 fun PaywallScreen(
     navController: NavController,
-    viewModel: PaywallViewModel = hiltViewModel()
+    viewModel: PaywallViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -51,7 +51,7 @@ fun PaywallScreen(
     val notificationHelper = remember { NotificationHelper(context) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
+        contract = ActivityResultContracts.RequestPermission(),
     ) { isGranted ->
     }
 
@@ -91,47 +91,47 @@ fun PaywallScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState()),
         ) {
             // Top Header Image Area
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(240.dp)
-                    .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
+                    .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)),
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.paywall_bg_image),
                     contentDescription = stringResource(id = R.string.cd_profile_settings),
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.4f))
+                        .background(Color.Black.copy(alpha = 0.4f)),
                 )
 
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
-                        .padding(16.dp)
+                        .padding(16.dp),
                 ) {
                     Surface(
                         color = Color(0xFF1E5641).copy(alpha = 0.8f),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(16.dp),
                     ) {
                         Text(
                             text = stringResource(id = R.string.exclusive_access),
                             color = Color.White,
                             style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
@@ -139,7 +139,7 @@ fun PaywallScreen(
                         text = stringResource(id = R.string.paywall_title),
                         color = Color.White,
                         style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Black
+                        fontWeight = FontWeight.Black,
                     )
                 }
             }
@@ -148,22 +148,22 @@ fun PaywallScreen(
 
             Column(
                 modifier = Modifier.padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 FeatureCard(
                     icon = Icons.Default.AutoAwesome,
                     title = stringResource(id = R.string.feature_ai_generations_title),
-                    description = stringResource(id = R.string.feature_ai_generations_desc)
+                    description = stringResource(id = R.string.feature_ai_generations_desc),
                 )
                 FeatureCard(
                     icon = Icons.Default.Email,
                     title = stringResource(id = R.string.feature_coach_title),
-                    description = stringResource(id = R.string.feature_coach_desc)
+                    description = stringResource(id = R.string.feature_coach_desc),
                 )
                 FeatureCard(
                     icon = Icons.Default.Star,
                     title = stringResource(id = R.string.feature_analytics_title),
-                    description = stringResource(id = R.string.feature_analytics_desc)
+                    description = stringResource(id = R.string.feature_analytics_desc),
                 )
             }
 
@@ -174,7 +174,7 @@ fun PaywallScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 PriceLabel(uiState)
 
@@ -182,7 +182,7 @@ fun PaywallScreen(
                     text = stringResource(id = R.string.pricing_sub_label),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+                    modifier = Modifier.padding(top = 4.dp, bottom = 16.dp),
                 )
 
                 Button(
@@ -195,14 +195,14 @@ fun PaywallScreen(
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF165239))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF165239)),
                 ) {
                     if (uiState.isPurchasing) {
                         CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                     } else {
                         Text(
                             text = stringResource(id = R.string.btn_unlock_premium),
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         )
                         Spacer(modifier = Modifier.weight(1f))
                         Icon(Icons.Default.ArrowForward, contentDescription = null)
@@ -213,14 +213,14 @@ fun PaywallScreen(
 
                 TextButton(
                     onClick = viewModel::restorePurchases,
-                    enabled = !uiState.isBusy
+                    enabled = !uiState.isBusy,
                 ) {
                     if (uiState.isRestoring) {
                         CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                     } else {
                         Text(
                             text = stringResource(id = R.string.btn_restore_purchase),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -250,7 +250,7 @@ private fun PriceLabel(uiState: PaywallUiState) {
             MaterialTheme.colorScheme.error
         } else {
             Color(0xFF4A7C59)
-        }
+        },
     )
 }
 
@@ -272,18 +272,18 @@ fun FeatureCard(icon: ImageVector, title: String, description: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = CardDefaults.outlinedCardBorder()
+        border = CardDefaults.outlinedCardBorder(),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color(0xFFB5E4CA).copy(alpha = 0.5f)),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(imageVector = icon, contentDescription = null, tint = Color(0xFF165239))
             }
