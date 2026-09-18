@@ -1,0 +1,11 @@
+# Revisions to skip when running `git blame`.
+#
+# Use it with:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+#
+# GitHub reads this file automatically; local git needs the config line above once.
+# Only add commits here that are provably mechanical — a reformat, a rename — never
+# one that also changes behaviour, or blame will quietly point at the wrong author.
+
+# Apply ktlint formatting across the codebase (Spotless 7.0.4 / ktlint 1.6.0).
+47b6d4c32ad6ff1548472e1439a4be20b09e93f7
