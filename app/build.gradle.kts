@@ -79,15 +79,26 @@ android {
         abortOnError = true
         baseline = file("lint-baseline.xml")
 
-        // Disabled rather than baselined: these three compare the declared versions against
-        // whatever is newest on the network TODAY, so a baselined snapshot of them would start
-        // failing CI on an unrelated day when an upstream release happens. Dependency freshness
-        // is a deliberate, reviewed decision here (see the billing note in libs.versions.toml),
-        // not something a build gate should force.
+        // Disabled rather than baselined. None of these checks depend on the source alone —
+        // each compares it against something outside the repo, so the same commit is green on
+        // one machine and red on another, and a baseline entry (keyed to an environment) would
+        // not fix that. Dependency and SDK freshness are deliberate, reviewed decisions here
+        // (see the billing note in libs.versions.toml), not something a build gate should force.
+        //
+        //  - NewerVersionAvailable, GradleDependency, AndroidGradlePluginVersion: compare against
+        //    whatever is newest on the network TODAY.
+        //  - OldTargetApi: compares targetSdk against the newest SDK INSTALLED on the machine
+        //    running lint. First seen on the GitHub runner, which ships a newer SDK than a local
+        //    install — so it passed every local run and failed the first CI run.
+        //  - ExpiringTargetSdkVersion, ExpiredTargetSdkVersion: compare against the CALENDAR
+        //    (Play's annual target-SDK deadline), so they would fail CI on a date with no change.
         disable += setOf(
             "NewerVersionAvailable",
             "GradleDependency",
             "AndroidGradlePluginVersion",
+            "OldTargetApi",
+            "ExpiringTargetSdkVersion",
+            "ExpiredTargetSdkVersion",
         )
 
         xmlReport = true
