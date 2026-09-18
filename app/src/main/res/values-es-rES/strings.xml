@@ -209,6 +209,12 @@
     <!-- Distintivo para las sesiones que aportó el propio usuario -->
     <string name="badge_your_plan">TU PLAN</string>
 
+    <!-- Barra de navegación inferior -->
+    <string name="nav_home">Inicio</string>
+    <string name="nav_workouts">Entrenos</string>
+    <string name="nav_coach">Coach</string>
+    <string name="nav_history">Historial</string>
+
     <!-- Fallos de Google Sign-In. La librería reporta cancelación ante CUALQUIER resultado
          cancelado de Play Services, incluido un package/SHA-1 sin registrar, así que el texto
          tiene que cubrir ambos casos. -->

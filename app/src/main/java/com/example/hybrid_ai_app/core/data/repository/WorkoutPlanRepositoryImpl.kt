@@ -12,9 +12,9 @@ import com.example.hybrid_ai_app.core.data.remote.UserApi
 import com.example.hybrid_ai_app.core.data.remote.dto.StrengthExerciseDto
 import com.example.hybrid_ai_app.core.data.remote.dto.WorkoutRunDto
 import com.example.hybrid_ai_app.core.data.remote.dto.WorkoutStrengthDto
+import com.example.hybrid_ai_app.core.di.ApplicationScope
 import com.example.hybrid_ai_app.core.domain.repository.WorkoutPlanRepository
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -24,7 +24,10 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
     private val database: AppDatabase,
     private val planDao: WorkoutPlanDao,
     private val progressDao: ProgressDao,
-    private val api: UserApi
+    private val api: UserApi,
+    // Injected rather than built inline so the fire-and-forget sync below runs on a scheduler
+    // tests control. See CoroutinesModule.
+    @ApplicationScope private val syncScope: CoroutineScope
 ) : WorkoutPlanRepository {
 
     override fun getActivePlan(): Flow<WorkoutPlanEntity?> = planDao.getActivePlan()
@@ -71,8 +74,10 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
             progressDao.insertOrUpdateProgress(nextProgress)
         }
 
-        // remote synchronization
-        CoroutineScope(Dispatchers.IO).launch {
+        // Remote synchronization. Fire-and-forget on purpose: the user has already seen the
+        // workout marked complete from the local write above, and a failed push is retried on the
+        // next sync rather than surfaced as an error they cannot act on.
+        syncScope.launch {
             try {
                 if (workoutType == "strength") {
                     val strengthPayload = WorkoutStrengthDto(

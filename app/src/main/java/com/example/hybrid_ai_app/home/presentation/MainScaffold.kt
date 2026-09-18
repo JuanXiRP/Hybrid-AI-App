@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -21,6 +22,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.hybrid_ai_app.R
 import com.example.hybrid_ai_app.navigation.MainNavGraph
 import com.example.hybrid_ai_app.navigation.Screen
 
@@ -42,27 +44,29 @@ fun MainScaffold(
     Scaffold(
         bottomBar = {
             NavigationBar {
+                // The label already names the destination, so the icon's content description is
+                // null: TalkBack would otherwise read every tab twice.
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                    label = { Text("Home") },
+                    icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                    label = { Text(stringResource(id = R.string.nav_home)) },
                     selected = currentRoute == Screen.Home.route,
                     onClick = { bottomNavController.navigate(Screen.Home.route) { launchSingleTop = true } }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.DateRange, contentDescription = "Workouts") },
-                    label = { Text("Workouts") },
+                    icon = { Icon(Icons.Default.DateRange, contentDescription = null) },
+                    label = { Text(stringResource(id = R.string.nav_workouts)) },
                     selected = currentRoute == Screen.Workouts.route,
                     onClick = { bottomNavController.navigate(Screen.Workouts.route) { launchSingleTop = true } }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Face, contentDescription = "Coach AI") },
-                    label = { Text("Coach") },
+                    icon = { Icon(Icons.Default.Face, contentDescription = null) },
+                    label = { Text(stringResource(id = R.string.nav_coach)) },
                     selected = currentRoute == Screen.Coach.route,
                     onClick = { bottomNavController.navigate(Screen.Coach.route) { launchSingleTop = true } }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.List, contentDescription = "History") },
-                    label = { Text("History") },
+                    icon = { Icon(Icons.Default.List, contentDescription = null) },
+                    label = { Text(stringResource(id = R.string.nav_history)) },
                     selected = currentRoute == Screen.History.route,
                     onClick = { bottomNavController.navigate(Screen.History.route) { launchSingleTop = true } }
                 )

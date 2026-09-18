@@ -10,7 +10,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  test:
+  quality-and-testing:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -32,12 +32,32 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Run unit tests
+      # Each gate is its own step so a failure is attributable. Formatting runs first and is
+      # separate from lint, so a stray blank line cannot mask a real static-analysis finding —
+      # the same split the backend workflow uses for Prettier vs ESLint.
+
+      - name: Check formatting
+        run: ./gradlew spotlessCheck
+
+      - name: Android Lint
+        run: ./gradlew lintDebug
+
+      - name: Unit tests
         run: ./gradlew testDebugUnitTest
 
-      - name: Upload Test Reports
+      # Variant-suffixed on purpose: the unsuffixed `koverVerify` spans every build variant and
+      # would demand release-variant unit tests too. `koverVerifyDebug` matches the variant the
+      # tests above actually ran against.
+      - name: Coverage gate
+        run: ./gradlew koverVerifyDebug
+
+      - name: Upload reports
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: unit-test-reports
-          path: app/build/reports/tests/testDebugUnitTest/
+          name: build-reports
+          path: |
+            app/build/reports/tests/testDebugUnitTest/
+            app/build/reports/lint-results-debug.html
+            app/build/reports/kover/
+          if-no-files-found: ignore

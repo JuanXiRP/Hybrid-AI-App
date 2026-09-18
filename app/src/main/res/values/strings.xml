@@ -209,6 +209,12 @@
     <!-- Provenance badge shown on sessions the user brought in themselves -->
     <string name="badge_your_plan">YOUR PLAN</string>
 
+    <!-- Bottom navigation bar -->
+    <string name="nav_home">Home</string>
+    <string name="nav_workouts">Workouts</string>
+    <string name="nav_coach">Coach</string>
+    <string name="nav_history">History</string>
+
     <!-- Google Sign-In failures. The library reports a cancellation for ANY cancelled result from
          Play Services, including an unregistered package/SHA-1, so the copy has to cover both. -->
     <string name="google_signin_cancelled">Google sign-in was cancelled. If you didn\'t cancel it, this app\'s OAuth client may not be registered yet.</string>

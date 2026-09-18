@@ -41,6 +41,7 @@ enum class WorkoutStatus {
 @Composable
 fun WorkoutsScreen(
     navController: NavController,
+    rootNavController: NavController,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -84,7 +85,13 @@ fun WorkoutsScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(text = stringResource(id = R.string.no_plan_found))
-                        Button(onClick = { navController.navigate(Screen.Onboarding.route) }) {
+                        // Root graph, same reason as HomeScreen: the inner navController has no
+                        // onboarding destination.
+                        Button(onClick = {
+                            rootNavController.navigate(Screen.Onboarding.route) {
+                                popUpTo(Screen.MainContainer.route) { inclusive = true }
+                            }
+                        }) {
                             Text(text = stringResource(id = R.string.btn_generate_plan))
                         }
                     }

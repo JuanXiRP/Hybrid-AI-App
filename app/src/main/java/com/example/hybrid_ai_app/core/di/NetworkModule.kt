@@ -3,6 +3,7 @@ package com.example.hybrid_ai_app.core.di
 import com.example.hybrid_ai_app.BuildConfig
 import com.example.hybrid_ai_app.coach.data.CoachApi
 import com.example.hybrid_ai_app.core.data.PreferencesManager
+import com.example.hybrid_ai_app.core.data.remote.NetworkJson
 import com.example.hybrid_ai_app.core.data.remote.TokenAuthenticator
 import com.example.hybrid_ai_app.core.data.remote.UserApi
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -10,7 +11,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.serialization.json.Json
 import okhttp3.CertificatePinner
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
@@ -79,12 +79,10 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
-        val networkJson = Json { ignoreUnknownKeys = true }
-
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)
-            .addConverterFactory(networkJson.asConverterFactory("application/json".toMediaType()))
+            .addConverterFactory(NetworkJson.asConverterFactory("application/json".toMediaType()))
             .build()
     }
 

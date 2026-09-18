@@ -7,13 +7,12 @@ import com.example.hybrid_ai_app.core.data.remote.GeneratePlanResponse
 import com.example.hybrid_ai_app.core.data.remote.ImportPlanRequest
 import com.example.hybrid_ai_app.core.data.remote.PlanAttachmentDto
 import com.example.hybrid_ai_app.core.data.remote.UserApi
-import com.example.hybrid_ai_app.core.data.remote.dto.EntitlementDto
+import com.example.hybrid_ai_app.core.data.mapper.toDomain
 import com.example.hybrid_ai_app.core.data.remote.dto.UserDto
 import com.example.hybrid_ai_app.core.data.remote.dto.VerifyPurchaseRequest
 import com.example.hybrid_ai_app.core.data.remote.planImportErrorOrNull
 import com.example.hybrid_ai_app.core.data.remote.premiumRequiredOrNull
 import com.example.hybrid_ai_app.core.domain.model.Entitlement
-import com.example.hybrid_ai_app.core.domain.model.EntitlementStatus
 import com.example.hybrid_ai_app.core.domain.repository.UserRepository
 import com.example.hybrid_ai_app.onboarding.data.remote.dto.ProfileUpdateRequest
 import retrofit2.Response
@@ -166,13 +165,3 @@ class UserRepositoryImpl @Inject constructor(
     }
 
 }
-
-private fun EntitlementDto.toDomain(): Entitlement = Entitlement(
-    status = EntitlementStatus.fromWire(status),
-    trialDaysLeft = trialDaysLeft,
-    plansUsed = plans.used,
-    plansLimit = plans.limit,
-    chatUsed = chat.used,
-    chatLimit = chat.limit,
-    chatResetsAt = chat.resetsAt,
-)

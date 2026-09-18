@@ -100,7 +100,7 @@ fun MainNavGraph(
             HomeScreen(navController = navController, rootNavController = rootNavController)
         }
         composable(route = Screen.Workouts.route) {
-            WorkoutsScreen(navController = navController)
+            WorkoutsScreen(navController = navController, rootNavController = rootNavController)
         }
         composable(route = Screen.Coach.route) {
             // rootNavController so the paywall opens full-screen, without the bottom bar.

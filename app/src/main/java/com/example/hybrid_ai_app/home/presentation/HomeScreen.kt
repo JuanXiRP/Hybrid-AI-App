@@ -92,7 +92,14 @@ fun HomeScreen(
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
-                        Button(onClick = { navController.navigate(Screen.Onboarding.route) }) {
+                        // Onboarding lives in the ROOT graph; the inner (bottom-bar) navController
+                        // cannot resolve it and throws. Clear MainContainer like Settings does, so
+                        // finishing onboarding does not leave a stale home under the new one.
+                        Button(onClick = {
+                            rootNavController.navigate(Screen.Onboarding.route) {
+                                popUpTo(Screen.MainContainer.route) { inclusive = true }
+                            }
+                        }) {
                             Text(text = stringResource(id = R.string.btn_go_onboarding))
                         }
                     }

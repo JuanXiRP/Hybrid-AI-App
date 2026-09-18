@@ -1,11 +1,10 @@
 package com.example.hybrid_ai_app.core.data
 
 import android.util.Log
-import com.example.hybrid_ai_app.core.data.remote.dto.ChatQuotaDto
+import com.example.hybrid_ai_app.core.data.mapper.toDomain
+import com.example.hybrid_ai_app.core.data.mapper.toDto
 import com.example.hybrid_ai_app.core.data.remote.dto.EntitlementDto
-import com.example.hybrid_ai_app.core.data.remote.dto.QuotaDto
 import com.example.hybrid_ai_app.core.domain.model.Entitlement
-import com.example.hybrid_ai_app.core.domain.model.EntitlementStatus
 import com.example.hybrid_ai_app.core.domain.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -69,26 +68,3 @@ class EntitlementManager @Inject constructor(
         const val TAG = "EntitlementManager"
     }
 }
-
-private fun EntitlementDto.toDomain(): Entitlement = Entitlement(
-    status = EntitlementStatus.fromWire(status),
-    trialDaysLeft = trialDaysLeft,
-    plansUsed = plans.used,
-    plansLimit = plans.limit,
-    chatUsed = chat.used,
-    chatLimit = chat.limit,
-    chatResetsAt = chat.resetsAt,
-)
-
-private fun Entitlement.toDto(): EntitlementDto = EntitlementDto(
-    status = when (status) {
-        EntitlementStatus.PREMIUM -> "premium"
-        EntitlementStatus.TRIAL -> "trial"
-        EntitlementStatus.EXPIRED -> "expired"
-    },
-    isPremium = isPremium,
-    trialEndsAt = null,
-    trialDaysLeft = trialDaysLeft,
-    plans = QuotaDto(used = plansUsed, limit = plansLimit),
-    chat = ChatQuotaDto(used = chatUsed, limit = chatLimit, resetsAt = chatResetsAt),
-)

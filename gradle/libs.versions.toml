@@ -1,5 +1,11 @@
 [versions]
 agp = "8.13.2"
+# Format/coverage tooling. These are pinned to EXACT versions on purpose: a minor bump of the
+# formatter changes its output, which turns a green `spotlessCheck` red without a source change.
+spotless = "7.0.4"
+ktlint = "1.6.0"
+kover = "0.9.9"
+turbine = "1.2.1"
 kotlin = "2.0.21"
 ksp = "2.0.21-1.0.28"
 coreKtx = "1.17.0"
@@ -47,10 +53,17 @@ androidx-compose-ui-text = { group = "androidx.compose.ui", name = "ui-text", ve
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 billing = { group = "com.android.billingclient", name = "billing", version.ref = "billing" }
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
+# Deliberately version-less: it resolves through the okhttp-bom 4.12.0 already on the classpath.
+# The standalone latest (5.x) belongs to OkHttp 5 and would put two OkHttp majors on the test
+# classpath alongside the production 4.12.0 client.
+okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 
