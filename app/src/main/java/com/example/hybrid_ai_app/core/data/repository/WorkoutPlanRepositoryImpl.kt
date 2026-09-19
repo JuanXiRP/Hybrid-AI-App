@@ -82,6 +82,11 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
                     val strengthPayload = WorkoutStrengthDto(
                         userId = null, // Backend extracts from JWT
                         routineType = dayName,
+                        // The day this session closed. The plan id is not sent because the cached
+                        // plan does not carry the server's _id; the backend reads a log with no
+                        // plan id as belonging to the athlete's active plan.
+                        weekNumber = log.weekNumber,
+                        dayIndex = log.dayIndex,
                         exercises = log.loggedExercises.map { entity ->
                             StrengthExerciseDto(
                                 exerciseName = entity.name,
@@ -114,6 +119,8 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
                         elevationGain = 0.0,
                         rpe = rpeValue,
                         gpsPath = emptyList(),
+                        weekNumber = log.weekNumber,
+                        dayIndex = log.dayIndex,
                     )
 
                     val response = api.syncRunWorkout(runPayload)

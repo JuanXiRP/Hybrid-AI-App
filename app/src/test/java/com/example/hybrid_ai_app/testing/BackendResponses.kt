@@ -38,6 +38,7 @@ object BackendResponses {
         const val GENERATE_PLAN = "/api/ai/generate-plan"
         const val IMPORT_PLAN = "/api/ai/import-plan"
         const val CHAT = "/api/ai/chat"
+        const val CHAT_HISTORY = "/api/ai/chat/history"
         const val WORKOUTS_STRENGTH = "/api/workouts/strength"
         const val WORKOUTS_RUN = "/api/workouts/run"
         const val PLANS_ACTIVE = "/api/plans/active"
@@ -235,6 +236,33 @@ object BackendResponses {
         append("\"message\":\"Your free plan includes one generated routine.\",")
         append("\"data\":{\"used\":").append(used).append(",\"limit\":").append(limit).append("}}")
     }
+
+    /**
+     * `GET /api/ai/chat/history` — the transcript the backend stores, oldest turn first.
+     *
+     * `role` uses Gemini's vocabulary ('user' | 'model'), and `created_at` / `has_more` are two
+     * more of the API's handful of snake_case keys.
+     */
+    fun chatHistory(
+        turns: List<Pair<String, String>> = listOf(
+            "user" to "¿Cuánto peso en sentadilla?",
+            "model" to "Empieza con RPE 7.",
+        ),
+        hasMore: Boolean = false,
+        firstCreatedAt: String = "2026-09-18T09:59:00.000Z",
+    ): String = buildString {
+        append("{\"success\":true,\"data\":{\"messages\":[")
+        turns.forEachIndexed { index, (role, content) ->
+            if (index > 0) append(",")
+            append("{\"role\":\"").append(role).append("\",")
+            append("\"content\":\"").append(content).append("\",")
+            append("\"created_at\":\"").append(firstCreatedAt).append("\"}")
+        }
+        append("],\"has_more\":").append(hasMore).append("}}")
+    }
+
+    /** `GET /api/ai/chat/history` for an athlete who has never chatted. */
+    fun emptyChatHistory(): String = "{\"success\":true,\"data\":{\"messages\":[],\"has_more\":false}}"
 
     /** 402 from `requireChatQuota`. `data` is `{used, limit, resets_at}` — always UTC midnight. */
     fun chatQuotaExceeded(

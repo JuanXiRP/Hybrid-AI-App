@@ -73,6 +73,9 @@ class CoachViewModelTest {
         every { workoutPlanRepository.getActivePlan() } returns activePlanFlow
         every { preferencesManager.userProfilePicFlow } returns flowOf(null)
         coEvery { entitlementManager.refresh() } returns Result.success(trialEntitlement())
+        // init now asks the backend for the stored transcript. Empty by default: the greeting-only
+        // start is what every test below was written against.
+        coEvery { coachRepository.loadHistory(any()) } returns Result.success(emptyList())
     }
 
     private fun viewModel() = CoachViewModel(
@@ -81,6 +84,100 @@ class CoachViewModelTest {
         entitlementManager,
         preferencesManager,
     )
+
+    // ------------------------------------------------------------------------------------
+    // Restoring the stored conversation
+    // ------------------------------------------------------------------------------------
+
+    @Test
+    fun `the stored transcript replaces the greeting on entry`() = runTest {
+        // The fix for the coach forgetting everything on a tab switch: the server keeps the
+        // conversation, this screen asks for it back.
+        // Arrange
+        coEvery { coachRepository.loadHistory(any()) } returns Result.success(
+            listOf(
+                ChatMessageDto(role = "user", content = "¿Cuánto peso?"),
+                ChatMessageDto(role = "model", content = "RPE 7."),
+            ),
+        )
+
+        // Act
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(listOf("¿Cuánto peso?", "RPE 7."), vm.messages.map { it.text })
+        assertEquals(
+            listOf(MessageSender.USER, MessageSender.COACH),
+            vm.messages.map { it.sender },
+        )
+    }
+
+    @Test
+    fun `a first-time athlete still gets the greeting`() = runTest {
+        // Arrange: the default stub returns an empty transcript
+
+        // Act
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(1, vm.messages.size)
+        assertEquals("welcome", vm.messages.single().id)
+    }
+
+    @Test
+    fun `a backend that cannot serve the transcript leaves the screen as it was`() = runTest {
+        // Arrange: an offline device, or a backend deployed before the endpoint existed
+        coEvery { coachRepository.loadHistory(any()) } returns
+            Result.failure(Exception("Coach history error: HTTP 404"))
+
+        // Act
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals("welcome", vm.messages.single().id)
+    }
+
+    @Test
+    fun `a message typed while the transcript loads stays after it`() = runTest {
+        // Arrange
+        coEvery { coachRepository.loadHistory(any()) } returns Result.success(
+            listOf(ChatMessageDto(role = "user", content = "de ayer")),
+        )
+        coEvery { coachRepository.sendMessage(any(), any(), any()) } returns Result.success("ok")
+
+        // Act: send before the history coroutine has been allowed to run
+        val vm = viewModel()
+        vm.sendUserMessage("de ahora")
+        advanceUntilIdle()
+
+        // Assert: the restored turn is prepended, never interleaved
+        assertEquals("de ayer", vm.messages.first().text)
+        assertTrue(vm.messages.map { it.text }.containsAll(listOf("de ayer", "de ahora", "ok")))
+    }
+
+    @Test
+    fun `a restored conversation is replayed as history on the next message`() = runTest {
+        // The field is ignored by the current backend, but it must stay coherent while it exists.
+        // Arrange
+        coEvery { coachRepository.loadHistory(any()) } returns Result.success(
+            listOf(ChatMessageDto(role = "user", content = "anterior")),
+        )
+        val history = slot<List<ChatMessageDto>>()
+        coEvery { coachRepository.sendMessage(any(), any(), capture(history)) } returns
+            Result.success("ok")
+
+        // Act
+        val vm = viewModel()
+        advanceUntilIdle()
+        vm.sendUserMessage("nuevo")
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(listOf(ChatMessageDto(role = "user", content = "anterior")), history.captured)
+    }
 
     // ------------------------------------------------------------------------------------
     // Construction

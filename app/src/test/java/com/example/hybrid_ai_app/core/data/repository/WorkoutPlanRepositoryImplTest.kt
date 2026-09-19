@@ -301,6 +301,52 @@ class WorkoutPlanRepositoryImplTest {
     }
 
     @Test
+    fun `a strength session names the planned day it closed`() = runTest {
+        // Without these the backend can only count how many sessions exist this week, so the AI
+        // coach has to guess which one is next. With them the link is exact.
+        // Arrange
+        server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)
+        val log = workoutLogEntity(weekNumber = 3, dayIndex = 2)
+
+        // Act
+        repository(this).completeWorkout(
+            log,
+            userProgressEntity(),
+            workoutType = "strength",
+            dayName = "Lower Body",
+        )
+        advanceUntilIdle()
+
+        // Assert
+        val payload = Json { ignoreUnknownKeys = true }
+            .decodeFromString<WorkoutStrengthDto>(server.takeRequest().body.readUtf8())
+        assertEquals(3, payload.weekNumber)
+        assertEquals(2, payload.dayIndex)
+    }
+
+    @Test
+    fun `a cardio session names the planned day it closed`() = runTest {
+        // Arrange
+        server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)
+        val log = workoutLogEntity(weekNumber = 2, dayIndex = 4)
+
+        // Act
+        repository(this).completeWorkout(
+            log,
+            userProgressEntity(),
+            workoutType = "cardio",
+            dayName = "Tempo Run",
+        )
+        advanceUntilIdle()
+
+        // Assert
+        val payload = Json { ignoreUnknownKeys = true }
+            .decodeFromString<WorkoutRunDto>(server.takeRequest().body.readUtf8())
+        assertEquals(2, payload.weekNumber)
+        assertEquals(4, payload.dayIndex)
+    }
+
+    @Test
     fun `a cardio session is pushed to the run endpoint`() = runTest {
         // Arrange
         server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)

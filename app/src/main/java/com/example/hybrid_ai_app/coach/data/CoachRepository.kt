@@ -11,6 +11,38 @@ class CoachRepository @Inject constructor(
     private val api: CoachApi,
 ) {
     /**
+     * The stored conversation, oldest turn first, or a failure.
+     *
+     * Returned as [ChatMessageDto] — the same `role` / `content` shape the send path already uses
+     * to describe a turn — so the role-to-sender mapping stays in the one place that owns it, the
+     * ViewModel, instead of being written once per direction.
+     *
+     * A backend that does not serve this endpoint yet answers 404, which surfaces as a failure and
+     * leaves the screen exactly as it behaved before: greeting, no transcript.
+     */
+    suspend fun loadHistory(limit: Int = DEFAULT_HISTORY_LIMIT): Result<List<ChatMessageDto>> = withContext(Dispatchers.IO) {
+        try {
+            val response = api.getHistory(limit)
+            val body = response.body()
+
+            when {
+                response.isSuccessful && body != null -> Result.success(
+                    body.data?.messages.orEmpty().map { turn ->
+                        ChatMessageDto(role = turn.role, content = turn.content)
+                    },
+                )
+
+                else -> Result.failure(
+                    response.premiumRequiredOrNull()
+                        ?: Exception("Coach history error: HTTP ${response.code()}"),
+                )
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
      * @return the coach's reply, or a failure. A spent daily quota arrives as a
      * `PremiumRequiredException`, distinguishable from a network error — previously both
      * collapsed into `null` and the UI blamed the connection.
@@ -39,5 +71,10 @@ class CoachRepository @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    private companion object {
+        // One screenful of conversation. Matches the backend's own default page size.
+        const val DEFAULT_HISTORY_LIMIT = 50
     }
 }

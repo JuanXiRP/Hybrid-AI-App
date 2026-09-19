@@ -4,6 +4,9 @@ import com.example.hybrid_ai_app.auth.data.remote.AuthResponse
 import com.example.hybrid_ai_app.auth.data.remote.LoginRequest
 import com.example.hybrid_ai_app.auth.data.remote.RegisterRequest
 import com.example.hybrid_ai_app.coach.data.ChatData
+import com.example.hybrid_ai_app.coach.data.ChatHistoryData
+import com.example.hybrid_ai_app.coach.data.ChatHistoryMessageDto
+import com.example.hybrid_ai_app.coach.data.ChatHistoryResponse
 import com.example.hybrid_ai_app.coach.data.ChatMessageDto
 import com.example.hybrid_ai_app.coach.data.ChatRequest
 import com.example.hybrid_ai_app.coach.data.ChatResponse
@@ -217,6 +220,8 @@ class SerialNameContractTest {
             "date",
             "routineType",
             "exercises",
+            "weekNumber",
+            "dayIndex",
         )
         assertWireNames(
             WorkoutRunDto.serializer(),
@@ -228,6 +233,8 @@ class SerialNameContractTest {
             "elevationGain",
             "rpe",
             "gpsPath",
+            "weekNumber",
+            "dayIndex",
         )
     }
 
@@ -265,6 +272,16 @@ class SerialNameContractTest {
         // Arrange, Act & Assert
         assertWireNames(ChatMessageDto.serializer(), "role", "content")
         assertWireNames(ChatData.serializer(), "reply", "timestamp")
+    }
+
+    @Test
+    fun `the chat history payloads keep their snake_case keys`() {
+        // `created_at` and `has_more` join the handful of snake_case keys in this API. The
+        // backend writes them explicitly in aiController.getChatHistory to match these names.
+        // Arrange, Act & Assert
+        assertWireNames(ChatHistoryResponse.serializer(), "success", "data", "message")
+        assertWireNames(ChatHistoryData.serializer(), "messages", "has_more")
+        assertWireNames(ChatHistoryMessageDto.serializer(), "role", "content", "created_at")
     }
 
     @Test

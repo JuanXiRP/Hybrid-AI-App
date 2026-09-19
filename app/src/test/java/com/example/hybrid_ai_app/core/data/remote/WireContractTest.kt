@@ -1,6 +1,7 @@
 package com.example.hybrid_ai_app.core.data.remote
 
 import com.example.hybrid_ai_app.auth.data.remote.AuthResponse
+import com.example.hybrid_ai_app.coach.data.ChatHistoryResponse
 import com.example.hybrid_ai_app.coach.data.ChatRequest
 import com.example.hybrid_ai_app.coach.data.ChatResponse
 import com.example.hybrid_ai_app.core.data.remote.dto.BillingErrorDto
@@ -277,6 +278,34 @@ class WireContractTest {
         assertNull(success.errorMessage)
         assertNull("no data block on the failure body", failure.data)
         assertEquals("Message is required", failure.errorMessage)
+    }
+
+    @Test
+    fun `the stored transcript decodes with its snake_case keys`() {
+        // Arrange: the body aiController.getChatHistory actually writes
+        val body = BackendResponses.chatHistory(hasMore = true)
+
+        // Act
+        val response = NetworkJson.decodeFromString<ChatHistoryResponse>(body)
+
+        // Assert
+        val data = response.data!!
+        assertEquals(2, data.messages.size)
+        assertEquals("user", data.messages.first().role)
+        assertEquals("2026-09-18T09:59:00.000Z", data.messages.first().createdAt)
+        assertTrue("has_more must survive the snake_case boundary", data.hasMore)
+    }
+
+    @Test
+    fun `an empty transcript decodes to an empty list, not a null`() {
+        // Arrange
+        val body = BackendResponses.emptyChatHistory()
+
+        // Act
+        val response = NetworkJson.decodeFromString<ChatHistoryResponse>(body)
+
+        // Assert
+        assertEquals(emptyList<Any>(), response.data!!.messages)
     }
 
     // ------------------------------------------------------------------------------------

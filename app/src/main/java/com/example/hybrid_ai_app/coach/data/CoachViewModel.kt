@@ -55,14 +55,45 @@ class CoachViewModel @Inject constructor(
         // entry rather than trusting whatever the cache holds.
         viewModelScope.launch { entitlementManager.refresh() }
 
-        // Initialize UI with a friendly greeting
+        // Greet immediately so the screen is never blank, then restore the real conversation
+        // underneath it once the network answers.
         messages.add(
             ChatMessage(
-                id = "welcome",
+                id = WELCOME_ID,
                 text = "¡Hola! Soy tu Asistente Personal de entrenamiento. ¿Tienes alguna duda con los RPE o necesitas adaptar algún ejercicio?",
                 sender = MessageSender.COACH,
             ),
         )
+
+        // The backend owns the transcript, so the conversation survives leaving this screen — but
+        // the ViewModel dies with the nav back-stack entry, so it has to ask for it again on every
+        // entry. A failure (offline, or a backend that predates the endpoint) is not worth showing:
+        // the greeting already on screen is exactly the old behaviour.
+        viewModelScope.launch {
+            val restored = coachRepository.loadHistory().getOrDefault(emptyList())
+            if (restored.isEmpty()) return@launch
+
+            // A restored conversation replaces the greeting, which only makes sense as the opening
+            // line of a new one.
+            messages.removeAll { it.id == WELCOME_ID }
+            // Inserted at the front rather than appended: the user may already have typed while
+            // this was in flight, and their turn belongs after the transcript, not before it.
+            messages.addAll(
+                0,
+                restored.mapIndexed { index, turn ->
+                    ChatMessage(
+                        id = "$HISTORY_ID_PREFIX$index",
+                        text = turn.content,
+                        sender = if (turn.role == "user") MessageSender.USER else MessageSender.COACH,
+                    )
+                },
+            )
+        }
+    }
+
+    private companion object {
+        const val WELCOME_ID = "welcome"
+        const val HISTORY_ID_PREFIX = "history-"
     }
 
     fun dismissPremiumPrompt() {
@@ -89,9 +120,11 @@ class CoachViewModel @Inject constructor(
             return
         }
 
-        // Snapshot the prior conversation BEFORE adding the new turn (skip the canned greeting)
+        // Snapshot the prior conversation BEFORE adding the new turn (skip the canned greeting).
+        // The server ignores this field — it rebuilds the window from its own transcript — but it
+        // stays on the wire until both sides ship the removal together.
         val history = messages
-            .filter { it.id != "welcome" }
+            .filter { it.id != WELCOME_ID }
             .map { msg ->
                 ChatMessageDto(
                     role = if (msg.sender == MessageSender.USER) "user" else "model",

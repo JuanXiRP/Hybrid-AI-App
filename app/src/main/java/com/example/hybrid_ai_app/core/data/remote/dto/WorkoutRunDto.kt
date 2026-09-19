@@ -12,6 +12,12 @@ data class WorkoutRunDto(
     val elevationGain: Double = 0.0,
     val rpe: Int,
     val gpsPath: List<LatLngDto> = emptyList(),
+    // Plan markers: which planned session this log closed. Optional on the wire (both are
+    // omitted when null, since NetworkJson leaves encodeDefaults off), because the backend
+    // accepts logs from clients that predate them. They are what lets the AI coach say which
+    // sessions are left this week instead of inferring it from how many logs exist.
+    val weekNumber: Int? = null,
+    val dayIndex: Int? = null,
 )
 
 @Serializable

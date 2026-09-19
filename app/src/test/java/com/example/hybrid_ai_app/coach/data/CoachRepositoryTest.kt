@@ -29,6 +29,86 @@ class CoachRepositoryTest {
     private fun repository() = CoachRepository(server.api(CoachApi::class.java))
 
     // ------------------------------------------------------------------------------------
+    // loadHistory
+    // ------------------------------------------------------------------------------------
+
+    @Test
+    fun `the stored transcript is unwrapped in order`() {
+        runTest {
+            // Arrange
+            server.enqueueJson(BackendResponses.chatHistory())
+
+            // Act
+            val result = repository().loadHistory()
+
+            // Assert
+            val turns = result.getOrNull()!!
+            assertEquals(listOf("user", "model"), turns.map { it.role })
+            assertEquals("¿Cuánto peso en sentadilla?", turns.first().content)
+        }
+    }
+
+    @Test
+    fun `the history request is a GET carrying the page size`() {
+        runTest {
+            // Arrange
+            server.enqueueJson(BackendResponses.emptyChatHistory())
+
+            // Act
+            repository().loadHistory(limit = 25)
+            val request = server.takeRequest()
+
+            // Assert
+            assertEquals("GET", request.method)
+            assertEquals("${BackendResponses.Routes.CHAT_HISTORY}?limit=25", request.path)
+        }
+    }
+
+    @Test
+    fun `an athlete who never chatted gets an empty transcript, not a failure`() {
+        runTest {
+            // Arrange
+            server.enqueueJson(BackendResponses.emptyChatHistory())
+
+            // Act
+            val result = repository().loadHistory()
+
+            // Assert
+            assertTrue(result.isSuccess)
+            assertEquals(emptyList<ChatMessageDto>(), result.getOrNull())
+        }
+    }
+
+    @Test
+    fun `a backend without the endpoint fails instead of blanking the screen`() {
+        runTest {
+            // Arrange: exactly what the deployed backend answers until this ships
+            server.enqueueEmpty(HttpURLConnection.HTTP_NOT_FOUND)
+
+            // Act
+            val result = repository().loadHistory()
+
+            // Assert
+            assertTrue(result.isFailure)
+            assertEquals("Coach history error: HTTP 404", result.exceptionOrNull()?.message)
+        }
+    }
+
+    @Test
+    fun `a dropped connection while loading history is a failure, not a crash`() {
+        runTest {
+            // Arrange
+            server.enqueueConnectionFailure()
+
+            // Act
+            val result = repository().loadHistory()
+
+            // Assert
+            assertTrue(result.exceptionOrNull() is IOException)
+        }
+    }
+
+    // ------------------------------------------------------------------------------------
     // Success
     // ------------------------------------------------------------------------------------
 
