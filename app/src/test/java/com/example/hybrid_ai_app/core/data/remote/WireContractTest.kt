@@ -212,6 +212,36 @@ class WireContractTest {
     }
 
     @Test
+    fun `a strength exercise's catalog id survives the wire`() {
+        // Arrange
+        val exerciseId = TestIds.uniqueExerciseId()
+        val body = BackendResponses.workoutPlan(exerciseId = exerciseId)
+
+        // Act
+        val exercise = NetworkJson.decodeFromString<GeneratePlanResponse>(body)
+            .data!!.weeks.first().days.first().exercises.first()
+
+        // Assert
+        assertEquals(exerciseId, exercise.exerciseId)
+    }
+
+    @Test
+    fun `an exercise the backend sends without a catalog id decodes with a null one`() {
+        // Cardio exercises, and imported ones with no unambiguous match, arrive without the key.
+        // Arrange
+        val body = """{"success":true,"data":{"durationWeeks":1,"goal":"both","weeks":[""" +
+            """{"weekNumber":1,"days":[{"dayName":"Run","workoutType":"cardio",""" +
+            """"exercises":[{"name":"Easy run","sets":"1","reps":"8 km","rpe":"4"}]}]}]}}"""
+
+        // Act
+        val exercise = NetworkJson.decodeFromString<GeneratePlanResponse>(body)
+            .data!!.weeks.first().days.first().exercises.first()
+
+        // Assert
+        assertNull(exercise.exerciseId)
+    }
+
+    @Test
     fun `an imported plan's provenance survives the wire`() {
         // Arrange
         val body = BackendResponses.workoutPlan(origin = "imported", source = "imported")

@@ -36,6 +36,9 @@ object TestIds {
         return "%024x".format(n xor (UUID.randomUUID().mostSignificantBits and 0xFFFFFFFFFFFFL))
     }
 
+    /** A unique id shaped like a free-exercise-db catalog id (`Barbell_Squat`). */
+    fun uniqueExerciseId(): String = "Catalog_Exercise_${counter.incrementAndGet()}"
+
     /** A unique human-ish name, for cases where the value only has to differ. */
     fun uniqueName(): String = "User ${counter.incrementAndGet()}"
 }

@@ -1,10 +1,12 @@
 package com.example.hybrid_ai_app.core.data.local.converter
 
+import com.example.hybrid_ai_app.testing.TestIds
 import com.example.hybrid_ai_app.testing.dayDto
 import com.example.hybrid_ai_app.testing.exerciseDto
 import com.example.hybrid_ai_app.testing.loggedExerciseEntity
 import com.example.hybrid_ai_app.testing.weekDto
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -118,6 +120,38 @@ class WorkoutConvertersTest {
         // Assert
         assertEquals(1, restored.size)
         assertEquals("Push", restored.first().days.first().dayName)
+    }
+
+    @Test
+    fun `a plan row cached before exerciseId existed still decodes with a null id`() {
+        // exerciseId is nullable with a default; without the default every cached plan would fail
+        // to decode and silently come back empty.
+        // Arrange
+        val legacyRow = """[{"weekNumber":1,"days":[{"dayName":"Legs","workoutType":"strength",""" +
+            """"exercises":[{"name":"Back Squat","sets":"4","reps":"6","rpe":"8"}]}]}]"""
+
+        // Act
+        val restored = planConverters.toWeekList(legacyRow)
+
+        // Assert
+        val exercise = restored.first().days.first().exercises.first()
+        assertEquals("Back Squat", exercise.name)
+        assertNull(exercise.exerciseId)
+    }
+
+    @Test
+    fun `a catalog exerciseId survives a round trip`() {
+        // Arrange
+        val exerciseId = TestIds.uniqueExerciseId()
+        val weeks = listOf(
+            weekDto(days = listOf(dayDto(exercises = listOf(exerciseDto(exerciseId = exerciseId))))),
+        )
+
+        // Act
+        val restored = planConverters.toWeekList(planConverters.fromWeekList(weeks))
+
+        // Assert
+        assertEquals(exerciseId, restored.first().days.first().exercises.first().exerciseId)
     }
 
     @Test

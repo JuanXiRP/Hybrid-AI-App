@@ -79,7 +79,8 @@ fun exerciseDto(
     sets: String = "4",
     reps: String = "6",
     rpe: String = "8",
-): ExerciseDto = ExerciseDto(name = name, sets = sets, reps = reps, rpe = rpe)
+    exerciseId: String? = null,
+): ExerciseDto = ExerciseDto(name = name, sets = sets, reps = reps, rpe = rpe, exerciseId = exerciseId)
 
 fun dayDto(
     dayName: String = "Lower Body",
