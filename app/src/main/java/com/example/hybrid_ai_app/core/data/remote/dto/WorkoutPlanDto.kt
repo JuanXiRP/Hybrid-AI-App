@@ -34,4 +34,8 @@ data class ExerciseDto(
     val sets: String = "-",
     val reps: String = "-",
     val rpe: String = "-",
+    // Id of the exercise in the backend's free-exercise-db catalog (e.g. "Barbell_Squat"). Only
+    // strength exercises carry one; cardio, and imported exercises with no unambiguous match, are
+    // null. Nullable with a default so plans cached before this field existed still decode.
+    val exerciseId: String? = null,
 )

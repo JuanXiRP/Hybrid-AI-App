@@ -170,7 +170,7 @@ class SerialNameContractTest {
         assertWireNames(WorkoutPlanDto.serializer(), "durationWeeks", "goal", "weeks")
         assertWireNames(WeekDto.serializer(), "weekNumber", "days")
         assertWireNames(DayDto.serializer(), "dayName", "workoutType", "source", "exercises")
-        assertWireNames(ExerciseDto.serializer(), "name", "sets", "reps", "rpe")
+        assertWireNames(ExerciseDto.serializer(), "name", "sets", "reps", "rpe", "exerciseId")
     }
 
     @Test

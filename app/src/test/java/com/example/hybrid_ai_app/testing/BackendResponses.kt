@@ -142,6 +142,7 @@ object BackendResponses {
         origin: String = "generated",
         source: String = "generated",
         active: Boolean = true,
+        exerciseId: String = TestIds.uniqueExerciseId(),
     ): String = buildString {
         append("{\"success\":true,\"data\":{")
         append("\"_id\":\"").append(planId).append("\",")
@@ -153,7 +154,8 @@ object BackendResponses {
         append("\"dayName\":\"Lower Body\",\"workoutType\":\"strength\",")
         append("\"source\":\"").append(source).append("\",")
         append("\"exercises\":[{\"name\":\"Back Squat\",\"sets\":\"4\",\"reps\":\"6\",")
-        append("\"rpe\":\"8\",\"_id\":\"").append(TestIds.uniqueObjectId()).append("\"}],")
+        append("\"rpe\":\"8\",\"exerciseId\":\"").append(exerciseId).append("\",")
+        append("\"_id\":\"").append(TestIds.uniqueObjectId()).append("\"}],")
         append("\"_id\":\"").append(TestIds.uniqueObjectId()).append("\"}],")
         append("\"_id\":\"").append(TestIds.uniqueObjectId()).append("\"}],")
         append("\"active\":").append(active).append(",")
