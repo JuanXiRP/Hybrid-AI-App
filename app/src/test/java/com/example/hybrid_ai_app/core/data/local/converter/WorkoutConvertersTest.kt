@@ -4,6 +4,7 @@ import com.example.hybrid_ai_app.testing.TestIds
 import com.example.hybrid_ai_app.testing.dayDto
 import com.example.hybrid_ai_app.testing.exerciseDto
 import com.example.hybrid_ai_app.testing.loggedExerciseEntity
+import com.example.hybrid_ai_app.testing.loggedSetEntity
 import com.example.hybrid_ai_app.testing.weekDto
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -234,16 +235,13 @@ class WorkoutConvertersTest {
     }
 
     @Test
-    fun `log rows do NOT tolerate a new field, unlike plan rows`() {
-        // The one real inconsistency between the two converters: WorkoutLogConverters uses the
-        // bare `Json` default, so ignoreUnknownKeys is FALSE here while it is TRUE in
-        // WorkoutPlanConverters. Adding a property to LoggedExerciseEntity therefore makes every
-        // existing row throw, and the catch above turns that into a silent loss of the user's
-        // logged sets — the one place in the app reading data the user typed in themselves.
-        //
-        // Pinned as current behaviour so the asymmetry is visible and deliberate. Fixing it means
-        // giving this converter `Json { ignoreUnknownKeys = true }`, which is a data-durability
-        // change and belongs in its own commit.
+    fun `log rows tolerate a field this build does not know, like plan rows`() {
+        // Both converters are lenient now. WorkoutLogConverters used to use the bare strict `Json`,
+        // so a row written by a build with one more property than this one made the decode throw,
+        // the catch turned that into an empty list, and the user's logged sets vanished. That was
+        // the one place in the app reading data the athlete typed in themselves, and the change to
+        // `ignoreUnknownKeys = true` is deliberate: a downgrade or a rollout that overlaps builds
+        // must not cost anyone their history.
         // Arrange
         val rowFromNewerBuild = """[{"name":"Back Squat","sets":"4","reps":"6","weight":"100",""" +
             """"rpe":"8","tempo":"3-1-1"}]"""
@@ -252,21 +250,77 @@ class WorkoutConvertersTest {
         val restored = logConverters.toLoggedExerciseList(rowFromNewerBuild)
 
         // Assert
-        assertTrue(
-            "the unknown 'tempo' field is not tolerated, so the row is dropped entirely",
-            restored.isEmpty(),
-        )
+        assertEquals(1, restored.size)
+        assertEquals("Back Squat", restored.single().name)
+        assertEquals("100", restored.single().weight)
     }
 
     @Test
-    fun `a log row missing a required field is dropped rather than partially restored`() {
-        // Arrange — `weight` absent, and LoggedExerciseEntity gives it no default
-        val incomplete = """[{"name":"Back Squat","sets":"4","reps":"6","rpe":"8"}]"""
+    fun `a log row written before per-set detail existed still decodes`() {
+        // The v3 shape: five string fields, no exerciseId, notes or setLogs. Every new property has
+        // a default, which is what lets rows already on the device survive the upgrade.
+        // Arrange
+        val legacyRow = """[{"name":"Back Squat","sets":"4","reps":"6","weight":"100","rpe":"8"}]"""
+
+        // Act
+        val restored = logConverters.toLoggedExerciseList(legacyRow)
+
+        // Assert
+        val exercise = restored.single()
+        assertEquals("Back Squat", exercise.name)
+        assertNull(exercise.exerciseId)
+        assertNull(exercise.notes)
+        assertTrue(exercise.setLogs.isEmpty())
+    }
+
+    @Test
+    fun `a log row missing the legacy summary fields still decodes, with them blank`() {
+        // The summary fields carry defaults now, because a row written by a build that stops
+        // populating them must not be dropped. Only the name is required.
+        // Arrange
+        val incomplete = """[{"name":"Back Squat"}]"""
 
         // Act
         val restored = logConverters.toLoggedExerciseList(incomplete)
 
         // Assert
+        val exercise = restored.single()
+        assertEquals("Back Squat", exercise.name)
+        assertEquals("", exercise.sets)
+        assertEquals("", exercise.weight)
+    }
+
+    @Test
+    fun `a row with no name is dropped, because nothing can be shown for it`() {
+        // Arrange
+        val nameless = """[{"sets":"4","reps":"6"}]"""
+
+        // Act
+        val restored = logConverters.toLoggedExerciseList(nameless)
+
+        // Assert
         assertEquals(emptyList<Any>(), restored)
+    }
+
+    @Test
+    fun `per-set logs survive a round trip with every field intact`() {
+        // Arrange
+        val logged = listOf(
+            loggedExerciseEntity(
+                exerciseId = TestIds.uniqueExerciseId(),
+                notes = "Paused reps",
+                setLogs = listOf(
+                    loggedSetEntity(type = "warmup", weight = "40", reps = "10", actualRpe = ""),
+                    loggedSetEntity(type = "normal", weight = "82.5", reps = "5", targetRpe = "8", actualRpe = "9"),
+                    loggedSetEntity(type = "failure", weight = "70", reps = "8", completed = false),
+                ),
+            ),
+        )
+
+        // Act
+        val restored = logConverters.toLoggedExerciseList(logConverters.fromLoggedExerciseList(logged))
+
+        // Assert
+        assertEquals(logged, restored)
     }
 }

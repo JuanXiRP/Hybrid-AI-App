@@ -16,6 +16,8 @@ import com.example.hybrid_ai_app.core.data.remote.dto.DayDto
 import com.example.hybrid_ai_app.core.data.remote.dto.EntitlementDto
 import com.example.hybrid_ai_app.core.data.remote.dto.EntitlementResponse
 import com.example.hybrid_ai_app.core.data.remote.dto.ExerciseDto
+import com.example.hybrid_ai_app.core.data.remote.dto.StrengthExerciseDto
+import com.example.hybrid_ai_app.core.data.remote.dto.StrengthSetDto
 import com.example.hybrid_ai_app.core.data.remote.dto.UserDto
 import com.example.hybrid_ai_app.core.data.remote.dto.UserProfileResponse
 import com.example.hybrid_ai_app.core.data.remote.dto.VerifyPurchaseRequest
@@ -222,6 +224,32 @@ class SerialNameContractTest {
             "exercises",
             "weekNumber",
             "dayIndex",
+            "clientId",
+            "startedAt",
+            "durationSec",
+            "notes",
+        )
+        assertWireNames(
+            StrengthExerciseDto.serializer(),
+            "exerciseName",
+            "sets",
+            "reps",
+            "targetWeight",
+            "actualWeight",
+            "targetRpe",
+            "actualRpe",
+            "exerciseId",
+            "notes",
+            "setLogs",
+        )
+        assertWireNames(
+            StrengthSetDto.serializer(),
+            "type",
+            "weight",
+            "reps",
+            "targetReps",
+            "targetRpe",
+            "actualRpe",
         )
         assertWireNames(
             WorkoutRunDto.serializer(),

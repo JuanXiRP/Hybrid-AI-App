@@ -14,16 +14,17 @@ import com.example.hybrid_ai_app.home.presentation.MainScaffold
 import com.example.hybrid_ai_app.home.presentation.PaywallScreen
 import com.example.hybrid_ai_app.home.presentation.WorkoutExecutionScreen
 import com.example.hybrid_ai_app.home.presentation.WorkoutsScreen
+import com.example.hybrid_ai_app.home.presentation.workout.WorkoutSessionScreen
 import com.example.hybrid_ai_app.onboarding.presentation.OnboardingScreen
 import com.example.hybrid_ai_app.settings.presentation.SettingsScreen
 
 sealed class Screen(val route: String) {
-    // Rutas Raíz (Pantalla Completa)
+    // Root routes (full screen)
     object Auth : Screen("auth")
     object Onboarding : Screen("onboarding")
     object MainContainer : Screen("main_container")
 
-    // Rutas Internas (Barra Inferior y Entrenamientos)
+    // Inner routes (bottom bar and workouts)
     object Home : Screen("home")
     object Workouts : Screen("workouts")
     object Coach : Screen("coach")
@@ -31,11 +32,16 @@ sealed class Screen(val route: String) {
     object WorkoutExecution : Screen("workout_execution/{weekNumber}/{dayIndex}") {
         fun createRoute(weekNumber: Int, dayIndex: Int): String = "workout_execution/$weekNumber/$dayIndex"
     }
+
+    // A past workout reopened for editing, by the id of its stored log.
+    object WorkoutEdit : Screen("workout_edit/{logId}") {
+        fun createRoute(logId: Long): String = "workout_edit/$logId"
+    }
     object Settings : Screen("settings")
     object Paywall : Screen("paywall")
 }
 
-// GRAFO RAÍZ
+// ROOT GRAPH
 @Composable
 fun RootNavGraph(
     navController: NavHostController,
@@ -124,10 +130,19 @@ fun MainNavGraph(
             )
         }
 
+        composable(
+            route = Screen.WorkoutEdit.route,
+            arguments = listOf(navArgument("logId") { type = NavType.LongType }),
+        ) {
+            // The ViewModel reads `logId` from the route itself, which is what puts the screen in
+            // edit mode.
+            WorkoutSessionScreen(navController = navController, rootNavController = rootNavController)
+        }
+
         composable(route = Screen.Settings.route) {
             SettingsScreen(
                 navController = navController,
-                rootNavController = rootNavController, // 🟢 Passed to Settings
+                rootNavController = rootNavController, // Passed to Settings
             )
         }
         // Paywall is deliberately NOT registered here: it lives in RootNavGraph so it covers the

@@ -7,36 +7,23 @@ import android.location.Location
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.hybrid_ai_app.R
 import com.example.hybrid_ai_app.core.data.local.entity.LoggedExerciseEntity
-import com.example.hybrid_ai_app.core.data.remote.dto.ExerciseDto
 import com.example.hybrid_ai_app.core.presentation.PremiumBottomSheet
+import com.example.hybrid_ai_app.home.presentation.workout.WorkoutSessionScreen
 import com.example.hybrid_ai_app.navigation.Screen
 import com.example.hybrid_ai_app.tracking.LocationTrackingService
 import com.example.hybrid_ai_app.tracking.WorkoutLocationManager
@@ -44,7 +31,13 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * The entry point of a workout day: strength days open the set-by-set session screen, everything
+ * else keeps the GPS run-tracking screen below.
+ *
+ * The day is looked up in the cached plan here, and only to decide which screen to show; the
+ * session screen loads its own state from its route.
+ */
 @Composable
 fun WorkoutExecutionScreen(
     weekNumber: Int,
@@ -52,6 +45,25 @@ fun WorkoutExecutionScreen(
     navController: NavController,
     rootNavController: NavController,
     viewModel: HomeViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val day = (uiState as? HomeUiState.Success)?.plan?.weeks?.find { it.weekNumber == weekNumber }?.days?.getOrNull(dayIndex)
+
+    when {
+        day == null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        day.workoutType == "cardio" -> CardioWorkoutScreen(weekNumber, dayIndex, navController, rootNavController, viewModel)
+        else -> WorkoutSessionScreen(navController = navController, rootNavController = rootNavController)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CardioWorkoutScreen(
+    weekNumber: Int,
+    dayIndex: Int,
+    navController: NavController,
+    rootNavController: NavController,
+    viewModel: HomeViewModel,
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -74,8 +86,6 @@ fun WorkoutExecutionScreen(
     val currentDay = plan?.weeks?.find { it.weekNumber == weekNumber }?.days?.getOrNull(dayIndex)
 
     val isCardio = currentDay?.workoutType == "cardio"
-
-    val weightInputs = remember { mutableStateMapOf<Int, String>() }
 
     // Tracking States
     val pathPoints by WorkoutLocationManager.pathPoints.collectAsState()
@@ -258,22 +268,6 @@ fun WorkoutExecutionScreen(
                         }
                     }
                 }
-            } else {
-                // STRENGTH / GYM UI
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-                    contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    itemsIndexed(currentDay.exercises) { index, exercise ->
-                        val currentWeightValue = weightInputs[index] ?: ""
-                        InteractiveExerciseCard(
-                            exercise = exercise,
-                            weightValue = currentWeightValue,
-                            onWeightChange = { newValue -> weightInputs[index] = newValue },
-                        )
-                    }
-                }
             }
 
             // Global Finish Button
@@ -286,13 +280,13 @@ fun WorkoutExecutionScreen(
                         }
                     }
 
-                    val compiledPerformanceMetrics = currentDay?.exercises?.mapIndexed { index, exercise ->
-                        val finalWeight = weightInputs[index] ?: ""
+                    // A run has no weight to log; the day's own instruction is what gets recorded.
+                    val compiledPerformanceMetrics = currentDay?.exercises?.map { exercise ->
                         LoggedExerciseEntity(
                             name = exercise.name,
                             sets = exercise.sets,
                             reps = exercise.reps,
-                            weight = finalWeight,
+                            weight = "",
                             rpe = exercise.rpe,
                         )
                     } ?: emptyList()
@@ -308,92 +302,6 @@ fun WorkoutExecutionScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             ) {
                 Text(text = stringResource(id = R.string.btn_finish_workout), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-            }
-        }
-    }
-}
-
-@Composable
-fun InteractiveExerciseCard(
-    exercise: ExerciseDto,
-    weightValue: String,
-    onWeightChange: (String) -> Unit,
-) {
-    var isCompleted by rememberSaveable { mutableStateOf(false) }
-
-    val containerColor by animateColorAsState(
-        if (isCompleted) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) else MaterialTheme.colorScheme.surfaceVariant,
-        label = "containerColor",
-    )
-    val contentColor by animateColorAsState(
-        if (isCompleted) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurfaceVariant,
-        label = "contentColor",
-    )
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = exercise.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = contentColor,
-                    textDecoration = if (isCompleted) TextDecoration.LineThrough else null,
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(text = stringResource(id = R.string.exercise_card_sets_label, exercise.sets), style = MaterialTheme.typography.bodyMedium, color = contentColor.copy(alpha = 0.7f))
-                    Text(text = stringResource(id = R.string.exercise_card_reps_label, exercise.reps), style = MaterialTheme.typography.bodyMedium, color = contentColor.copy(alpha = 0.7f))
-                    Text(text = stringResource(id = R.string.exercise_card_rpe_label, exercise.rpe), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = weightValue,
-                    onValueChange = { if (!isCompleted) onWeightChange(it) },
-                    label = { Text(text = stringResource(id = R.string.label_weight)) },
-                    placeholder = { Text(text = stringResource(id = R.string.placeholder_weight)) },
-                    enabled = !isCompleted,
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                    ),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Done,
-                    ),
-                    modifier = Modifier.fillMaxWidth(0.7f).height(56.dp),
-                )
-            }
-
-            IconButton(
-                onClick = { isCompleted = !isCompleted },
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (isCompleted) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
-                        },
-                    ),
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = stringResource(id = R.string.cd_log_exercise_status),
-                    tint = if (isCompleted) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                )
             }
         }
     }

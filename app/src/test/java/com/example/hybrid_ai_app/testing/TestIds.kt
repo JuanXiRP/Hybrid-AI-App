@@ -36,6 +36,9 @@ object TestIds {
         return "%024x".format(n xor (UUID.randomUUID().mostSignificantBits and 0xFFFFFFFFFFFFL))
     }
 
+    /** A unique UUID, the shape of the `clientId` a workout log is upserted on. */
+    fun uniqueClientId(): String = UUID.randomUUID().toString()
+
     /** A unique id shaped like a free-exercise-db catalog id (`Barbell_Squat`). */
     fun uniqueExerciseId(): String = "Catalog_Exercise_${counter.incrementAndGet()}"
 

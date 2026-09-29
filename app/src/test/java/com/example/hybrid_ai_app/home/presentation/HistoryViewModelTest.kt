@@ -10,6 +10,7 @@ import com.example.hybrid_ai_app.testing.MainDispatcherRule
 import com.example.hybrid_ai_app.testing.MockCleanupRule
 import com.example.hybrid_ai_app.testing.dayDto
 import com.example.hybrid_ai_app.testing.loggedExerciseEntity
+import com.example.hybrid_ai_app.testing.loggedSetEntity
 import com.example.hybrid_ai_app.testing.weekDto
 import com.example.hybrid_ai_app.testing.workoutLogEntity
 import com.example.hybrid_ai_app.testing.workoutPlanEntity
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -82,14 +84,21 @@ class HistoryViewModelTest {
     }
 
     @Test
-    fun `logs without a plan yield Empty because titles cannot be resolved`() = runTest {
+    fun `logs without a plan are still listed, because they carry their own title`() = runTest {
+        // Regenerating a plan clears it while the history stays, so a missing plan must not blank
+        // this screen (it used to yield Empty, hiding every log the athlete had).
         // Arrange
-        val vm = viewModel(logs = listOf(workoutLogEntity()), plan = null)
+        val vm = viewModel(
+            logs = listOf(workoutLogEntity(id = 4, title = "Upper Body", workoutType = "strength")),
+            plan = null,
+        )
 
         // Act & Assert
         vm.uiState.test {
             assertEquals(HistoryUiState.Loading, awaitItem())
-            assertEquals(HistoryUiState.Empty, awaitItem())
+            val item = (awaitItem() as HistoryUiState.Success).items.single()
+            assertEquals(4L, item.logId)
+            assertEquals("Upper Body", item.title)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -175,14 +184,14 @@ class HistoryViewModelTest {
         vm.uiState.test {
             awaitItem()
             val item = (awaitItem() as HistoryUiState.Success).items.single()
-            assertEquals("Workout Session", item.title)
-            assertEquals("Strength session completed", item.summary)
+            assertNull("the screen supplies the localized fallback", item.title)
+            assertEquals("no names to list, so the screen supplies the localized line", "", item.summary)
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `a cardio day is flagged and gets endurance copy when nothing was logged`() = runTest {
+    fun `a cardio day is flagged when nothing was logged`() = runTest {
         // Arrange
         val plan = workoutPlanEntity(
             weeks = listOf(
@@ -199,7 +208,7 @@ class HistoryViewModelTest {
             awaitItem()
             val item = (awaitItem() as HistoryUiState.Success).items.single()
             assertTrue(item.isCardio)
-            assertEquals("Endurance session completed", item.summary)
+            assertEquals("", item.summary)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -286,6 +295,151 @@ class HistoryViewModelTest {
             assertEquals("6", metric.reps)
             assertEquals("100", metric.weight)
             assertEquals("8", metric.rpe)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `a log's own title wins over the plan day at the same position`() = runTest {
+        // The plan may have been regenerated since, so the day now at week/day index can be a
+        // different session altogether; the log remembers what it was called.
+        // Arrange
+        val plan = workoutPlanEntity(weeks = listOf(weekDto(days = listOf(dayDto(dayName = "Brand New Day")))))
+        val vm = viewModel(
+            logs = listOf(workoutLogEntity(dayIndex = 0, title = "Old Push Day", workoutType = "strength")),
+            plan = plan,
+        )
+
+        // Act & Assert
+        vm.uiState.test {
+            awaitItem()
+            val item = (awaitItem() as HistoryUiState.Success).items.single()
+            assertEquals("Old Push Day", item.title)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `a log's own type wins over the plan day when deciding if it was cardio`() = runTest {
+        // Arrange — the plan day at that position is cardio now, but the log says it was strength
+        val plan = workoutPlanEntity(weeks = listOf(weekDto(days = listOf(dayDto(workoutType = "cardio")))))
+        val vm = viewModel(
+            logs = listOf(workoutLogEntity(title = "Legs", workoutType = "strength")),
+            plan = plan,
+        )
+
+        // Act & Assert
+        vm.uiState.test {
+            awaitItem()
+            val item = (awaitItem() as HistoryUiState.Success).items.single()
+            assertFalse(item.isCardio)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `a run log is flagged as cardio`() = runTest {
+        // Arrange
+        val vm = viewModel(
+            logs = listOf(workoutLogEntity(title = "Easy 5k", workoutType = "run", loggedExercises = emptyList())),
+            plan = null,
+        )
+
+        // Act & Assert
+        vm.uiState.test {
+            awaitItem()
+            val item = (awaitItem() as HistoryUiState.Success).items.single()
+            assertTrue(item.isCardio)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `a blank title falls back to the plan day`() = runTest {
+        // Arrange
+        val plan = workoutPlanEntity(weeks = listOf(weekDto(days = listOf(dayDto(dayName = "Plan Day")))))
+        val vm = viewModel(logs = listOf(workoutLogEntity(title = "  ")), plan = plan)
+
+        // Act & Assert
+        vm.uiState.test {
+            awaitItem()
+            val item = (awaitItem() as HistoryUiState.Success).items.single()
+            assertEquals("Plan Day", item.title)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `a strength log with per-set detail can be edited, a legacy one cannot`() = runTest {
+        // Arrange
+        val detailed = workoutLogEntity(
+            id = 1,
+            title = "Upper Body",
+            workoutType = "strength",
+            loggedExercises = listOf(loggedExerciseEntity(setLogs = listOf(loggedSetEntity()))),
+        )
+        val legacy = workoutLogEntity(
+            id = 2,
+            title = "Upper Body",
+            workoutType = "strength",
+            loggedExercises = listOf(loggedExerciseEntity(setLogs = emptyList())),
+        )
+        val vm = viewModel(logs = listOf(detailed, legacy), plan = null)
+
+        // Act & Assert
+        vm.uiState.test {
+            awaitItem()
+            val items = (awaitItem() as HistoryUiState.Success).items.associateBy { it.logId }
+            assertTrue(items.getValue(1).isEditable)
+            assertFalse(items.getValue(2).isEditable)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `a cardio log is never editable`() = runTest {
+        // Arrange
+        val vm = viewModel(
+            logs = listOf(
+                workoutLogEntity(
+                    workoutType = "cardio",
+                    loggedExercises = listOf(loggedExerciseEntity(setLogs = listOf(loggedSetEntity()))),
+                ),
+            ),
+            plan = null,
+        )
+
+        // Act & Assert
+        vm.uiState.test {
+            awaitItem()
+            assertFalse((awaitItem() as HistoryUiState.Success).items.single().isEditable)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `the notes, duration and per-set detail are carried through for the detail sheet`() = runTest {
+        // Arrange
+        val sets = listOf(loggedSetEntity(type = "warmup"), loggedSetEntity(type = "normal"))
+        val vm = viewModel(
+            logs = listOf(
+                workoutLogEntity(
+                    notes = "Felt strong",
+                    durationSec = 3600,
+                    loggedExercises = listOf(loggedExerciseEntity(notes = "Paused reps", setLogs = sets)),
+                ),
+            ),
+            plan = null,
+        )
+
+        // Act & Assert
+        vm.uiState.test {
+            awaitItem()
+            val item = (awaitItem() as HistoryUiState.Success).items.single()
+            assertEquals("Felt strong", item.notes)
+            assertEquals(3600L, item.durationSec)
+            assertEquals("Paused reps", item.loggedMetrics.single().notes)
+            assertEquals(sets, item.loggedMetrics.single().setLogs)
             cancelAndIgnoreRemainingEvents()
         }
     }

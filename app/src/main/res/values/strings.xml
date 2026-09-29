@@ -148,11 +148,6 @@
     <string name="btn_resume_run">RESUME RUN</string>
     <string name="btn_finish_workout">FINISH WORKOUT</string>
 
-    <string name="exercise_card_sets_label">Sets: %1$s</string>
-    <string name="exercise_card_reps_label">Reps: %1$s</string>
-    <string name="exercise_card_rpe_label">Target RPE: %1$s</string>
-    <string name="placeholder_weight">0.0</string>
-    <string name="cd_log_exercise_status">Log exercise completion status</string>
 
     <string name="loading_onboarding_msg">Calibrating your hybrid macrocycle...</string>
     <string name="btn_back">Back</string>
@@ -220,4 +215,128 @@
     <string name="google_signin_cancelled">Google sign-in was cancelled. If you didn\'t cancel it, this app\'s OAuth client may not be registered yet.</string>
     <string name="google_signin_no_account">No Google account available. Add one in Settings, or check this app\'s SHA-1 registration.</string>
     <string name="google_signin_failed_detail">Google sign-in failed (%1$s)</string>
+
+    <!-- History fallbacks -->
+    <string name="history_default_title">Workout Session</string>
+    <string name="history_summary_strength">Strength session completed</string>
+    <string name="history_summary_endurance">Endurance session completed</string>
+
+    <!-- Strength workout session -->
+    <string name="session_minimize">Minimize workout</string>
+    <string name="session_finish">Finish</string>
+    <string name="session_save">Save</string>
+    <string name="session_more">More options</string>
+    <string name="session_menu_note">Workout note</string>
+    <string name="session_menu_discard">Discard workout</string>
+    <string name="session_menu_change_start">Change start time</string>
+    <string name="session_close_edit">Close without saving</string>
+    <string name="session_discard_title">Discard this workout?</string>
+    <string name="session_discard_message">Everything you logged in this session will be lost.</string>
+    <string name="session_discard_confirm">Discard</string>
+    <string name="session_incomplete_title">Unfinished sets</string>
+    <string name="session_complete_all">Complete all</string>
+    <string name="session_discard_incomplete">Discard incomplete</string>
+    <string name="session_conflict_title">Workout already in progress</string>
+    <string name="session_conflict_message">You already have a workout in progress (%1$s). Resume it, or discard it and start this one?</string>
+    <string name="session_conflict_resume">Resume current</string>
+    <string name="session_conflict_discard">Discard and start this one</string>
+    <string name="session_note_hint">How did it go?</string>
+    <string name="session_error_no_day">This workout is no longer in your plan.</string>
+    <string name="session_error_log_missing">This workout could not be found.</string>
+    <string name="session_error_read_only">Your free trial has ended. Subscribe to keep logging workouts.</string>
+    <string name="session_save_failed">Could not save the workout. Please try again.</string>
+    <string name="session_edit_started">Started %1$s</string>
+    <string name="session_ok">OK</string>
+    <string name="session_pick_date_title">Start date</string>
+    <string name="session_pick_time_title">Start time</string>
+    <string name="session_col_set">Set</string>
+    <string name="session_col_previous">Previous</string>
+    <string name="session_col_kg">kg</string>
+    <string name="session_col_reps">Reps</string>
+    <string name="session_col_target_rpe">Tgt RPE</string>
+    <string name="session_col_rpe">RPE</string>
+    <string name="session_set_type_normal">Normal set</string>
+    <string name="session_set_type_warmup">Warm-up (this and previous sets)</string>
+    <string name="session_set_type_drop">Drop set</string>
+    <string name="session_set_type_failure">Failure set</string>
+    <string name="session_set_remove">Remove set</string>
+    <string name="session_cd_set_type">Change set type</string>
+    <string name="session_cd_toggle_set">Mark set as completed</string>
+    <string name="session_cd_delete_set">Delete set</string>
+    <string name="session_cd_use_previous">Use the previous weight and reps</string>
+    <string name="session_add_set">Add set</string>
+    <string name="session_exercise_menu_info">Exercise info</string>
+    <string name="session_exercise_menu_alternative">Alternative exercise</string>
+    <string name="session_exercise_menu_rest">Rest timer</string>
+    <string name="session_exercise_menu_note">Note</string>
+    <string name="session_exercise_menu_reorder">Reorder exercises</string>
+    <string name="session_exercise_menu_remove">Remove exercise</string>
+    <string name="session_exercise_note_hint">A note for this exercise (this session only)</string>
+    <string name="session_exercise_rest_format">Rest %1$s</string>
+    <string name="session_exercise_rest_off">Rest off</string>
+    <string name="session_add_exercise">Add exercise</string>
+    <string name="session_remove_exercise_title">Remove exercise?</string>
+    <string name="session_remove_exercise_message">The sets you completed for this exercise will be removed from the workout.</string>
+    <string name="session_remove_exercise_confirm">Remove</string>
+    <string name="session_empty_workout">This workout has no exercises. Add one to get started.</string>
+    <string name="session_rest_time_off">Off</string>
+    <string name="session_rest_minus">-15s</string>
+    <string name="session_rest_plus">+15s</string>
+    <string name="session_rest_skip">Skip</string>
+    <string name="session_rest_timer">Rest timer</string>
+    <string name="session_rest_manual_title">Start a rest timer</string>
+    <string name="session_rest_choose_title">Rest after this exercise</string>
+    <string name="session_alternatives_title">Alternative exercises</string>
+    <string name="session_alternatives_subtitle">Same muscle group, from most to least similar</string>
+    <string name="session_alternatives_empty">No alternatives found for this exercise.</string>
+    <string name="session_add_title">Add exercise</string>
+    <string name="session_search_hint">Search exercises</string>
+    <string name="session_filter_all">All</string>
+    <string name="session_search_empty">No exercises match your search.</string>
+    <string name="session_info_primary">Primary muscles</string>
+    <string name="session_info_secondary">Secondary muscles</string>
+    <string name="session_info_equipment">Equipment</string>
+    <string name="session_info_level">Level</string>
+    <string name="session_info_instructions">Instructions</string>
+    <string name="session_info_none">None</string>
+    <string name="session_info_unavailable">No details are available for this exercise.</string>
+    <string name="session_info_english_only">Exercise details are shown in English.</string>
+    <string name="session_reorder_title">Reorder exercises</string>
+    <string name="session_move_up">Move up</string>
+    <string name="session_move_down">Move down</string>
+    <string name="session_thumbnail_cd">Exercise picture</string>
+    <plurals name="session_incomplete_message">
+        <item quantity="one">%d set is not completed. What should happen to it?</item>
+        <item quantity="other">%d sets are not completed. What should happen to them?</item>
+    </plurals>
+
+    <!-- Workout service, minimized bar and quick start -->
+    <string name="session_notif_title">Workout in progress</string>
+    <string name="session_notif_running_text">Workout in progress</string>
+    <string name="session_notif_rest_text">Resting</string>
+    <string name="session_notif_rest_over_title">Rest over</string>
+    <string name="session_notif_rest_over_text">Time for your next set.</string>
+    <string name="session_notif_channel_session">Workout in progress</string>
+    <string name="session_notif_channel_session_desc">Shows your workout timer while a session is running.</string>
+    <string name="session_notif_channel_rest">Rest timer</string>
+    <string name="session_notif_channel_rest_desc">Alerts you when your rest between sets is over.</string>
+    <string name="session_bar_rest">Rest %1$s</string>
+    <string name="session_bar_return_cd">Return to your workout</string>
+    <string name="quickstart_cd">Quick Start Workout</string>
+    <string name="quickstart_select_title">Select Session · Week %1$d</string>
+    <string name="quickstart_all_done">All active sessions for this week are completed! Enjoy your recovery.</string>
+    <string name="quickstart_no_plan">No active plan to select from.</string>
+    <plurals name="quickstart_exercises_count">
+        <item quantity="one">%d Exercise</item>
+        <item quantity="other">%d Exercises</item>
+    </plurals>
+
+    <!-- History detail -->
+    <string name="history_edit">Edit</string>
+    <string name="history_duration_format">Duration %1$s</string>
+    <string name="history_set_load">%1$s kg × %2$s</string>
+    <string name="history_set_reps_only">× %1$s</string>
+    <string name="history_set_rpe">RPE %1$s</string>
+    <string name="history_set_rpe_target">RPE %1$s (target %2$s)</string>
+
 </resources>
