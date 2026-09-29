@@ -7,14 +7,16 @@ import com.example.hybrid_ai_app.core.data.remote.dto.EntitlementResponse
 import com.example.hybrid_ai_app.core.data.remote.dto.GoogleAuthRequest
 import com.example.hybrid_ai_app.core.data.remote.dto.UserProfileResponse
 import com.example.hybrid_ai_app.core.data.remote.dto.VerifyPurchaseRequest
-import com.example.hybrid_ai_app.core.data.remote.dto.WorkoutRunDto // 🟢 Added import
-import com.example.hybrid_ai_app.core.data.remote.dto.WorkoutStrengthDto // 🟢 Added import
+import com.example.hybrid_ai_app.core.data.remote.dto.WorkoutRunDto
+import com.example.hybrid_ai_app.core.data.remote.dto.WorkoutStrengthDto
 import com.example.hybrid_ai_app.onboarding.data.remote.dto.ProfileUpdateRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Path
 
 interface UserApi {
 
@@ -42,6 +44,17 @@ interface UserApi {
 
     @POST("api/workouts/strength")
     suspend fun syncStrengthWorkout(@Body payload: WorkoutStrengthDto): Response<Unit>
+
+    /**
+     * Creates or edits a strength log, keyed by the client-generated [clientId]. Idempotent: the
+     * same id always lands on the same document, which is what makes a retried sync and an edit of
+     * a past workout safe.
+     */
+    @PUT("api/workouts/strength/{clientId}")
+    suspend fun upsertStrengthWorkout(
+        @Path("clientId") clientId: String,
+        @Body body: WorkoutStrengthDto,
+    ): Response<Unit>
 
     @POST("api/workouts/run")
     suspend fun syncRunWorkout(@Body payload: WorkoutRunDto): Response<Unit>

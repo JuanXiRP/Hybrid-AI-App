@@ -15,6 +15,7 @@ import com.example.hybrid_ai_app.core.domain.repository.WorkoutPlanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 sealed interface HomeUiState {
@@ -111,6 +112,9 @@ class HomeViewModel @Inject constructor(
                     timestamp = System.currentTimeMillis(),
                     isCompleted = true,
                     loggedExercises = metrics,
+                    // The idempotency key the backend upserts on. The title and type are stamped
+                    // by the repository from the day this log is for.
+                    clientId = UUID.randomUUID().toString(),
                 )
 
                 val isLastDayOfWeek = currentState.currentDayIndex == 6

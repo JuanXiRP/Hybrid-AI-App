@@ -115,6 +115,12 @@ android {
     }
 }
 
+// Room writes the schema of every database version here, so a migration can be checked against
+// what Room itself generates instead of against a guess. Commit the files it produces.
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     // AndroidX & Compose Core
     implementation(libs.androidx.core.ktx)
@@ -227,6 +233,9 @@ kover {
                     "com.example.hybrid_ai_app.core.data.repository.*",
                     "com.example.hybrid_ai_app.core.data.remote.*",
                     "com.example.hybrid_ai_app.core.data.local.converter.*",
+                    "com.example.hybrid_ai_app.core.data.mapper.*",
+                    "com.example.hybrid_ai_app.core.domain.catalog.*",
+                    "com.example.hybrid_ai_app.home.data.repository.ActiveWorkoutRepositoryImpl*",
                     "com.example.hybrid_ai_app.core.data.EntitlementManager",
                     "com.example.hybrid_ai_app.core.domain.model.*",
                     "com.example.hybrid_ai_app.coach.data.*",
@@ -250,7 +259,7 @@ kover {
                     // Dead stack: wired in HomeModule but consumed by no ViewModel. The pure
                     // parts (PlanMapper, GetActivePlanUseCase) stay covered above; the network
                     // half is excluded rather than hardened. Deletion is separate follow-up work.
-                    "com.example.hybrid_ai_app.home.data.repository.*",
+                    "com.example.hybrid_ai_app.home.data.repository.PlanRepositoryImpl*",
                     "com.example.hybrid_ai_app.home.data.remote.PlanApiService",
                     // Not JVM-testable: Context, DataStore, Android Keystore, Play Billing,
                     // ContentResolver/Bitmap. These are mocked collaborators in tests.

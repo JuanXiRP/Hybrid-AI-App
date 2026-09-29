@@ -1,5 +1,6 @@
 package com.example.hybrid_ai_app
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -23,7 +24,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
 import com.example.hybrid_ai_app.core.data.EntitlementManager
 import com.example.hybrid_ai_app.core.data.PreferencesManager
+import com.example.hybrid_ai_app.core.domain.repository.WorkoutPlanRepository
 import com.example.hybrid_ai_app.core.util.JwtUtils
+import com.example.hybrid_ai_app.home.presentation.workout.SessionDay
+import com.example.hybrid_ai_app.home.presentation.workout.SessionLinks
 import com.example.hybrid_ai_app.navigation.RootNavGraph
 import com.example.hybrid_ai_app.navigation.Screen
 import com.example.hybrid_ai_app.ui.theme.HybridTrainingTheme
@@ -41,8 +45,12 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var entitlementManager: EntitlementManager
 
+    @Inject
+    lateinit var workoutPlanRepository: WorkoutPlanRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        openSessionIfRequested(intent)
 
         setContent {
             val currentLanguage by preferencesManager.languageFlow.collectAsState(initial = "en")
@@ -51,7 +59,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             var startDestination by remember { mutableStateOf<String?>(null) }
 
-            // 🟢 EL FIX: Actualizamos los recursos de la Actividad original
+            // Update the resources of the original Activity so the chosen language applies.
             val context = LocalContext.current
             // Read the system configuration through Compose rather than context.resources: it is
             // read here, OUTSIDE the provider below, so it is the real device configuration, and
@@ -88,6 +96,10 @@ class MainActivity : ComponentActivity() {
                     // and app launch must never wait on the network. A failed refresh keeps the
                     // cached value rather than locking the user out.
                     launch { entitlementManager.refresh() }
+
+                    // Same reasoning for workouts that failed to reach the backend (offline, or a
+                    // 402 that has since cleared): try them again, in the background.
+                    launch { workoutPlanRepository.retryPendingSyncs() }
                 }
             }
 
@@ -111,5 +123,25 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    // The workout notification opens the app through this intent. The app may already be running,
+    // in which case it arrives here rather than in onCreate.
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        openSessionIfRequested(intent)
+    }
+
+    private fun openSessionIfRequested(intent: Intent?) {
+        if (intent?.action != SessionLinks.ACTION_OPEN_SESSION) return
+        if (!intent.hasExtra(SessionLinks.EXTRA_WEEK) || !intent.hasExtra(SessionLinks.EXTRA_DAY)) return
+
+        SessionLinks.open(
+            SessionDay(
+                weekNumber = intent.getIntExtra(SessionLinks.EXTRA_WEEK, 1),
+                dayIndex = intent.getIntExtra(SessionLinks.EXTRA_DAY, 0),
+            ),
+        )
     }
 }

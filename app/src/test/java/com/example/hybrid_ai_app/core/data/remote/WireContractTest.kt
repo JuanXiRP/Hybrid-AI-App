@@ -6,8 +6,11 @@ import com.example.hybrid_ai_app.coach.data.ChatRequest
 import com.example.hybrid_ai_app.coach.data.ChatResponse
 import com.example.hybrid_ai_app.core.data.remote.dto.BillingErrorDto
 import com.example.hybrid_ai_app.core.data.remote.dto.EntitlementResponse
+import com.example.hybrid_ai_app.core.data.remote.dto.StrengthExerciseDto
+import com.example.hybrid_ai_app.core.data.remote.dto.StrengthSetDto
 import com.example.hybrid_ai_app.core.data.remote.dto.UserDto
 import com.example.hybrid_ai_app.core.data.remote.dto.UserProfileResponse
+import com.example.hybrid_ai_app.core.data.remote.dto.WorkoutStrengthDto
 import com.example.hybrid_ai_app.onboarding.data.remote.dto.ProfileUpdateRequest
 import com.example.hybrid_ai_app.testing.BackendResponses
 import com.example.hybrid_ai_app.testing.TestIds
@@ -15,6 +18,8 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -454,6 +459,108 @@ class WireContractTest {
         assertTrue(json.contains("\"last_period_date\":\"2026-09-01\""))
         assertTrue(json.contains("\"fitnessLevel\":\"beginner\""))
         assertTrue(json.contains("\"daysAvailable\":3"))
+    }
+
+    @Test
+    fun `a strength log for the upsert endpoint keeps its per-set detail and omits what is unset`() {
+        // The body of PUT /api/workouts/strength/:clientId. The backend allowlists the top-level
+        // fields, so everything sent has to be a name it accepts; and a value that is null must be
+        // absent rather than an explicit null it would reject.
+        // Arrange
+        val dto = WorkoutStrengthDto(
+            routineType = "Upper Body",
+            clientId = TestIds.uniqueClientId(),
+            startedAt = "2026-09-18T09:00:00Z",
+            durationSec = 3600,
+            weekNumber = 2,
+            dayIndex = 0,
+            exercises = listOf(
+                StrengthExerciseDto(
+                    exerciseName = "Bench Press",
+                    sets = 2,
+                    reps = 5,
+                    targetWeight = 0.0,
+                    targetRpe = 8,
+                    exerciseId = "Barbell_Bench_Press",
+                    setLogs = listOf(
+                        StrengthSetDto(type = "warmup", weight = 40.0, reps = 10),
+                        StrengthSetDto(type = "normal", weight = 82.5, reps = 5, targetReps = "5", actualRpe = 9),
+                    ),
+                ),
+            ),
+        )
+
+        // Act
+        val json = NetworkJson.encodeToString(dto)
+
+        // Assert
+        assertTrue(json, json.contains("\"setLogs\":[{\"type\":\"warmup\",\"weight\":40.0,\"reps\":10}"))
+        assertTrue(json, json.contains("\"exerciseId\":\"Barbell_Bench_Press\""))
+        assertTrue(json, json.contains("\"startedAt\":\"2026-09-18T09:00:00Z\""))
+        assertFalse("no notes were written, so none are sent: $json", json.contains("\"notes\""))
+        assertFalse("the JWT supplies the user: $json", json.contains("\"userId\""))
+    }
+
+    @Test
+    fun `a set type is always sent, because the backend default must never have to apply`() {
+        // `type` has no Kotlin default on purpose: with `encodeDefaults = false` a default would
+        // be dropped from the body.
+        // Arrange
+        val set = StrengthSetDto(type = "normal")
+
+        // Act
+        val json = NetworkJson.encodeToString(set)
+
+        // Assert
+        assertEquals("""{"type":"normal"}""", json)
+    }
+
+    @Test
+    fun `a legacy strength log body is unchanged by the new optional fields`() {
+        // The POST route and older builds send exactly this shape. New fields default to null and
+        // are therefore omitted, so the payload of anything that does not set them is the same.
+        // Arrange
+        val dto = WorkoutStrengthDto(
+            routineType = "Legs",
+            exercises = listOf(
+                StrengthExerciseDto(
+                    exerciseName = "Squat",
+                    sets = 4,
+                    reps = 6,
+                    targetWeight = 0.0,
+                    targetRpe = 8,
+                ),
+            ),
+        )
+
+        // Act
+        val json = NetworkJson.encodeToString(dto)
+
+        // Assert
+        assertEquals(
+            """{"routineType":"Legs","exercises":[{"exerciseName":"Squat","sets":4,"reps":6,""" +
+                """"targetWeight":0.0,"targetRpe":8}]}""",
+            json,
+        )
+    }
+
+    @Test
+    fun `the document the backend echoes back decodes despite fields the app does not model`() {
+        // What the upsert answers under `data`: the Mongoose document, with `_id`, `__v`,
+        // timestamps and an `_id` on every exercise subdocument. The app reads the response as Unit,
+        // but the DTO is also the shape a future read of history would use.
+        // Arrange
+        val body = BackendResponses.strengthWorkoutUpserted()
+
+        // Act
+        val data = NetworkJson.parseToJsonElement(body).jsonObject.getValue("data")
+        val dto = NetworkJson.decodeFromJsonElement<WorkoutStrengthDto>(data)
+
+        // Assert
+        assertEquals("Upper Body", dto.routineType)
+        assertEquals(3600L, dto.durationSec)
+        assertNull(dto.exercises.single().exerciseId)
+        assertEquals("normal", dto.exercises.single().setLogs!!.single().type)
     }
 
     @Test

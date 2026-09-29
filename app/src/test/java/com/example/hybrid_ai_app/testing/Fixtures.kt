@@ -1,7 +1,9 @@
 package com.example.hybrid_ai_app.testing
 
 import com.example.hybrid_ai_app.auth.data.remote.AuthResponse
+import com.example.hybrid_ai_app.core.data.catalog.CatalogExerciseDto
 import com.example.hybrid_ai_app.core.data.local.entity.LoggedExerciseEntity
+import com.example.hybrid_ai_app.core.data.local.entity.LoggedSetEntity
 import com.example.hybrid_ai_app.core.data.local.entity.UserProgressEntity
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutLogEntity
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutPlanEntity
@@ -9,8 +11,13 @@ import com.example.hybrid_ai_app.core.data.remote.dto.DayDto
 import com.example.hybrid_ai_app.core.data.remote.dto.ExerciseDto
 import com.example.hybrid_ai_app.core.data.remote.dto.UserDto
 import com.example.hybrid_ai_app.core.data.remote.dto.WeekDto
+import com.example.hybrid_ai_app.core.domain.model.CatalogExercise
 import com.example.hybrid_ai_app.core.domain.model.Entitlement
 import com.example.hybrid_ai_app.core.domain.model.EntitlementStatus
+import com.example.hybrid_ai_app.home.domain.model.SessionExercise
+import com.example.hybrid_ai_app.home.domain.model.SessionSet
+import com.example.hybrid_ai_app.home.domain.model.SetType
+import com.example.hybrid_ai_app.home.domain.model.WorkoutSession
 
 /**
  * Builders for the shapes tests need, with sensible defaults and named overrides.
@@ -146,12 +153,36 @@ fun loggedExerciseEntity(
     reps: String = "6",
     weight: String = "100",
     rpe: String = "8",
+    exerciseId: String? = null,
+    notes: String? = null,
+    setLogs: List<LoggedSetEntity> = emptyList(),
 ): LoggedExerciseEntity = LoggedExerciseEntity(
     name = name,
     sets = sets,
     reps = reps,
     weight = weight,
     rpe = rpe,
+    exerciseId = exerciseId,
+    notes = notes,
+    setLogs = setLogs,
+)
+
+fun loggedSetEntity(
+    type: String = "normal",
+    weight: String = "100",
+    reps: String = "5",
+    targetReps: String = "5",
+    targetRpe: String = "8",
+    actualRpe: String = "8",
+    completed: Boolean = true,
+): LoggedSetEntity = LoggedSetEntity(
+    type = type,
+    weight = weight,
+    reps = reps,
+    targetReps = targetReps,
+    targetRpe = targetRpe,
+    actualRpe = actualRpe,
+    completed = completed,
 )
 
 fun workoutLogEntity(
@@ -161,6 +192,13 @@ fun workoutLogEntity(
     timestamp: Long = FIXED_TIMESTAMP,
     isCompleted: Boolean = true,
     loggedExercises: List<LoggedExerciseEntity> = listOf(loggedExerciseEntity()),
+    clientId: String = TestIds.uniqueClientId(),
+    title: String? = null,
+    workoutType: String? = null,
+    startedAt: Long? = null,
+    durationSec: Long? = null,
+    notes: String? = null,
+    syncPending: Boolean = false,
 ): WorkoutLogEntity = WorkoutLogEntity(
     id = id,
     weekNumber = weekNumber,
@@ -168,6 +206,13 @@ fun workoutLogEntity(
     timestamp = timestamp,
     isCompleted = isCompleted,
     loggedExercises = loggedExercises,
+    clientId = clientId,
+    title = title,
+    workoutType = workoutType,
+    startedAt = startedAt,
+    durationSec = durationSec,
+    notes = notes,
+    syncPending = syncPending,
 )
 
 /**
@@ -220,4 +265,122 @@ fun authResponse(
     token = token,
     message = message,
     hasCompletedOnboarding = hasCompletedOnboarding,
+)
+
+// ---------------------------------------------------------------------------------------------
+// Workout session (domain)
+// ---------------------------------------------------------------------------------------------
+
+fun sessionSet(
+    id: String = TestIds.uniqueClientId(),
+    type: SetType = SetType.NORMAL,
+    targetReps: String = "5",
+    targetRpe: String = "8",
+    weight: String = "",
+    reps: String = "",
+    actualRpe: String = "",
+    completed: Boolean = false,
+): SessionSet = SessionSet(
+    id = id,
+    type = type,
+    targetReps = targetReps,
+    targetRpe = targetRpe,
+    weight = weight,
+    reps = reps,
+    actualRpe = actualRpe,
+    completed = completed,
+)
+
+fun sessionExercise(
+    id: String = TestIds.uniqueClientId(),
+    exerciseId: String? = null,
+    name: String = "Back Squat",
+    notes: String = "",
+    restSeconds: Int = 120,
+    sets: List<SessionSet> = listOf(sessionSet(), sessionSet(), sessionSet()),
+): SessionExercise = SessionExercise(
+    id = id,
+    exerciseId = exerciseId,
+    name = name,
+    notes = notes,
+    restSeconds = restSeconds,
+    sets = sets,
+)
+
+fun workoutSession(
+    clientId: String = TestIds.uniqueClientId(),
+    weekNumber: Int = 1,
+    dayIndex: Int = 0,
+    title: String = "Lower Body",
+    startedAt: Long = FIXED_TIMESTAMP,
+    notes: String = "",
+    exercises: List<SessionExercise> = listOf(sessionExercise()),
+    restEndsAt: Long? = null,
+    restTotalSec: Int? = null,
+): WorkoutSession = WorkoutSession(
+    clientId = clientId,
+    weekNumber = weekNumber,
+    dayIndex = dayIndex,
+    title = title,
+    startedAt = startedAt,
+    notes = notes,
+    exercises = exercises,
+    restEndsAt = restEndsAt,
+    restTotalSec = restTotalSec,
+)
+
+// ---------------------------------------------------------------------------------------------
+// Exercise catalog
+// ---------------------------------------------------------------------------------------------
+
+fun catalogExerciseDto(
+    id: String = TestIds.uniqueExerciseId(),
+    name: String = "Barbell Squat",
+    force: String? = "push",
+    level: String? = "intermediate",
+    mechanic: String? = "compound",
+    equipment: String? = "barbell",
+    primaryMuscles: List<String> = listOf("quadriceps"),
+    secondaryMuscles: List<String> = listOf("glutes"),
+    instructions: List<String> = listOf("Stand tall.", "Squat down."),
+    category: String? = "strength",
+    images: List<String> = listOf("Barbell_Squat/0.jpg", "Barbell_Squat/1.jpg"),
+): CatalogExerciseDto = CatalogExerciseDto(
+    id = id,
+    name = name,
+    force = force,
+    level = level,
+    mechanic = mechanic,
+    equipment = equipment,
+    primaryMuscles = primaryMuscles,
+    secondaryMuscles = secondaryMuscles,
+    instructions = instructions,
+    category = category,
+    images = images,
+)
+
+fun catalogExercise(
+    id: String = TestIds.uniqueExerciseId(),
+    name: String = "Barbell Squat",
+    force: String? = "push",
+    level: String? = "intermediate",
+    mechanic: String? = "compound",
+    equipment: String? = "barbell",
+    primaryMuscles: List<String> = listOf("quadriceps"),
+    secondaryMuscles: List<String> = listOf("glutes"),
+    instructions: List<String> = listOf("Stand tall.", "Squat down."),
+    category: String? = "strength",
+    imageUrls: List<String> = emptyList(),
+): CatalogExercise = CatalogExercise(
+    id = id,
+    name = name,
+    force = force,
+    level = level,
+    mechanic = mechanic,
+    equipment = equipment,
+    primaryMuscles = primaryMuscles,
+    secondaryMuscles = secondaryMuscles,
+    instructions = instructions,
+    category = category,
+    imageUrls = imageUrls,
 )

@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -23,6 +24,11 @@ import androidx.navigation.compose.rememberNavController
 import com.example.hybrid_ai_app.R
 import com.example.hybrid_ai_app.core.presentation.ImportedBadge
 import com.example.hybrid_ai_app.core.presentation.isImported
+import com.example.hybrid_ai_app.home.domain.model.WorkoutSession
+import com.example.hybrid_ai_app.home.presentation.workout.ActiveWorkoutBarViewModel
+import com.example.hybrid_ai_app.home.presentation.workout.SessionLinks
+import com.example.hybrid_ai_app.home.presentation.workout.components.ActiveWorkoutBar
+import com.example.hybrid_ai_app.home.presentation.workout.rememberNowMillis
 import com.example.hybrid_ai_app.navigation.MainNavGraph
 import com.example.hybrid_ai_app.navigation.Screen
 
@@ -31,6 +37,7 @@ import com.example.hybrid_ai_app.navigation.Screen
 fun MainScaffold(
     rootNavController: NavHostController,
     viewModel: HomeViewModel = hiltViewModel(),
+    barViewModel: ActiveWorkoutBarViewModel = hiltViewModel(),
 ) {
     val bottomNavController = rememberNavController()
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
@@ -40,41 +47,67 @@ fun MainScaffold(
     val sheetState = rememberModalBottomSheetState()
 
     val uiState by viewModel.uiState.collectAsState()
+    val activeSession by barViewModel.session.collectAsState()
+
+    // A tap on the workout notification asks to open a session; this is the one place that owns the
+    // controller for that route. Consumed at once so it does not fire again.
+    val requestedSession by SessionLinks.pending.collectAsState()
+    LaunchedEffect(requestedSession) {
+        requestedSession?.let { day ->
+            bottomNavController.navigate(Screen.WorkoutExecution.createRoute(day.weekNumber, day.dayIndex)) {
+                launchSingleTop = true
+            }
+            SessionLinks.consume()
+        }
+    }
+
+    val onWorkoutScreen = currentRoute?.startsWith("workout_execution") == true ||
+        currentRoute?.startsWith("workout_edit") == true
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                // The label already names the destination, so the icon's content description is
-                // null: TalkBack would otherwise read every tab twice.
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                    label = { Text(stringResource(id = R.string.nav_home)) },
-                    selected = currentRoute == Screen.Home.route,
-                    onClick = { bottomNavController.navigate(Screen.Home.route) { launchSingleTop = true } },
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.DateRange, contentDescription = null) },
-                    label = { Text(stringResource(id = R.string.nav_workouts)) },
-                    selected = currentRoute == Screen.Workouts.route,
-                    onClick = { bottomNavController.navigate(Screen.Workouts.route) { launchSingleTop = true } },
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Face, contentDescription = null) },
-                    label = { Text(stringResource(id = R.string.nav_coach)) },
-                    selected = currentRoute == Screen.Coach.route,
-                    onClick = { bottomNavController.navigate(Screen.Coach.route) { launchSingleTop = true } },
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.List, contentDescription = null) },
-                    label = { Text(stringResource(id = R.string.nav_history)) },
-                    selected = currentRoute == Screen.History.route,
-                    onClick = { bottomNavController.navigate(Screen.History.route) { launchSingleTop = true } },
-                )
+            Column {
+                // The floating stand-in for a workout that was minimized rather than finished.
+                activeSession?.takeIf { !onWorkoutScreen }?.let { session ->
+                    LiveWorkoutBar(session) {
+                        bottomNavController.navigate(Screen.WorkoutExecution.createRoute(session.weekNumber, session.dayIndex)) {
+                            launchSingleTop = true
+                        }
+                    }
+                }
+                NavigationBar {
+                    // The label already names the destination, so the icon's content description is
+                    // null: TalkBack would otherwise read every tab twice.
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                        label = { Text(stringResource(id = R.string.nav_home)) },
+                        selected = currentRoute == Screen.Home.route,
+                        onClick = { bottomNavController.navigate(Screen.Home.route) { launchSingleTop = true } },
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.DateRange, contentDescription = null) },
+                        label = { Text(stringResource(id = R.string.nav_workouts)) },
+                        selected = currentRoute == Screen.Workouts.route,
+                        onClick = { bottomNavController.navigate(Screen.Workouts.route) { launchSingleTop = true } },
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Face, contentDescription = null) },
+                        label = { Text(stringResource(id = R.string.nav_coach)) },
+                        selected = currentRoute == Screen.Coach.route,
+                        onClick = { bottomNavController.navigate(Screen.Coach.route) { launchSingleTop = true } },
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.List, contentDescription = null) },
+                        label = { Text(stringResource(id = R.string.nav_history)) },
+                        selected = currentRoute == Screen.History.route,
+                        onClick = { bottomNavController.navigate(Screen.History.route) { launchSingleTop = true } },
+                    )
+                }
             }
         },
         floatingActionButton = {
             val isCoachScreen = currentRoute == Screen.Coach.route
-            val isExecutionScreen = currentRoute?.startsWith("workout_execution") == true
+            val isExecutionScreen = onWorkoutScreen
             val isOnboarding = currentRoute == Screen.Onboarding.route
 
             if (!isCoachScreen && !isExecutionScreen && !isOnboarding) {
@@ -84,7 +117,7 @@ fun MainScaffold(
                 ) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Quick Start Workout",
+                        contentDescription = stringResource(id = R.string.quickstart_cd),
                         tint = MaterialTheme.colorScheme.onPrimary,
                     )
                 }
@@ -109,7 +142,7 @@ fun MainScaffold(
                     is HomeUiState.Success -> {
                         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                             Text(
-                                text = "Select Session · Week ${state.currentWeekNumber}",
+                                text = stringResource(id = R.string.quickstart_select_title, state.currentWeekNumber),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(bottom = 16.dp),
@@ -130,7 +163,7 @@ fun MainScaffold(
                             if (pendingWorkouts.isEmpty()) {
                                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                                     Text(
-                                        text = "All active sessions for this week are completed! Enjoy your recovery.",
+                                        text = stringResource(id = R.string.quickstart_all_done),
                                         color = MaterialTheme.colorScheme.primary,
                                         textAlign = TextAlign.Center,
                                     )
@@ -165,7 +198,7 @@ fun MainScaffold(
                                                         verticalAlignment = Alignment.CenterVertically,
                                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                                                     ) {
-                                                        Text(text = "${day.exercises.size} Exercises")
+                                                        Text(text = pluralStringResource(id = R.plurals.quickstart_exercises_count, count = day.exercises.size, day.exercises.size))
                                                         if (day.isImported()) ImportedBadge()
                                                     }
                                                 },
@@ -186,11 +219,18 @@ fun MainScaffold(
                     }
                     else -> {
                         Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                            Text("No active plan to select from.")
+                            Text(stringResource(id = R.string.quickstart_no_plan))
                         }
                     }
                 }
             }
         }
     }
+}
+
+/** The minimized-workout bar with its own clock, so the ticker runs only while the bar is on screen. */
+@Composable
+private fun LiveWorkoutBar(session: WorkoutSession, onClick: () -> Unit) {
+    val nowMillis by rememberNowMillis()
+    ActiveWorkoutBar(session = session, nowMillis = nowMillis, onClick = onClick)
 }

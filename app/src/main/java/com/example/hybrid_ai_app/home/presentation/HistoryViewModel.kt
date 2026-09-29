@@ -30,7 +30,9 @@ class HistoryViewModel @Inject constructor(
         repository.getAllWorkoutLogs(),
         repository.getActivePlan(),
     ) { logs, plan ->
-        if (logs.isEmpty() || plan == null) {
+        // The logs are the history. They no longer depend on a plan being present: each one carries
+        // its own title and type, so regenerating the plan does not blank this screen.
+        if (logs.isEmpty()) {
             return@combine HistoryUiState.Empty
         }
 
@@ -38,11 +40,13 @@ class HistoryViewModel @Inject constructor(
         val historyItems = logs
             .sortedByDescending { it.timestamp }
             .map { log ->
-                val weekData = plan.weeks.find { it.weekNumber == log.weekNumber }
-                val dayData = weekData?.days?.getOrNull(log.dayIndex)
+                // Only rows written before logs carried their own title and type need the plan
+                // lookup, and for those the plan is a best guess (it may have been regenerated).
+                val dayData = plan?.weeks?.find { it.weekNumber == log.weekNumber }?.days?.getOrNull(log.dayIndex)
 
-                val isCardio = dayData?.workoutType == "cardio"
-                val title = dayData?.dayName ?: "Workout Session"
+                val workoutType = log.workoutType ?: dayData?.workoutType
+                val isCardio = workoutType == "cardio" || workoutType == "run"
+                val title = log.title?.takeIf { it.isNotBlank() } ?: dayData?.dayName
 
                 val mappedMetrics = log.loggedExercises.map { entity ->
                     LoggedExerciseMetric(
@@ -51,14 +55,18 @@ class HistoryViewModel @Inject constructor(
                         reps = entity.reps,
                         weight = entity.weight,
                         rpe = entity.rpe,
+                        notes = entity.notes,
+                        setLogs = entity.setLogs,
                     )
                 }
 
+                // The names of the first exercises. Blank when there are none; the screen then
+                // shows a localized "session completed" line, which is why no English lives here.
                 val summary = if (mappedMetrics.isNotEmpty()) {
                     val exerciseNames = mappedMetrics.take(3).joinToString(", ") { it.name }
                     if (mappedMetrics.size > 3) "$exerciseNames..." else exerciseNames
                 } else {
-                    if (isCardio) "Endurance session completed" else "Strength session completed"
+                    ""
                 }
 
                 HistoryItem(
@@ -70,6 +78,11 @@ class HistoryViewModel @Inject constructor(
                     isCardio = isCardio,
                     summary = summary,
                     loggedMetrics = mappedMetrics,
+                    notes = log.notes,
+                    durationSec = log.durationSec,
+                    // Only a log with per-set detail can be edited with the session screen; a legacy
+                    // one has nothing to put in the table.
+                    isEditable = !isCardio && mappedMetrics.any { it.setLogs.isNotEmpty() },
                 )
             }
 

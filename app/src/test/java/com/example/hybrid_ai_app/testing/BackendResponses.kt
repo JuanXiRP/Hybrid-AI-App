@@ -40,6 +40,10 @@ object BackendResponses {
         const val CHAT = "/api/ai/chat"
         const val CHAT_HISTORY = "/api/ai/chat/history"
         const val WORKOUTS_STRENGTH = "/api/workouts/strength"
+
+        /** `PUT` — the idempotent create-or-edit path, keyed by the client-generated id. */
+        fun workoutsStrengthUpsert(clientId: String): String = "$WORKOUTS_STRENGTH/$clientId"
+
         const val WORKOUTS_RUN = "/api/workouts/run"
         const val PLANS_ACTIVE = "/api/plans/active"
         const val PLANS_HISTORY = "/api/plans/history"
@@ -160,6 +164,40 @@ object BackendResponses {
         append("\"_id\":\"").append(TestIds.uniqueObjectId()).append("\"}],")
         append("\"active\":").append(active).append(",")
         append("\"origin\":\"").append(origin).append("\",")
+        append("\"createdAt\":\"2026-09-18T10:00:00.000Z\",")
+        append("\"updatedAt\":\"2026-09-18T10:00:00.000Z\",\"__v\":0}}")
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // Workout logs
+    // ---------------------------------------------------------------------------------------
+
+    /**
+     * `PUT /api/workouts/strength/:clientId` (200, for both create and edit) — the stored
+     * WorkoutStrength document under `data`.
+     *
+     * Every exercise carries its own `_id` (Mongoose adds one to each subdocument except the set
+     * logs, which the schema declares with `_id: false`), plus `__v` and the timestamps, none of
+     * which a DTO models. `exerciseId` is `null` when the client sent none, and `planId` is `null`
+     * because the endpoint never accepts one from the body.
+     */
+    fun strengthWorkoutUpserted(
+        clientId: String = TestIds.uniqueClientId(),
+        userId: String = TestIds.uniqueObjectId(),
+        routineType: String = "Upper Body",
+    ): String = buildString {
+        append("{\"success\":true,\"data\":{")
+        append("\"_id\":\"").append(TestIds.uniqueObjectId()).append("\",")
+        append("\"userId\":\"").append(userId).append("\",")
+        append("\"clientId\":\"").append(clientId).append("\",")
+        append("\"routineType\":\"").append(routineType).append("\",")
+        append("\"planId\":null,\"weekNumber\":2,\"dayIndex\":0,")
+        append("\"startedAt\":\"2026-09-18T09:00:00.000Z\",\"durationSec\":3600,")
+        append("\"date\":\"2026-09-18T10:00:00.000Z\",")
+        append("\"exercises\":[{\"exerciseName\":\"Bench Press\",\"exerciseId\":null,")
+        append("\"sets\":1,\"reps\":5,\"targetWeight\":0,\"actualWeight\":80,\"targetRpe\":8,")
+        append("\"setLogs\":[{\"type\":\"normal\",\"weight\":80,\"reps\":5}],")
+        append("\"_id\":\"").append(TestIds.uniqueObjectId()).append("\"}],")
         append("\"createdAt\":\"2026-09-18T10:00:00.000Z\",")
         append("\"updatedAt\":\"2026-09-18T10:00:00.000Z\",\"__v\":0}}")
     }

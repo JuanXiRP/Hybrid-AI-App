@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -328,6 +329,33 @@ class HomeViewModelTest {
         assertTrue(log.captured.isCompleted)
         assertEquals("progress moves to the next day", 3, progress.captured.currentDayIndex)
         assertEquals("still the same week", 1, progress.captured.currentWeekNumber)
+    }
+
+    @Test
+    fun `every log gets its own clientId, the key the backend upserts on`() = runTest {
+        // Arrange
+        givenPlan(
+            plan = workoutPlanEntity(weeks = listOf(fullWeekDto(weekNumber = 1))),
+            progress = userProgressEntity(currentWeekNumber = 1, currentDayIndex = 0),
+        )
+        val vm = viewModel()
+        val logs = mutableListOf<WorkoutLogEntity>()
+        coEvery { repository.completeWorkout(capture(logs), any(), any(), any()) } returns Unit
+
+        // Act
+        vm.uiState.test {
+            awaitItem()
+            awaitItem()
+            vm.logCurrentWorkoutAsCompleted()
+            vm.logCurrentWorkoutAsCompleted()
+            advanceUntilIdle()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        // Assert
+        assertEquals(2, logs.size)
+        assertTrue(logs.all { it.clientId.isNotBlank() })
+        assertNotEquals(logs[0].clientId, logs[1].clientId)
     }
 
     @Test

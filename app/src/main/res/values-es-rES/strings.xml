@@ -148,11 +148,6 @@
     <string name="btn_resume_run">REANUDAR CARRERA</string>
     <string name="btn_finish_workout">FINALIZAR ENTRENAMIENTO</string>
 
-    <string name="exercise_card_sets_label">Series: %1$s</string>
-    <string name="exercise_card_reps_label">Reps: %1$s</string>
-    <string name="exercise_card_rpe_label">RPE Objetivo: %1$s</string>
-    <string name="placeholder_weight">0.0</string>
-    <string name="cd_log_exercise_status">Registrar estado de finalización del ejercicio</string>
 
     <string name="loading_onboarding_msg">Calibrando tu macrociclo híbrido...</string>
     <string name="btn_back">Atrás</string>
@@ -221,5 +216,130 @@
     <string name="google_signin_cancelled">Se canceló el inicio de sesión con Google. Si no lo cancelaste tú, puede que el cliente OAuth de esta app aún no esté registrado.</string>
     <string name="google_signin_no_account">No hay ninguna cuenta de Google disponible. Añade una en Ajustes, o revisa el registro del SHA-1 de esta app.</string>
     <string name="google_signin_failed_detail">Falló el inicio de sesión con Google (%1$s)</string>
+
+    <!-- Historial: textos por defecto -->
+    <string name="history_default_title">Sesión de entrenamiento</string>
+    <string name="history_summary_strength">Sesión de fuerza completada</string>
+    <string name="history_summary_endurance">Sesión de resistencia completada</string>
+
+    <!-- Sesión de entrenamiento de fuerza -->
+    <string name="session_minimize">Minimizar entrenamiento</string>
+    <string name="session_finish">Terminar</string>
+    <string name="session_save">Guardar</string>
+    <string name="session_more">Más opciones</string>
+    <string name="session_menu_note">Nota del entrenamiento</string>
+    <string name="session_menu_discard">Descartar entrenamiento</string>
+    <string name="session_menu_change_start">Cambiar hora de inicio</string>
+    <string name="session_close_edit">Cerrar sin guardar</string>
+    <string name="session_discard_title">¿Descartar este entrenamiento?</string>
+    <string name="session_discard_message">Todo lo que registraste en esta sesión se perderá.</string>
+    <string name="session_discard_confirm">Descartar</string>
+    <string name="session_incomplete_title">Series sin terminar</string>
+    <string name="session_complete_all">Completar todas</string>
+    <string name="session_discard_incomplete">Descartar incompletas</string>
+    <string name="session_conflict_title">Ya hay un entrenamiento en curso</string>
+    <string name="session_conflict_message">Ya tienes un entrenamiento en curso (%1$s). ¿Quieres reanudarlo o descartarlo y empezar este?</string>
+    <string name="session_conflict_resume">Reanudar el actual</string>
+    <string name="session_conflict_discard">Descartar y empezar este</string>
+    <string name="session_note_hint">¿Qué tal fue?</string>
+    <string name="session_error_no_day">Este entrenamiento ya no está en tu plan.</string>
+    <string name="session_error_log_missing">No se encontró este entrenamiento.</string>
+    <string name="session_error_read_only">Tu prueba gratuita ha terminado. Suscríbete para seguir registrando entrenamientos.</string>
+    <string name="session_save_failed">No se pudo guardar el entrenamiento. Inténtalo de nuevo.</string>
+    <string name="session_edit_started">Inicio: %1$s</string>
+    <string name="session_ok">Aceptar</string>
+    <string name="session_pick_date_title">Fecha de inicio</string>
+    <string name="session_pick_time_title">Hora de inicio</string>
+    <string name="session_col_set">Serie</string>
+    <string name="session_col_previous">Anterior</string>
+    <string name="session_col_kg">kg</string>
+    <string name="session_col_reps">Reps</string>
+    <string name="session_col_target_rpe">Obj. RPE</string>
+    <string name="session_col_rpe">RPE</string>
+    <string name="session_set_type_normal">Serie normal</string>
+    <string name="session_set_type_warmup">Calentamiento (esta y las anteriores)</string>
+    <string name="session_set_type_drop">Serie descendente</string>
+    <string name="session_set_type_failure">Serie al fallo</string>
+    <string name="session_set_remove">Eliminar serie</string>
+    <string name="session_cd_set_type">Cambiar tipo de serie</string>
+    <string name="session_cd_toggle_set">Marcar serie como completada</string>
+    <string name="session_cd_delete_set">Eliminar serie</string>
+    <string name="session_cd_use_previous">Usar el peso y las reps anteriores</string>
+    <string name="session_add_set">Añadir serie</string>
+    <string name="session_exercise_menu_info">Información del ejercicio</string>
+    <string name="session_exercise_menu_alternative">Ejercicio alternativo</string>
+    <string name="session_exercise_menu_rest">Temporizador de descanso</string>
+    <string name="session_exercise_menu_note">Nota</string>
+    <string name="session_exercise_menu_reorder">Reordenar ejercicios</string>
+    <string name="session_exercise_menu_remove">Quitar ejercicio</string>
+    <string name="session_exercise_note_hint">Una nota para este ejercicio (solo esta sesión)</string>
+    <string name="session_exercise_rest_format">Descanso %1$s</string>
+    <string name="session_exercise_rest_off">Sin descanso</string>
+    <string name="session_add_exercise">Añadir ejercicio</string>
+    <string name="session_remove_exercise_title">¿Quitar el ejercicio?</string>
+    <string name="session_remove_exercise_message">Las series que completaste de este ejercicio se quitarán del entrenamiento.</string>
+    <string name="session_remove_exercise_confirm">Quitar</string>
+    <string name="session_empty_workout">Este entrenamiento no tiene ejercicios. Añade uno para empezar.</string>
+    <string name="session_rest_time_off">Desactivado</string>
+    <string name="session_rest_minus">-15 s</string>
+    <string name="session_rest_plus">+15 s</string>
+    <string name="session_rest_skip">Omitir</string>
+    <string name="session_rest_timer">Temporizador</string>
+    <string name="session_rest_manual_title">Iniciar un temporizador</string>
+    <string name="session_rest_choose_title">Descanso tras este ejercicio</string>
+    <string name="session_alternatives_title">Ejercicios alternativos</string>
+    <string name="session_alternatives_subtitle">Mismo grupo muscular, de más a menos parecido</string>
+    <string name="session_alternatives_empty">No se encontraron alternativas para este ejercicio.</string>
+    <string name="session_add_title">Añadir ejercicio</string>
+    <string name="session_search_hint">Buscar ejercicios</string>
+    <string name="session_filter_all">Todos</string>
+    <string name="session_search_empty">Ningún ejercicio coincide con tu búsqueda.</string>
+    <string name="session_info_primary">Músculos principales</string>
+    <string name="session_info_secondary">Músculos secundarios</string>
+    <string name="session_info_equipment">Equipamiento</string>
+    <string name="session_info_level">Nivel</string>
+    <string name="session_info_instructions">Instrucciones</string>
+    <string name="session_info_none">Ninguno</string>
+    <string name="session_info_unavailable">No hay detalles disponibles para este ejercicio.</string>
+    <string name="session_info_english_only">Los detalles de los ejercicios se muestran en inglés.</string>
+    <string name="session_reorder_title">Reordenar ejercicios</string>
+    <string name="session_move_up">Subir</string>
+    <string name="session_move_down">Bajar</string>
+    <string name="session_thumbnail_cd">Imagen del ejercicio</string>
+    <plurals name="session_incomplete_message">
+        <item quantity="one">%d serie no está completada. ¿Qué hacemos con ella?</item>
+        <item quantity="other">%d series no están completadas. ¿Qué hacemos con ellas?</item>
+        <item quantity="many">%d series no están completadas. ¿Qué hacemos con ellas?</item>
+    </plurals>
+
+    <!-- Servicio del entrenamiento, barra minimizada e inicio rápido -->
+    <string name="session_notif_title">Entrenamiento en curso</string>
+    <string name="session_notif_running_text">Entrenamiento en curso</string>
+    <string name="session_notif_rest_text">Descansando</string>
+    <string name="session_notif_rest_over_title">Descanso terminado</string>
+    <string name="session_notif_rest_over_text">Es hora de tu próxima serie.</string>
+    <string name="session_notif_channel_session">Entrenamiento en curso</string>
+    <string name="session_notif_channel_session_desc">Muestra el cronómetro mientras hay un entrenamiento en marcha.</string>
+    <string name="session_notif_channel_rest">Temporizador de descanso</string>
+    <string name="session_notif_channel_rest_desc">Te avisa cuando termina tu descanso entre series.</string>
+    <string name="session_bar_rest">Descanso %1$s</string>
+    <string name="session_bar_return_cd">Volver a tu entrenamiento</string>
+    <string name="quickstart_cd">Empezar entrenamiento</string>
+    <string name="quickstart_select_title">Elige sesión · Semana %1$d</string>
+    <string name="quickstart_all_done">¡Todas las sesiones de esta semana están completadas! Disfruta de tu recuperación.</string>
+    <string name="quickstart_no_plan">No hay ningún plan activo para elegir.</string>
+    <plurals name="quickstart_exercises_count">
+        <item quantity="one">%d ejercicio</item>
+        <item quantity="other">%d ejercicios</item>
+        <item quantity="many">%d ejercicios</item>
+    </plurals>
+
+    <!-- Historial: detalle -->
+    <string name="history_edit">Editar</string>
+    <string name="history_duration_format">Duración %1$s</string>
+    <string name="history_set_load">%1$s kg × %2$s</string>
+    <string name="history_set_reps_only">× %1$s</string>
+    <string name="history_set_rpe">RPE %1$s</string>
+    <string name="history_set_rpe_target">RPE %1$s (objetivo %2$s)</string>
 
 </resources>

@@ -31,6 +31,22 @@ interface ProgressDao {
     @Delete
     suspend fun deleteWorkoutLog(log: WorkoutLogEntity)
 
+    @Update
+    suspend fun updateWorkoutLog(log: WorkoutLogEntity)
+
+    @Query("SELECT * FROM workout_logs WHERE id = :id LIMIT 1")
+    suspend fun getWorkoutLogById(id: Long): WorkoutLogEntity?
+
+    /** The newest logs strictly older than [before], for the "previous" column of a session. */
+    @Query("SELECT * FROM workout_logs WHERE timestamp < :before ORDER BY timestamp DESC LIMIT :limit")
+    suspend fun getRecentWorkoutLogs(before: Long, limit: Int): List<WorkoutLogEntity>
+
+    @Query("SELECT * FROM workout_logs WHERE syncPending = 1 ORDER BY timestamp ASC")
+    suspend fun getPendingSyncLogs(): List<WorkoutLogEntity>
+
+    @Query("UPDATE workout_logs SET syncPending = :pending WHERE clientId = :clientId")
+    suspend fun setSyncPending(clientId: String, pending: Boolean)
+
     @Query("SELECT * FROM user_progress LIMIT 1")
     suspend fun getProgress(): UserProgressEntity?
 
