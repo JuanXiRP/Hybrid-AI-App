@@ -339,4 +339,33 @@
     <string name="history_set_rpe">RPE %1$s</string>
     <string name="history_set_rpe_target">RPE %1$s (target %2$s)</string>
 
+    <!-- Guided run: setup screen -->
+    <string name="run_setup_warmup">Warm-up</string>
+    <string name="run_setup_main">Main set</string>
+    <string name="run_setup_cooldown">Cool-down</string>
+    <string name="run_setup_mode_continuous">Continuous</string>
+    <string name="run_setup_mode_intervals">Intervals</string>
+    <string name="run_setup_duration">Duration</string>
+    <string name="run_setup_repeats">Repeats</string>
+    <string name="run_setup_work">Work</string>
+    <string name="run_setup_rest">Rest</string>
+    <string name="run_setup_minutes_format">%1$d min</string>
+    <string name="run_setup_total_format">Total ≈ %1$s</string>
+    <string name="run_setup_start">START RUN</string>
+    <string name="run_setup_error">Could not load the run for this day.</string>
+    <string name="run_stepper_decrease">Decrease</string>
+    <string name="run_stepper_increase">Increase</string>
+
+    <!-- Guided run: phases, banner and notification -->
+    <string name="run_phase_warmup">Warm-up</string>
+    <string name="run_phase_continuous">Run</string>
+    <string name="run_phase_work">Run</string>
+    <string name="run_phase_rest">Rest</string>
+    <string name="run_phase_cooldown">Cool-down</string>
+    <string name="run_banner_repeat_format">%1$s %2$d/%3$d</string>
+    <string name="run_banner_next_format">Next: %1$s %2$s</string>
+    <string name="run_banner_done">Run structure complete — tap Finish</string>
+    <string name="run_notif_paused">Run paused</string>
+    <string name="run_notif_done">Run structure complete — tap to finish</string>
+
 </resources>

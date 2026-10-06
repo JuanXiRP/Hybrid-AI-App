@@ -1,5 +1,6 @@
 package com.example.hybrid_ai_app.tracking
 
+import com.example.hybrid_ai_app.core.domain.model.RunProgress
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +16,10 @@ object WorkoutLocationManager {
     private val _elapsedTimeSec = MutableStateFlow(0L)
     val elapsedTimeSec: StateFlow<Long> = _elapsedTimeSec.asStateFlow()
 
+    /** Where the guided run stands; null for a free run, or before the first tick of a guided one. */
+    private val _runProgress = MutableStateFlow<RunProgress?>(null)
+    val runProgress: StateFlow<RunProgress?> = _runProgress.asStateFlow()
+
     fun addPoint(point: LatLng) {
         _pathPoints.value = _pathPoints.value + point
     }
@@ -27,9 +32,14 @@ object WorkoutLocationManager {
         _elapsedTimeSec.value = seconds
     }
 
+    fun updateRunProgress(progress: RunProgress?) {
+        _runProgress.value = progress
+    }
+
     fun clearAll() {
         _pathPoints.value = emptyList()
         _isTracking.value = false
         _elapsedTimeSec.value = 0L
+        _runProgress.value = null
     }
 }

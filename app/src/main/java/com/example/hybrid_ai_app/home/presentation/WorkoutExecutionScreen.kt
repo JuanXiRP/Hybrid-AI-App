@@ -1,6 +1,7 @@
 package com.example.hybrid_ai_app.home.presentation
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -10,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -22,10 +24,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.hybrid_ai_app.R
 import com.example.hybrid_ai_app.core.domain.model.RunPoint
+import com.example.hybrid_ai_app.core.domain.model.RunStructure
 import com.example.hybrid_ai_app.core.presentation.PremiumBottomSheet
+import com.example.hybrid_ai_app.home.presentation.run.RunSetupScreen
+import com.example.hybrid_ai_app.home.presentation.run.RunSetupUiState
+import com.example.hybrid_ai_app.home.presentation.run.RunSetupViewModel
+import com.example.hybrid_ai_app.home.presentation.run.components.RunPhaseBanner
 import com.example.hybrid_ai_app.home.presentation.workout.WorkoutSessionScreen
 import com.example.hybrid_ai_app.navigation.Screen
 import com.example.hybrid_ai_app.tracking.LocationTrackingService
+import com.example.hybrid_ai_app.tracking.RunStructureExtras
 import com.example.hybrid_ai_app.tracking.WorkoutLocationManager
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
@@ -51,8 +59,36 @@ fun WorkoutExecutionScreen(
 
     when {
         day == null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        day.workoutType == "cardio" -> CardioWorkoutScreen(weekNumber, dayIndex, navController, rootNavController, viewModel)
+        day.workoutType == "cardio" -> CardioFlow(weekNumber, dayIndex, navController, rootNavController, viewModel)
         else -> WorkoutSessionScreen(navController = navController, rootNavController = rootNavController)
+    }
+}
+
+/**
+ * A cardio day: the setup screen first, then the run itself. Both share one [RunSetupViewModel], so
+ * the structure the athlete configured is the one the run starts with.
+ */
+@Composable
+private fun CardioFlow(
+    weekNumber: Int,
+    dayIndex: Int,
+    navController: NavController,
+    rootNavController: NavController,
+    viewModel: HomeViewModel,
+) {
+    val setupViewModel: RunSetupViewModel = hiltViewModel()
+    val setupState by setupViewModel.uiState.collectAsState()
+    var started by rememberSaveable { mutableStateOf(false) }
+
+    val structure = (setupState as? RunSetupUiState.Success)?.structure
+    if (started && structure != null) {
+        CardioWorkoutScreen(weekNumber, dayIndex, navController, rootNavController, viewModel, structure)
+    } else {
+        RunSetupScreen(
+            viewModel = setupViewModel,
+            onBack = { navController.popBackStack() },
+            onStart = { started = true },
+        )
     }
 }
 
@@ -64,6 +100,7 @@ private fun CardioWorkoutScreen(
     navController: NavController,
     rootNavController: NavController,
     viewModel: HomeViewModel,
+    structure: RunStructure,
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -114,6 +151,7 @@ private fun CardioWorkoutScreen(
     val pathPoints by WorkoutLocationManager.pathPoints.collectAsState()
     val isTracking by WorkoutLocationManager.isTracking.collectAsState()
     val elapsedTimeSec by WorkoutLocationManager.elapsedTimeSec.collectAsState()
+    val runProgress by WorkoutLocationManager.runProgress.collectAsState()
 
     var mapProperties by remember { mutableStateOf(MapProperties(isMyLocationEnabled = false)) }
     val cameraPositionState = rememberCameraPositionState()
@@ -126,10 +164,7 @@ private fun CardioWorkoutScreen(
 
             if (fineLocationGranted || coarseLocationGranted) {
                 mapProperties = mapProperties.copy(isMyLocationEnabled = true)
-                Intent(context, LocationTrackingService::class.java).apply {
-                    action = LocationTrackingService.ACTION_START
-                    context.startService(this)
-                }
+                startRunTracking(context, structure)
             }
         },
     )
@@ -151,10 +186,7 @@ private fun CardioWorkoutScreen(
 
             if (allGranted) {
                 mapProperties = mapProperties.copy(isMyLocationEnabled = true)
-                Intent(context, LocationTrackingService::class.java).apply {
-                    action = LocationTrackingService.ACTION_START
-                    context.startService(this)
-                }
+                startRunTracking(context, structure)
             } else {
                 locationPermissionLauncher.launch(permissionsToRequest.toTypedArray())
             }
@@ -210,6 +242,10 @@ private fun CardioWorkoutScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
+                        if (runProgress != null) {
+                            RunPhaseBanner(progress = runProgress)
+                            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                        }
                         val runInstruction = currentDay.exercises.firstOrNull()
                         if (runInstruction != null) {
                             Column(
@@ -353,4 +389,13 @@ private fun formatSeconds(seconds: Long): String {
     } else {
         String.format("%02d:%02d", minutes, secs)
     }
+}
+
+/** Starts the tracking service for a guided run, handing it the structure to follow. */
+private fun startRunTracking(context: Context, structure: RunStructure) {
+    val intent = Intent(context, LocationTrackingService::class.java).apply {
+        action = LocationTrackingService.ACTION_START
+        RunStructureExtras.put(this, structure)
+    }
+    context.startService(intent)
 }

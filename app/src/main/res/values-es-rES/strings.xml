@@ -342,4 +342,33 @@
     <string name="history_set_rpe">RPE %1$s</string>
     <string name="history_set_rpe_target">RPE %1$s (objetivo %2$s)</string>
 
+    <!-- Guided run: setup screen -->
+    <string name="run_setup_warmup">Calentamiento</string>
+    <string name="run_setup_main">Parte principal</string>
+    <string name="run_setup_cooldown">Vuelta a la calma</string>
+    <string name="run_setup_mode_continuous">Continua</string>
+    <string name="run_setup_mode_intervals">Intervalos</string>
+    <string name="run_setup_duration">Duración</string>
+    <string name="run_setup_repeats">Repeticiones</string>
+    <string name="run_setup_work">Trabajo</string>
+    <string name="run_setup_rest">Descanso</string>
+    <string name="run_setup_minutes_format">%1$d min</string>
+    <string name="run_setup_total_format">Total ≈ %1$s</string>
+    <string name="run_setup_start">EMPEZAR CARRERA</string>
+    <string name="run_setup_error">No se pudo cargar la carrera de este día.</string>
+    <string name="run_stepper_decrease">Reducir</string>
+    <string name="run_stepper_increase">Aumentar</string>
+
+    <!-- Guided run: phases, banner and notification -->
+    <string name="run_phase_warmup">Calentamiento</string>
+    <string name="run_phase_continuous">Corre</string>
+    <string name="run_phase_work">Corre</string>
+    <string name="run_phase_rest">Descanso</string>
+    <string name="run_phase_cooldown">Vuelta a la calma</string>
+    <string name="run_banner_repeat_format">%1$s %2$d/%3$d</string>
+    <string name="run_banner_next_format">Siguiente: %1$s %2$s</string>
+    <string name="run_banner_done">Estructura completada — pulsa Finalizar</string>
+    <string name="run_notif_paused">Carrera en pausa</string>
+    <string name="run_notif_done">Estructura completada — toca para finalizar</string>
+
 </resources>
