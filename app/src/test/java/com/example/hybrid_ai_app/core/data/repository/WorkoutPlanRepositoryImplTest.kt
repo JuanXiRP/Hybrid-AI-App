@@ -16,6 +16,7 @@ import com.example.hybrid_ai_app.testing.BackendResponses
 import com.example.hybrid_ai_app.testing.FIXED_TIMESTAMP
 import com.example.hybrid_ai_app.testing.MockCleanupRule
 import com.example.hybrid_ai_app.testing.MockWebServerRule
+import com.example.hybrid_ai_app.testing.completedRun
 import com.example.hybrid_ai_app.testing.loggedExerciseEntity
 import com.example.hybrid_ai_app.testing.loggedSetEntity
 import com.example.hybrid_ai_app.testing.sessionExercise
@@ -51,6 +52,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.net.HttpURLConnection
+import kotlin.math.roundToInt
 
 /**
  * Plan and progress persistence, finishing a session, and the push of a finished log.
@@ -611,10 +613,9 @@ class WorkoutPlanRepositoryImplTest {
     }
 
     @Test
-    fun `the run payload is mostly placeholder data, which is a known gap`() = runTest {
-        // Pinned as current behaviour, not as an endorsement: distance, duration and pace are all
-        // hardcoded to zero and the GPS path is dropped, so a synced run carries no real metrics.
-        // The tracking feature collects this data; wiring it through is separate work.
+    fun `the mark-as-done shortcut pushes a placeholder run payload`() = runTest {
+        // The dashboard's "mark as done" shortcut tracks nothing, so distance, duration and pace
+        // are zeros and the GPS path is empty. A tracked run goes through completeRun instead.
         // Arrange
         server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)
 
@@ -746,6 +747,165 @@ class WorkoutPlanRepositoryImplTest {
 
         // Assert
         assertTrue(stored.single().syncPending)
+    }
+
+    // ------------------------------------------------------------------------------------
+    // completeRun
+    // ------------------------------------------------------------------------------------
+
+    @Test
+    fun `a finished run is stored under its own week, day, title and duration`() = runTest {
+        // Arrange
+        val stored = wireLogStore()
+        server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)
+        coEvery { progressDao.getProgress() } returns userProgressEntity(currentWeekNumber = 1, currentDayIndex = 1)
+        val run = completedRun(weekNumber = 1, dayIndex = 4, durationSec = 1800, finishedAt = FIXED_TIMESTAMP)
+
+        // Act
+        val result = repository(this).completeRun(run)
+        advanceUntilIdle()
+
+        // Assert
+        assertTrue(result.isSuccess)
+        val log = stored.single()
+        assertEquals(run.weekNumber, log.weekNumber)
+        assertEquals(run.dayIndex, log.dayIndex)
+        assertEquals(run.title, log.title)
+        assertEquals("cardio", log.workoutType)
+        assertEquals(run.durationSec, log.durationSec)
+        assertEquals(run.finishedAt - run.durationSec * 1000, log.startedAt)
+        assertEquals(run.instruction, log.loggedExercises)
+        assertTrue(log.isCompleted)
+        assertFalse("a run is never retried as a strength log", log.syncPending)
+    }
+
+    @Test
+    fun `finishing the current day's run advances progress`() = runTest {
+        // Arrange
+        wireLogStore()
+        server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)
+        coEvery { progressDao.getProgress() } returns userProgressEntity(currentWeekNumber = 1, currentDayIndex = 4)
+        val written = slot<UserProgressEntity>()
+        coEvery { progressDao.insertOrUpdateProgress(capture(written)) } returns Unit
+
+        // Act
+        repository(this).completeRun(completedRun(weekNumber = 1, dayIndex = 4))
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 1) { database.withTransaction(any<suspend () -> Any>()) }
+        assertEquals(1, written.captured.currentWeekNumber)
+        assertEquals(5, written.captured.currentDayIndex)
+    }
+
+    @Test
+    fun `finishing a run that is not the current day does not move progress`() = runTest {
+        // Regression: the run used to be filed against whichever day the progress pointed at.
+        // Arrange
+        wireLogStore()
+        server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)
+        coEvery { progressDao.getProgress() } returns userProgressEntity(currentWeekNumber = 1, currentDayIndex = 1)
+
+        // Act
+        repository(this).completeRun(completedRun(weekNumber = 1, dayIndex = 4))
+        advanceUntilIdle()
+
+        // Assert
+        coVerify(exactly = 0) { progressDao.insertOrUpdateProgress(any()) }
+    }
+
+    @Test
+    fun `the pushed run carries the tracked distance, duration, pace and path`() = runTest {
+        // Arrange
+        wireLogStore()
+        server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)
+        val run = completedRun(weekNumber = 1, dayIndex = 4, durationSec = 1800, distanceKm = 5.034)
+
+        // Act
+        repository(this).completeRun(run)
+        advanceUntilIdle()
+
+        // Assert
+        val request = server.takeRequest()
+        assertEquals(BackendResponses.Routes.WORKOUTS_RUN, request.path)
+        val payload = NetworkJson.decodeFromString<WorkoutRunDto>(request.body.readUtf8())
+        assertEquals(5.03, payload.distance, 0.0)
+        assertEquals(1800, payload.duration)
+        assertEquals((1800 / 5.034).roundToInt(), payload.actualPace)
+        assertEquals(run.path.map { it.lat to it.lng }, payload.gpsPath.map { it.lat to it.lng })
+        assertEquals(1, payload.weekNumber)
+        assertEquals(4, payload.dayIndex)
+        assertEquals(3, payload.rpe)
+    }
+
+    @Test
+    fun `a run with no distance has a zero pace instead of dividing by zero`() = runTest {
+        // Arrange
+        wireLogStore()
+        server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)
+
+        // Act
+        repository(this).completeRun(completedRun(distanceKm = 0.0, durationSec = 600))
+        advanceUntilIdle()
+
+        // Assert
+        val payload = NetworkJson.decodeFromString<WorkoutRunDto>(server.takeRequest().body.readUtf8())
+        assertEquals(0, payload.actualPace)
+        assertEquals(600, payload.duration)
+    }
+
+    @Test
+    fun `an instruction RPE the backend would reject is clamped or defaulted`() = runTest {
+        // The backend's WorkoutRun schema accepts 1..10 and would 400 the whole run otherwise.
+        // Arrange
+        wireLogStore()
+        server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)
+        server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)
+        val repository = repository(this)
+
+        // Act
+        repository.completeRun(completedRun(instruction = listOf(loggedExerciseEntity(rpe = "12"))))
+        repository.completeRun(completedRun(instruction = listOf(loggedExerciseEntity(rpe = "-"))))
+        advanceUntilIdle()
+
+        // Assert
+        val clamped = NetworkJson.decodeFromString<WorkoutRunDto>(server.takeRequest().body.readUtf8())
+        val defaulted = NetworkJson.decodeFromString<WorkoutRunDto>(server.takeRequest().body.readUtf8())
+        assertEquals(10, clamped.rpe)
+        assertEquals(8, defaulted.rpe)
+    }
+
+    @Test
+    fun `a failed or rejected run push does not fail the local write`() = runTest {
+        // Arrange
+        val stored = wireLogStore()
+        server.enqueueJson(BackendResponses.unauthorized(), code = HttpURLConnection.HTTP_UNAUTHORIZED)
+        server.enqueueConnectionFailure()
+        val repository = repository(this)
+
+        // Act
+        val rejected = repository.completeRun(completedRun())
+        val unreachable = repository.completeRun(completedRun())
+        advanceUntilIdle()
+
+        // Assert
+        assertTrue(rejected.isSuccess)
+        assertTrue(unreachable.isSuccess)
+        assertEquals(2, stored.size)
+    }
+
+    @Test
+    fun `a local failure is reported and nothing is pushed`() = runTest {
+        // Arrange
+        coEvery { progressDao.insertWorkoutLog(any()) } throws IllegalStateException("disk full")
+
+        // Act
+        val result = repository(this).completeRun(completedRun())
+        advanceUntilIdle()
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("no request should have been sent", 0, server.server.requestCount)
     }
 
     // ------------------------------------------------------------------------------------

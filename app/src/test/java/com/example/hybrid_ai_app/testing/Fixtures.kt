@@ -12,8 +12,10 @@ import com.example.hybrid_ai_app.core.data.remote.dto.ExerciseDto
 import com.example.hybrid_ai_app.core.data.remote.dto.UserDto
 import com.example.hybrid_ai_app.core.data.remote.dto.WeekDto
 import com.example.hybrid_ai_app.core.domain.model.CatalogExercise
+import com.example.hybrid_ai_app.core.domain.model.CompletedRun
 import com.example.hybrid_ai_app.core.domain.model.Entitlement
 import com.example.hybrid_ai_app.core.domain.model.EntitlementStatus
+import com.example.hybrid_ai_app.core.domain.model.RunPoint
 import com.example.hybrid_ai_app.home.domain.model.SessionExercise
 import com.example.hybrid_ai_app.home.domain.model.SessionSet
 import com.example.hybrid_ai_app.home.domain.model.SetType
@@ -213,6 +215,28 @@ fun workoutLogEntity(
     durationSec = durationSec,
     notes = notes,
     syncPending = syncPending,
+)
+
+fun completedRun(
+    weekNumber: Int = 1,
+    dayIndex: Int = 4,
+    title: String = "Friday - Zone 2 Run",
+    instruction: List<LoggedExerciseEntity> = listOf(
+        loggedExerciseEntity(name = "Zone 2 Run", sets = "1", reps = "30 minutes", weight = "", rpe = "3"),
+    ),
+    finishedAt: Long = FIXED_TIMESTAMP,
+    durationSec: Long = 1800,
+    distanceKm: Double = 5.034,
+    path: List<RunPoint> = listOf(RunPoint(40.4168, -3.7038), RunPoint(40.4170, -3.7040)),
+): CompletedRun = CompletedRun(
+    weekNumber = weekNumber,
+    dayIndex = dayIndex,
+    title = title,
+    instruction = instruction,
+    finishedAt = finishedAt,
+    durationSec = durationSec,
+    distanceKm = distanceKm,
+    path = path,
 )
 
 /**

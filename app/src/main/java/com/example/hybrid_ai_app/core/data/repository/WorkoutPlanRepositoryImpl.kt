@@ -14,8 +14,10 @@ import com.example.hybrid_ai_app.core.data.local.entity.WorkoutLogEntity
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutPlanEntity
 import com.example.hybrid_ai_app.core.data.mapper.toStrengthDto
 import com.example.hybrid_ai_app.core.data.remote.UserApi
+import com.example.hybrid_ai_app.core.data.remote.dto.LatLngDto
 import com.example.hybrid_ai_app.core.data.remote.dto.WorkoutRunDto
 import com.example.hybrid_ai_app.core.di.ApplicationScope
+import com.example.hybrid_ai_app.core.domain.model.CompletedRun
 import com.example.hybrid_ai_app.core.domain.repository.WorkoutPlanRepository
 import com.example.hybrid_ai_app.home.data.mapper.toWorkoutLog
 import com.example.hybrid_ai_app.home.domain.model.WorkoutSession
@@ -28,12 +30,20 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 private const val TAG = "WorkoutSync"
 
 private const val STRENGTH = "strength"
+private const val CARDIO = "cardio"
 private const val ACTIVE_PLAN_ID = "active_plan"
 private const val LAST_DAY_OF_WEEK = 6
+private const val MILLIS_PER_SECOND = 1000L
+
+/** Used when the plan's instruction carries no usable RPE: the backend requires one in 1..10. */
+private const val DEFAULT_RUN_RPE = 8
+private const val MIN_RPE = 1
+private const val MAX_RPE = 10
 
 /** How many past logs are scanned for the "previous" column: months of training, but bounded. */
 private const val PREVIOUS_SCAN_LIMIT = 60
@@ -116,7 +126,7 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
             try {
                 when {
                     isStrength -> retryPendingSyncs()
-                    workoutType == "cardio" || workoutType == "run" -> syncRun(log)
+                    workoutType == CARDIO || workoutType == "run" -> syncRun(log.toPlaceholderRunDto())
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -135,11 +145,44 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
 
         database.withTransaction {
             progressDao.insertWorkoutLog(log)
-            advanceProgressIfCurrent(session)
+            advanceProgressIfCurrent(session.weekNumber, session.dayIndex)
             activeWorkoutDao.clear()
         }
 
         launchPendingSync()
+    }
+
+    override suspend fun completeRun(run: CompletedRun): Result<Unit> = localWrite {
+        val log = WorkoutLogEntity(
+            weekNumber = run.weekNumber,
+            dayIndex = run.dayIndex,
+            timestamp = run.finishedAt,
+            isCompleted = true,
+            loggedExercises = run.instruction,
+            clientId = UUID.randomUUID().toString(),
+            title = run.title,
+            workoutType = CARDIO,
+            startedAt = run.finishedAt - run.durationSec * MILLIS_PER_SECOND,
+            durationSec = run.durationSec,
+            // Runs go through POST, which has no idempotency key, so they are never retried:
+            // a pending run would be re-sent by retryPendingSyncs as a strength log.
+            syncPending = false,
+        )
+
+        database.withTransaction {
+            progressDao.insertWorkoutLog(log)
+            advanceProgressIfCurrent(run.weekNumber, run.dayIndex)
+        }
+
+        syncScope.launch {
+            try {
+                syncRun(run.toRunDto(log))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "Unexpected error while syncing a run", e)
+            }
+        }
     }
 
     override suspend fun getWorkoutLog(id: Long): WorkoutLogEntity? = progressDao.getWorkoutLogById(id)
@@ -221,11 +264,11 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
      * Moves the athlete on only if the finished day is the one they were up to. Finishing another
      * day (the quick-start sheet lets any pending day of the week be opened) must not skip ahead.
      */
-    private suspend fun advanceProgressIfCurrent(session: WorkoutSession) {
+    private suspend fun advanceProgressIfCurrent(weekNumber: Int, dayIndex: Int) {
         val progress = progressDao.getProgress()
         val currentWeek = progress?.currentWeekNumber ?: 1
         val currentDay = progress?.currentDayIndex ?: 0
-        if (currentWeek != session.weekNumber || currentDay != session.dayIndex) return
+        if (currentWeek != weekNumber || currentDay != dayIndex) return
 
         val isLastDayOfWeek = currentDay == LAST_DAY_OF_WEEK
         progressDao.insertOrUpdateProgress(
@@ -255,25 +298,9 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
         SyncOutcome.UNREACHABLE
     }
 
-    private suspend fun syncRun(log: WorkoutLogEntity) {
+    private suspend fun syncRun(payload: WorkoutRunDto) {
         try {
-            // The user's RPE if they entered one, or 8 by default.
-            val rpeValue = log.loggedExercises.firstOrNull()?.rpe?.toIntOrNull() ?: 8
-
-            val runPayload = WorkoutRunDto(
-                userId = "dummy",
-                distance = 0.0,
-                duration = 0,
-                targetPace = 0,
-                actualPace = 0,
-                elevationGain = 0.0,
-                rpe = rpeValue,
-                gpsPath = emptyList(),
-                weekNumber = log.weekNumber,
-                dayIndex = log.dayIndex,
-            )
-
-            val response = api.syncRunWorkout(runPayload)
+            val response = api.syncRunWorkout(payload)
             if (!response.isSuccessful) {
                 Log.e(TAG, "Run log rejected: ${response.errorBody()?.string()}")
             }
@@ -283,6 +310,41 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
             Log.e(TAG, "Run log not sent: network or serialisation error", e)
         }
     }
+
+    /**
+     * The payload of the dashboard's "mark as done" shortcut, which tracks nothing: every metric is
+     * a zero. Real runs go through [completeRun] and [toRunDto].
+     */
+    private fun WorkoutLogEntity.toPlaceholderRunDto(): WorkoutRunDto = WorkoutRunDto(
+        userId = "dummy",
+        distance = 0.0,
+        duration = 0,
+        targetPace = 0,
+        actualPace = 0,
+        elevationGain = 0.0,
+        rpe = runRpe(),
+        gpsPath = emptyList(),
+        weekNumber = weekNumber,
+        dayIndex = dayIndex,
+    )
+
+    private fun CompletedRun.toRunDto(log: WorkoutLogEntity): WorkoutRunDto = WorkoutRunDto(
+        userId = "dummy",
+        // Rounded so the coach prompt does not print "5.0342871 km".
+        distance = Math.round(distanceKm * 100) / 100.0,
+        duration = durationSec.toInt(),
+        // The plan states no numeric pace, and the backend requires the field.
+        targetPace = 0,
+        actualPace = if (distanceKm > 0) (durationSec / distanceKm).roundToInt() else 0,
+        elevationGain = 0.0,
+        rpe = log.runRpe(),
+        gpsPath = path.map { LatLngDto(it.lat, it.lng) },
+        weekNumber = weekNumber,
+        dayIndex = dayIndex,
+    )
+
+    /** The RPE the plan asked for, clamped to what the backend accepts, or a default of 8. */
+    private fun WorkoutLogEntity.runRpe(): Int = loggedExercises.firstOrNull()?.rpe?.toIntOrNull()?.coerceIn(MIN_RPE, MAX_RPE) ?: DEFAULT_RUN_RPE
 
     private fun LoggedExerciseEntity.matches(exerciseId: String?, name: String): Boolean = if (exerciseId != null && this.exerciseId != null) {
         this.exerciseId == exerciseId

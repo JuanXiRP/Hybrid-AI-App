@@ -5,12 +5,17 @@ import com.example.hybrid_ai_app.core.data.EntitlementManager
 import com.example.hybrid_ai_app.core.data.PreferencesManager
 import com.example.hybrid_ai_app.core.data.local.entity.UserProgressEntity
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutLogEntity
+import com.example.hybrid_ai_app.core.domain.model.CompletedRun
 import com.example.hybrid_ai_app.core.domain.model.Entitlement
 import com.example.hybrid_ai_app.core.domain.model.PremiumRequiredReason
+import com.example.hybrid_ai_app.core.domain.model.RunPoint
 import com.example.hybrid_ai_app.core.domain.repository.WorkoutPlanRepository
+import com.example.hybrid_ai_app.core.util.TimeProvider
+import com.example.hybrid_ai_app.testing.FIXED_TIMESTAMP
 import com.example.hybrid_ai_app.testing.MainDispatcherRule
 import com.example.hybrid_ai_app.testing.MockCleanupRule
 import com.example.hybrid_ai_app.testing.dayDto
+import com.example.hybrid_ai_app.testing.exerciseDto
 import com.example.hybrid_ai_app.testing.expiredEntitlement
 import com.example.hybrid_ai_app.testing.fullWeekDto
 import com.example.hybrid_ai_app.testing.loggedExerciseEntity
@@ -71,7 +76,7 @@ class HomeViewModelTest {
         every { preferencesManager.userProfilePicFlow } returns flowOf(null)
     }
 
-    private fun viewModel() = HomeViewModel(repository, entitlementManager, preferencesManager)
+    private fun viewModel() = HomeViewModel(repository, entitlementManager, preferencesManager, TimeProvider { FIXED_TIMESTAMP })
 
     private fun givenPlan(
         plan: com.example.hybrid_ai_app.core.data.local.entity.WorkoutPlanEntity? =
@@ -554,6 +559,165 @@ class HomeViewModelTest {
 
         // Assert
         assertNull(vm.premiumPrompt.value)
+    }
+
+    // ------------------------------------------------------------------------------------
+    // finishRun
+    // ------------------------------------------------------------------------------------
+
+    private fun planWithRunOnFriday() = workoutPlanEntity(
+        weeks = listOf(
+            weekDto(
+                weekNumber = 1,
+                days = List(7) { index ->
+                    if (index == 4) {
+                        dayDto(
+                            dayName = "Friday - Zone 2 Run",
+                            workoutType = "cardio",
+                            exercises = listOf(exerciseDto(name = "Zone 2 Run", sets = "1", reps = "30 minutes", rpe = "3")),
+                        )
+                    } else {
+                        dayDto(dayName = "Day ${index + 1}")
+                    }
+                },
+            ),
+        ),
+    )
+
+    private val runPath = listOf(RunPoint(40.4168, -3.7038), RunPoint(40.4170, -3.7040))
+
+    @Test
+    fun `a run is saved against the screen's own day, not the one the progress points at`() = runTest {
+        // Regression: the run used to be filed under whichever day the progress pointed at.
+        // Arrange
+        givenPlan(
+            plan = planWithRunOnFriday(),
+            progress = userProgressEntity(currentWeekNumber = 1, currentDayIndex = 1),
+        )
+        val vm = viewModel()
+        coEvery { repository.completeRun(any()) } returns Result.success(Unit)
+
+        // Act
+        vm.uiState.test {
+            awaitItem()
+            awaitItem()
+            vm.finishRun(weekNumber = 1, dayIndex = 4, durationSec = 1800, distanceKm = 5.0, path = runPath)
+            advanceUntilIdle()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        // Assert
+        coVerify(exactly = 1) {
+            repository.completeRun(match { it.weekNumber == 1 && it.dayIndex == 4 && it.title == "Friday - Zone 2 Run" })
+        }
+        coVerify(exactly = 0) { repository.completeWorkout(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `the run carries the day's instruction, the injected time and the tracked metrics`() = runTest {
+        // Arrange
+        givenPlan(plan = planWithRunOnFriday())
+        val vm = viewModel()
+        val run = slot<CompletedRun>()
+        coEvery { repository.completeRun(capture(run)) } returns Result.success(Unit)
+
+        // Act
+        vm.uiState.test {
+            awaitItem()
+            awaitItem()
+            vm.finishRun(weekNumber = 1, dayIndex = 4, durationSec = 1800, distanceKm = 5.25, path = runPath)
+            advanceUntilIdle()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        // Assert
+        assertEquals(
+            listOf(loggedExerciseEntity(name = "Zone 2 Run", sets = "1", reps = "30 minutes", weight = "", rpe = "3")),
+            run.captured.instruction,
+        )
+        assertEquals(FIXED_TIMESTAMP, run.captured.finishedAt)
+        assertEquals(1800L, run.captured.durationSec)
+        assertEquals(5.25, run.captured.distanceKm, 0.0)
+        assertEquals(runPath, run.captured.path)
+    }
+
+    @Test
+    fun `a saved run emits Saved`() = runTest {
+        // Arrange
+        givenPlan(plan = planWithRunOnFriday())
+        val vm = viewModel()
+        coEvery { repository.completeRun(any()) } returns Result.success(Unit)
+
+        // Act & Assert
+        vm.uiState.test {
+            awaitItem()
+            awaitItem()
+            vm.runEvents.test {
+                vm.finishRun(1, 4, 1800, 5.0, runPath)
+                assertEquals(RunEvent.Saved, awaitItem())
+            }
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `a run whose local write fails emits SaveFailed`() = runTest {
+        // Arrange
+        givenPlan(plan = planWithRunOnFriday())
+        val vm = viewModel()
+        coEvery { repository.completeRun(any()) } returns Result.failure(IllegalStateException("disk full"))
+
+        // Act & Assert
+        vm.uiState.test {
+            awaitItem()
+            awaitItem()
+            vm.runEvents.test {
+                vm.finishRun(1, 4, 1800, 5.0, runPath)
+                assertEquals(RunEvent.SaveFailed, awaitItem())
+            }
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `an expired trial blocks the run and opens the paywall without any event`() = runTest {
+        // Arrange
+        givenPlan(plan = planWithRunOnFriday())
+        entitlementFlow.value = expiredEntitlement()
+        val vm = viewModel()
+
+        // Act & Assert
+        vm.uiState.test {
+            awaitItem()
+            awaitItem()
+            vm.runEvents.test {
+                vm.finishRun(1, 4, 1800, 5.0, runPath)
+                advanceUntilIdle()
+                expectNoEvents()
+            }
+            cancelAndIgnoreRemainingEvents()
+        }
+        assertEquals(PremiumRequiredReason.TRIAL_EXPIRED, vm.premiumPrompt.value)
+        coVerify(exactly = 0) { repository.completeRun(any()) }
+    }
+
+    @Test
+    fun `a day the plan cannot resolve emits SaveFailed and writes nothing`() = runTest {
+        // Arrange
+        givenPlan(plan = planWithRunOnFriday())
+        val vm = viewModel()
+
+        // Act & Assert
+        vm.uiState.test {
+            awaitItem()
+            awaitItem()
+            vm.runEvents.test {
+                vm.finishRun(weekNumber = 9, dayIndex = 4, durationSec = 1800, distanceKm = 5.0, path = runPath)
+                assertEquals(RunEvent.SaveFailed, awaitItem())
+            }
+            cancelAndIgnoreRemainingEvents()
+        }
+        coVerify(exactly = 0) { repository.completeRun(any()) }
     }
 
     // ------------------------------------------------------------------------------------
