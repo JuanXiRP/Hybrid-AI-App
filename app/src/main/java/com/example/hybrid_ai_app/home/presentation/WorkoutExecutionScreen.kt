@@ -21,7 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.hybrid_ai_app.R
-import com.example.hybrid_ai_app.core.data.local.entity.LoggedExerciseEntity
+import com.example.hybrid_ai_app.core.domain.model.RunPoint
 import com.example.hybrid_ai_app.core.presentation.PremiumBottomSheet
 import com.example.hybrid_ai_app.home.presentation.workout.WorkoutSessionScreen
 import com.example.hybrid_ai_app.navigation.Screen
@@ -80,6 +80,29 @@ private fun CardioWorkoutScreen(
                 rootNavController.navigate(Screen.Paywall.route)
             },
         )
+    }
+
+    val snackbar = remember { SnackbarHostState() }
+    // True from the tap on Finish until the save is acknowledged, so a double tap cannot write
+    // two logs.
+    var saving by remember { mutableStateOf(false) }
+    val saveFailedMessage by rememberUpdatedState(stringResource(id = R.string.session_save_failed))
+
+    // The screen leaves only once the local write has finished, as the strength session does.
+    LaunchedEffect(Unit) {
+        viewModel.runEvents.collect { event ->
+            when (event) {
+                RunEvent.Saved -> navController.popBackStack()
+                RunEvent.SaveFailed -> {
+                    saving = false
+                    snackbar.showSnackbar(saveFailedMessage)
+                }
+            }
+        }
+    }
+    // A read-only account is stopped by the paywall sheet instead of a save: let the athlete retry.
+    LaunchedEffect(premiumPrompt) {
+        if (premiumPrompt != null) saving = false
     }
 
     val plan = (uiState as? HomeUiState.Success)?.plan
@@ -148,6 +171,7 @@ private fun CardioWorkoutScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
                 title = { Text(text = currentDay?.dayName ?: stringResource(id = R.string.executing_workout_fallback), fontWeight = FontWeight.Bold) },
@@ -273,6 +297,11 @@ private fun CardioWorkoutScreen(
             // Global Finish Button
             Button(
                 onClick = {
+                    // Snapshot the tracked metrics before the service is told to stop.
+                    val durationSec = elapsedTimeSec
+                    val distanceKm = calculateDistanceKm(pathPoints).toDouble()
+                    val path = pathPoints.map { RunPoint(it.latitude, it.longitude) }
+
                     if (isCardio) {
                         Intent(context, LocationTrackingService::class.java).apply {
                             action = LocationTrackingService.ACTION_STOP
@@ -280,20 +309,10 @@ private fun CardioWorkoutScreen(
                         }
                     }
 
-                    // A run has no weight to log; the day's own instruction is what gets recorded.
-                    val compiledPerformanceMetrics = currentDay?.exercises?.map { exercise ->
-                        LoggedExerciseEntity(
-                            name = exercise.name,
-                            sets = exercise.sets,
-                            reps = exercise.reps,
-                            weight = "",
-                            rpe = exercise.rpe,
-                        )
-                    } ?: emptyList()
-
-                    viewModel.logCurrentWorkoutAsCompleted(metrics = compiledPerformanceMetrics)
-                    navController.popBackStack()
+                    saving = true
+                    viewModel.finishRun(weekNumber, dayIndex, durationSec, distanceKm, path)
                 },
+                enabled = !saving,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 32.dp)

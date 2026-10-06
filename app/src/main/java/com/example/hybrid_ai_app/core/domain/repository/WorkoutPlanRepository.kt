@@ -4,6 +4,7 @@ import com.example.hybrid_ai_app.core.data.local.entity.LoggedSetEntity
 import com.example.hybrid_ai_app.core.data.local.entity.UserProgressEntity
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutLogEntity
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutPlanEntity
+import com.example.hybrid_ai_app.core.domain.model.CompletedRun
 import com.example.hybrid_ai_app.home.domain.model.WorkoutSession
 import kotlinx.coroutines.flow.Flow
 
@@ -45,6 +46,13 @@ interface WorkoutPlanRepository {
         discardIncomplete: Boolean,
         finishedAt: Long,
     ): Result<Unit>
+
+    /**
+     * Saves a finished run against its own plan day, advancing progress only if that day is the
+     * current one, then pushes it to the backend in the background with its tracked metrics. The
+     * result is the *local* outcome, so a caller can wait for it before navigating.
+     */
+    suspend fun completeRun(run: CompletedRun): Result<Unit>
 
     suspend fun getWorkoutLog(id: Long): WorkoutLogEntity?
 
