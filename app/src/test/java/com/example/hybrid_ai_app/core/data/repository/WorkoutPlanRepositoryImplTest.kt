@@ -863,14 +863,16 @@ class WorkoutPlanRepositoryImplTest {
         server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)
         val repository = repository(this)
 
-        // Act
+        // Act — one run at a time: the pushes leave on OkHttp's threads, so two in flight at once
+        // could reach the server in either order and the requests could not be told apart.
         repository.completeRun(completedRun(instruction = listOf(loggedExerciseEntity(rpe = "12"))))
+        advanceUntilIdle()
+        val clamped = NetworkJson.decodeFromString<WorkoutRunDto>(server.takeRequest().body.readUtf8())
         repository.completeRun(completedRun(instruction = listOf(loggedExerciseEntity(rpe = "-"))))
         advanceUntilIdle()
+        val defaulted = NetworkJson.decodeFromString<WorkoutRunDto>(server.takeRequest().body.readUtf8())
 
         // Assert
-        val clamped = NetworkJson.decodeFromString<WorkoutRunDto>(server.takeRequest().body.readUtf8())
-        val defaulted = NetworkJson.decodeFromString<WorkoutRunDto>(server.takeRequest().body.readUtf8())
         assertEquals(10, clamped.rpe)
         assertEquals(8, defaulted.rpe)
     }
