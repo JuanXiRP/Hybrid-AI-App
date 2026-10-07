@@ -1,10 +1,13 @@
 package com.example.hybrid_ai_app.home.presentation.workout
 
 import app.cash.turbine.test
+import com.example.hybrid_ai_app.core.domain.model.ActiveRun
+import com.example.hybrid_ai_app.core.domain.repository.ActiveRunRepository
 import com.example.hybrid_ai_app.home.domain.model.WorkoutSession
 import com.example.hybrid_ai_app.home.domain.repository.ActiveWorkoutRepository
 import com.example.hybrid_ai_app.testing.MainDispatcherRule
 import com.example.hybrid_ai_app.testing.MockCleanupRule
+import com.example.hybrid_ai_app.testing.activeRun
 import com.example.hybrid_ai_app.testing.workoutSession
 import io.mockk.every
 import io.mockk.mockk
@@ -24,10 +27,15 @@ class ActiveWorkoutBarViewModelTest {
     @get:Rule
     val mockCleanup = MockCleanupRule()
 
-    private fun viewModel(stored: MutableStateFlow<WorkoutSession?>): ActiveWorkoutBarViewModel {
+    private fun viewModel(
+        stored: MutableStateFlow<WorkoutSession?> = MutableStateFlow(null),
+        storedRun: MutableStateFlow<ActiveRun?> = MutableStateFlow(null),
+    ): ActiveWorkoutBarViewModel {
         val repository = mockk<ActiveWorkoutRepository>()
         every { repository.observe() } returns stored
-        return ActiveWorkoutBarViewModel(repository)
+        val runs = mockk<ActiveRunRepository>()
+        every { runs.observe() } returns storedRun
+        return ActiveWorkoutBarViewModel(repository, runs)
     }
 
     @Test
@@ -85,6 +93,23 @@ class ActiveWorkoutBarViewModelTest {
             val resting = workoutSession(restEndsAt = 1_789_725_720_000L, restTotalSec = 120)
             stored.value = resting
             assertEquals(resting, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `a run in progress is exposed for its own bar, and goes away when cleared`() = runTest {
+        // Arrange
+        val run = activeRun()
+        val storedRun = MutableStateFlow<ActiveRun?>(run)
+        val vm = viewModel(storedRun = storedRun)
+
+        // Act & Assert
+        vm.run.test {
+            assertNull("the initial value, before the repository is read", awaitItem())
+            assertEquals(run, awaitItem())
+            storedRun.value = null
+            assertNull(awaitItem())
             cancelAndIgnoreRemainingEvents()
         }
     }

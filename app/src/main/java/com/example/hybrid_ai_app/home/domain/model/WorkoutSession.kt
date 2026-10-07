@@ -45,6 +45,9 @@ data class WorkoutSession(
     val exercises: List<SessionExercise>,
     val restEndsAt: Long? = null,
     val restTotalSec: Int? = null,
+    // A session added on top of the plan rather than opened from one of its days. [weekNumber] and
+    // [dayIndex] are then the plan's "today" when it started, and finishing it closes no plan day.
+    val isExtra: Boolean = false,
 )
 
 @Serializable

@@ -49,8 +49,9 @@ interface WorkoutPlanRepository {
 
     /**
      * Saves a finished run against its own plan day, advancing progress only if that day is the
-     * current one, then pushes it to the backend in the background with its tracked metrics. The
-     * result is the *local* outcome, so a caller can wait for it before navigating.
+     * current one (and never for an extra run), and clears the run in progress in the same
+     * transaction. It is then pushed to the backend in the background with its tracked metrics.
+     * The result is the *local* outcome, so a caller can wait for it before navigating.
      */
     suspend fun completeRun(run: CompletedRun): Result<Unit>
 
@@ -76,7 +77,7 @@ interface WorkoutPlanRepository {
     suspend fun retryPendingSyncs()
 
     /**
-     * Clears the plan, the progress and the session in progress, but **keeps the logs**: they carry
+     * Clears the plan, the progress and the session or run in progress, but **keeps the logs**: they carry
      * their own title and type, so regenerating a plan no longer erases the athlete's history.
      */
     suspend fun clearActivePlanAndProgress()

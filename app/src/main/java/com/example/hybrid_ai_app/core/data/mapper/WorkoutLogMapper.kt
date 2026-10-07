@@ -29,7 +29,7 @@ private const val DEFAULT_TARGET_RPE = 8
  */
 fun WorkoutLogEntity.toStrengthDto(): WorkoutStrengthDto = WorkoutStrengthDto(
     // The name of the planned day, which the coach reads back as the session's routine type.
-    routineType = title.orEmpty().ifBlank { "Workout" },
+    routineType = title.orEmpty().ifBlank { if (isExtra) "Extra workout" else "Workout" },
     // The moment the session finished, not the moment it happened to be synced: a retry hours
     // later must not move the log to the wrong day.
     date = Instant.ofEpochMilli(timestamp).toString(),
@@ -41,6 +41,8 @@ fun WorkoutLogEntity.toStrengthDto(): WorkoutStrengthDto = WorkoutStrengthDto(
     // server's _id, and the backend reads a log with none as belonging to the active plan.
     weekNumber = weekNumber,
     dayIndex = dayIndex,
+    // Only an extra carries the flag; a planned log keeps the payload it always had.
+    isExtra = isExtra.takeIf { it },
     exercises = loggedExercises.map { it.toStrengthDto() },
 )
 

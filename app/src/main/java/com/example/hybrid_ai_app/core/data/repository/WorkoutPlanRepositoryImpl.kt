@@ -4,6 +4,7 @@ package com.example.hybrid_ai_app.core.data.repository
 import android.util.Log
 import androidx.room.withTransaction
 import com.example.hybrid_ai_app.core.data.local.AppDatabase
+import com.example.hybrid_ai_app.core.data.local.dao.ActiveRunDao
 import com.example.hybrid_ai_app.core.data.local.dao.ActiveWorkoutDao
 import com.example.hybrid_ai_app.core.data.local.dao.ProgressDao
 import com.example.hybrid_ai_app.core.data.local.dao.WorkoutPlanDao
@@ -56,6 +57,7 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
     private val planDao: WorkoutPlanDao,
     private val progressDao: ProgressDao,
     private val activeWorkoutDao: ActiveWorkoutDao,
+    private val activeRunDao: ActiveRunDao,
     private val api: UserApi,
     // Injected rather than built inline so the fire-and-forget sync below runs on a scheduler
     // tests control. See CoroutinesModule.
@@ -82,7 +84,8 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
         // Fetch all completed logs for the target week safely
         val weeklyLogs = progressDao.getLogsForWeek(weekNumber).firstOrNull() ?: emptyList()
 
-        val existingLog = weeklyLogs.find { it.dayIndex == dayIndex }
+        // An extra session done on this day is not the day itself: it neither ticks nor unticks it.
+        val existingLog = weeklyLogs.find { it.dayIndex == dayIndex && !it.isExtra }
 
         if (existingLog != null) {
             progressDao.deleteWorkoutLog(existingLog)
@@ -145,7 +148,8 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
 
         database.withTransaction {
             progressDao.insertWorkoutLog(log)
-            advanceProgressIfCurrent(session.weekNumber, session.dayIndex)
+            // An extra session closes no plan day, so it never moves the athlete on.
+            if (!session.isExtra) advanceProgressIfCurrent(session.weekNumber, session.dayIndex)
             activeWorkoutDao.clear()
         }
 
@@ -159,7 +163,7 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
             timestamp = run.finishedAt,
             isCompleted = true,
             loggedExercises = run.instruction,
-            clientId = UUID.randomUUID().toString(),
+            clientId = run.clientId,
             title = run.title,
             workoutType = CARDIO,
             startedAt = run.finishedAt - run.durationSec * MILLIS_PER_SECOND,
@@ -167,11 +171,15 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
             // Runs go through POST, which has no idempotency key, so they are never retried:
             // a pending run would be re-sent by retryPendingSyncs as a strength log.
             syncPending = false,
+            isExtra = run.isExtra,
         )
 
+        // The log is written and the run in progress cleared together, so a run can never be both
+        // saved and still running (which would save it twice), nor cleared and lost.
         database.withTransaction {
             progressDao.insertWorkoutLog(log)
-            advanceProgressIfCurrent(run.weekNumber, run.dayIndex)
+            if (!run.isExtra) advanceProgressIfCurrent(run.weekNumber, run.dayIndex)
+            activeRunDao.clear()
         }
 
         syncScope.launch {
@@ -230,6 +238,7 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
             planDao.clearPlan()
             progressDao.clearAllProgress()
             activeWorkoutDao.clear()
+            activeRunDao.clear()
         }
     }
 
@@ -326,6 +335,7 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
         gpsPath = emptyList(),
         weekNumber = weekNumber,
         dayIndex = dayIndex,
+        isExtra = isExtra.takeIf { it },
     )
 
     private fun CompletedRun.toRunDto(log: WorkoutLogEntity): WorkoutRunDto = WorkoutRunDto(
@@ -341,6 +351,7 @@ class WorkoutPlanRepositoryImpl @Inject constructor(
         gpsPath = path.map { LatLngDto(it.lat, it.lng) },
         weekNumber = weekNumber,
         dayIndex = dayIndex,
+        isExtra = isExtra.takeIf { it },
     )
 
     /** The RPE the plan asked for, clamped to what the backend accepts, or a default of 8. */

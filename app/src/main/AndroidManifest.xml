@@ -8,6 +8,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Guided runs: keeps the CPU awake so the phase beeps arrive on time with the screen off. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- Rest timer: the end-of-rest cue vibrates, and the workout service is a foreground service
          of type specialUse (Play Console asks for a declaration of that use). -->
     <uses-permission android:name="android.permission.VIBRATE" />

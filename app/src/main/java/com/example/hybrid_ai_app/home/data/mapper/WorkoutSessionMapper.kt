@@ -98,6 +98,7 @@ fun WorkoutSession.toWorkoutLog(
     notes = notes.trim().ifBlank { null },
     // A strength log is pushed to the backend, and stays pending until the backend confirms it.
     syncPending = true,
+    isExtra = isExtra,
 )
 
 private const val STRENGTH = "strength"
@@ -145,6 +146,7 @@ fun WorkoutLogEntity.toWorkoutSession(newId: () -> String): WorkoutSession = Wor
     title = title.orEmpty(),
     startedAt = startedAt ?: timestamp,
     notes = notes.orEmpty(),
+    isExtra = isExtra,
     exercises = loggedExercises.map { exercise ->
         SessionExercise(
             id = newId(),

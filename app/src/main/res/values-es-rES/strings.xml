@@ -342,4 +342,55 @@
     <string name="history_set_rpe">RPE %1$s</string>
     <string name="history_set_rpe_target">RPE %1$s (objetivo %2$s)</string>
 
+    <!-- Guided run: setup screen -->
+    <string name="run_setup_warmup">Calentamiento</string>
+    <string name="run_setup_main">Parte principal</string>
+    <string name="run_setup_cooldown">Vuelta a la calma</string>
+    <string name="run_setup_mode_continuous">Continua</string>
+    <string name="run_setup_mode_intervals">Intervalos</string>
+    <string name="run_setup_duration">Duración</string>
+    <string name="run_setup_repeats">Repeticiones</string>
+    <string name="run_setup_work">Trabajo</string>
+    <string name="run_setup_rest">Descanso</string>
+    <string name="run_setup_minutes_format">%1$d min</string>
+    <string name="run_setup_total_format">Total ≈ %1$s</string>
+    <string name="run_setup_start">EMPEZAR CARRERA</string>
+    <string name="run_setup_error">No se pudo cargar la carrera de este día.</string>
+    <string name="run_stepper_decrease">Reducir</string>
+    <string name="run_stepper_increase">Aumentar</string>
+
+    <!-- Guided run: phases, banner and notification -->
+    <string name="run_phase_warmup">Calentamiento</string>
+    <string name="run_phase_continuous">Corre</string>
+    <string name="run_phase_work">Corre</string>
+    <string name="run_phase_rest">Descanso</string>
+    <string name="run_phase_cooldown">Vuelta a la calma</string>
+    <string name="run_banner_repeat_format">%1$s %2$d/%3$d</string>
+    <string name="run_banner_next_format">Siguiente: %1$s %2$s</string>
+    <string name="run_banner_done">Estructura completada — pulsa Finalizar</string>
+    <string name="run_notif_paused">Carrera en pausa</string>
+    <string name="run_notif_done">Estructura completada — toca para finalizar</string>
+
+
+    <!-- Runs that survive the app being closed, free runs and extra workouts -->
+    <string name="extra_strength_title">Entreno extra</string>
+    <string name="extra_run_title">Carrera extra</string>
+    <string name="extra_workout_header">Añadir entreno extra</string>
+    <string name="extra_workout_hint">No está en tu plan: se registra sin completar ningún día del plan.</string>
+    <string name="extra_workout_strength">Fuerza</string>
+    <string name="extra_workout_run">Carrera</string>
+    <string name="history_extra_indicator">Extra · S%1$d · D%2$d</string>
+    <string name="run_setup_mode_free">Libre</string>
+    <string name="run_setup_free_hint">Solo GPS y cronómetro: sin fases ni pitidos. Termina cuando quieras.</string>
+    <string name="run_summary_free">Carrera libre</string>
+    <string name="run_summary_intervals_format">%1$d × %2$s / %3$s descanso</string>
+    <string name="run_notif_tracking">Registrando tu carrera</string>
+    <string name="run_notif_title">Carrera en curso</string>
+    <string name="run_notif_channel">Seguimiento de carrera</string>
+    <string name="run_discard_title">¿Descartar esta carrera?</string>
+    <string name="run_discard_message">Se perderán el tiempo y la ruta registrados hasta ahora.</string>
+    <string name="run_discard_cd">Descartar carrera</string>
+    <string name="run_waiting_gps">Buscando GPS…</string>
+    <string name="run_recenter_cd">Seguir mi posición</string>
+    <string name="run_bar_paused">En pausa</string>
 </resources>

@@ -2,6 +2,7 @@ package com.example.hybrid_ai_app.core.data.repository
 
 import androidx.room.withTransaction
 import com.example.hybrid_ai_app.core.data.local.AppDatabase
+import com.example.hybrid_ai_app.core.data.local.dao.ActiveRunDao
 import com.example.hybrid_ai_app.core.data.local.dao.ActiveWorkoutDao
 import com.example.hybrid_ai_app.core.data.local.dao.ProgressDao
 import com.example.hybrid_ai_app.core.data.local.dao.WorkoutPlanDao
@@ -88,6 +89,7 @@ class WorkoutPlanRepositoryImplTest {
     private lateinit var planDao: WorkoutPlanDao
     private lateinit var progressDao: ProgressDao
     private lateinit var activeWorkoutDao: ActiveWorkoutDao
+    private lateinit var activeRunDao: ActiveRunDao
 
     @Before
     fun setUp() {
@@ -95,6 +97,7 @@ class WorkoutPlanRepositoryImplTest {
         planDao = mockk(relaxed = true)
         progressDao = mockk(relaxed = true)
         activeWorkoutDao = mockk(relaxed = true)
+        activeRunDao = mockk(relaxed = true)
 
         // Run the transaction body inline. Scoped per test and undone in @After so the static
         // mock never leaks into another suite.
@@ -115,6 +118,7 @@ class WorkoutPlanRepositoryImplTest {
         planDao = planDao,
         progressDao = progressDao,
         activeWorkoutDao = activeWorkoutDao,
+        activeRunDao = activeRunDao,
         api = server.api(UserApi::class.java),
         syncScope = scope,
     )
@@ -272,6 +276,23 @@ class WorkoutPlanRepositoryImplTest {
         // Assert
         coVerify(exactly = 1) { progressDao.deleteWorkoutLog(existing) }
         coVerify(exactly = 0) { progressDao.insertWorkoutLog(any()) }
+    }
+
+    @Test
+    fun `toggling a day ignores an extra session logged on it`() = runTest {
+        // Arrange
+        val extra = workoutLogEntity(id = 7, weekNumber = 1, dayIndex = 2, isExtra = true)
+        every { progressDao.getLogsForWeek(1) } returns flowOf(listOf(extra))
+        val inserted = slot<WorkoutLogEntity>()
+        coEvery { progressDao.insertWorkoutLog(capture(inserted)) } returns Unit
+
+        // Act
+        repository(this).toggleDayStatus(weekNumber = 1, dayIndex = 2)
+
+        // Assert
+        coVerify(exactly = 0) { progressDao.deleteWorkoutLog(any()) }
+        assertEquals(2, inserted.captured.dayIndex)
+        assertFalse(inserted.captured.isExtra)
     }
 
     @Test
@@ -799,6 +820,61 @@ class WorkoutPlanRepositoryImplTest {
     }
 
     @Test
+    fun `finishing a run stores its client id and clears the run in progress in the same transaction`() = runTest {
+        // Arrange
+        val stored = wireLogStore()
+        server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)
+        val run = completedRun()
+
+        // Act
+        repository(this).completeRun(run)
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(run.clientId, stored.single().clientId)
+        coVerify(exactly = 1) { database.withTransaction(any<suspend () -> Any>()) }
+        coVerifyOrder {
+            progressDao.insertWorkoutLog(any())
+            activeRunDao.clear()
+        }
+    }
+
+    @Test
+    fun `an extra run on the current day is logged as extra and does not move progress`() = runTest {
+        // Arrange
+        val stored = wireLogStore()
+        server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)
+        coEvery { progressDao.getProgress() } returns userProgressEntity(currentWeekNumber = 1, currentDayIndex = 4)
+
+        // Act
+        repository(this).completeRun(completedRun(weekNumber = 1, dayIndex = 4, isExtra = true))
+        advanceUntilIdle()
+
+        // Assert
+        assertTrue(stored.single().isExtra)
+        coVerify(exactly = 0) { progressDao.insertOrUpdateProgress(any()) }
+        val payload = NetworkJson.decodeFromString<WorkoutRunDto>(server.takeRequest().body.readUtf8())
+        assertEquals(true, payload.isExtra)
+        assertEquals(1, payload.weekNumber)
+        assertEquals(4, payload.dayIndex)
+    }
+
+    @Test
+    fun `a planned run is pushed without the extra flag`() = runTest {
+        // Arrange
+        wireLogStore()
+        server.enqueueEmpty(HttpURLConnection.HTTP_CREATED)
+
+        // Act
+        repository(this).completeRun(completedRun())
+        advanceUntilIdle()
+
+        // Assert
+        val body = server.takeRequest().body.readUtf8()
+        assertFalse(body.contains("isExtra"))
+    }
+
+    @Test
     fun `finishing a run that is not the current day does not move progress`() = runTest {
         // Regression: the run used to be filed against whichever day the progress pointed at.
         // Arrange
@@ -913,6 +989,24 @@ class WorkoutPlanRepositoryImplTest {
     // ------------------------------------------------------------------------------------
     // completeSession
     // ------------------------------------------------------------------------------------
+
+    @Test
+    fun `finishing an extra session on the current day does not move progress`() = runTest {
+        // Arrange
+        val stored = wireLogStore()
+        server.enqueueEmpty(HttpURLConnection.HTTP_OK)
+        coEvery { progressDao.getProgress() } returns userProgressEntity(currentWeekNumber = 1, currentDayIndex = 0)
+        val session = workoutSession(weekNumber = 1, dayIndex = 0, isExtra = true)
+
+        // Act
+        repository(this).completeSession(session, discardIncomplete = false, finishedAt = FIXED_TIMESTAMP)
+        advanceUntilIdle()
+
+        // Assert
+        assertTrue(stored.single().isExtra)
+        coVerify(exactly = 0) { progressDao.insertOrUpdateProgress(any()) }
+        coVerify(exactly = 1) { activeWorkoutDao.clear() }
+    }
 
     @Test
     fun `finishing a session writes the log, moves progress and clears the session in one transaction`() = runTest {
@@ -1455,6 +1549,7 @@ class WorkoutPlanRepositoryImplTest {
         coVerify(exactly = 1) { planDao.clearPlan() }
         coVerify(exactly = 1) { progressDao.clearAllProgress() }
         coVerify(exactly = 1) { activeWorkoutDao.clear() }
+        coVerify(exactly = 1) { activeRunDao.clear() }
     }
 
     @Test

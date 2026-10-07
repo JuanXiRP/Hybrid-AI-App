@@ -1,42 +1,55 @@
 package com.example.hybrid_ai_app.home.presentation
 
 import android.Manifest
-import android.content.Intent
+import android.content.Context
 import android.content.pm.PackageManager
-import android.location.Location
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.hybrid_ai_app.R
-import com.example.hybrid_ai_app.core.domain.model.RunPoint
+import com.example.hybrid_ai_app.core.domain.model.PremiumRequiredReason
 import com.example.hybrid_ai_app.core.presentation.PremiumBottomSheet
+import com.example.hybrid_ai_app.home.presentation.run.RunSessionEvent
+import com.example.hybrid_ai_app.home.presentation.run.RunSessionUiState
+import com.example.hybrid_ai_app.home.presentation.run.RunSessionViewModel
+import com.example.hybrid_ai_app.home.presentation.run.RunSetupScreen
+import com.example.hybrid_ai_app.home.presentation.run.RunSetupUiState
+import com.example.hybrid_ai_app.home.presentation.run.RunSetupViewModel
+import com.example.hybrid_ai_app.home.presentation.run.RunTrackingScreen
+import com.example.hybrid_ai_app.home.presentation.run.runTitle
+import com.example.hybrid_ai_app.home.presentation.workout.SessionLinks
 import com.example.hybrid_ai_app.home.presentation.workout.WorkoutSessionScreen
 import com.example.hybrid_ai_app.navigation.Screen
 import com.example.hybrid_ai_app.tracking.LocationTrackingService
-import com.example.hybrid_ai_app.tracking.WorkoutLocationManager
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.*
 
 /**
- * The entry point of a workout day: strength days open the set-by-set session screen, everything
- * else keeps the GPS run-tracking screen below.
+ * The entry point of a workout day: strength days open the set-by-set session screen, cardio days
+ * the run flow below.
  *
- * The day is looked up in the cached plan here, and only to decide which screen to show; the
- * session screen loads its own state from its route.
+ * The day is looked up in the cached plan here, and only to decide which screen to show; both
+ * screens load their own state from their route.
  */
 @Composable
 fun WorkoutExecutionScreen(
@@ -51,306 +64,147 @@ fun WorkoutExecutionScreen(
 
     when {
         day == null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        day.workoutType == "cardio" -> CardioWorkoutScreen(weekNumber, dayIndex, navController, rootNavController, viewModel)
+        day.workoutType == "cardio" -> RunFlow(navController, rootNavController)
         else -> WorkoutSessionScreen(navController = navController, rootNavController = rootNavController)
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** A run added on top of the plan (`extra_workout/run`): the same flow, with no plan day behind it. */
 @Composable
-private fun CardioWorkoutScreen(
-    weekNumber: Int,
-    dayIndex: Int,
+fun ExtraRunScreen(navController: NavController, rootNavController: NavController) {
+    RunFlow(navController, rootNavController)
+}
+
+/**
+ * A run, from setup to finish. Which part shows is decided by the stored run, not by anything held
+ * in the composition: arriving here while this screen's run is in progress — after leaving the
+ * screen, after the activity was recreated, after the process was killed — shows the run as it is,
+ * and never starts it again.
+ */
+@Composable
+private fun RunFlow(
     navController: NavController,
     rootNavController: NavController,
-    viewModel: HomeViewModel,
+    sessionViewModel: RunSessionViewModel = hiltViewModel(),
+    setupViewModel: RunSetupViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
-    val uiState by viewModel.uiState.collectAsState()
-    val premiumPrompt by viewModel.premiumPrompt.collectAsState()
+    val state by sessionViewModel.uiState.collectAsState()
+    val setupState by setupViewModel.uiState.collectAsState()
 
-    // Shares HomeViewModel, so the read-only guard in logCurrentWorkoutAsCompleted covers the
-    // "finish session" button here too.
-    premiumPrompt?.let { reason ->
+    val snackbar = remember { SnackbarHostState() }
+    var paywallReason by remember { mutableStateOf<PremiumRequiredReason?>(null) }
+    // True from the tap on Finish until the outcome is known, so a double tap cannot save twice.
+    var saving by remember { mutableStateOf(false) }
+    val saveFailedMessage by rememberUpdatedState(stringResource(id = R.string.session_save_failed))
+
+    LaunchedEffect(Unit) {
+        sessionViewModel.events.collect { event ->
+            when (event) {
+                RunSessionEvent.Finished -> navController.popBackStack()
+                RunSessionEvent.SaveFailed -> {
+                    saving = false
+                    snackbar.showSnackbar(saveFailedMessage)
+                }
+                is RunSessionEvent.ShowPaywall -> {
+                    saving = false
+                    paywallReason = event.reason
+                }
+                is RunSessionEvent.OpenRun -> navController.navigate(SessionLinks.routeFor(event.run)) {
+                    navController.currentDestination?.route?.let { current -> popUpTo(current) { inclusive = true } }
+                }
+            }
+        }
+    }
+
+    paywallReason?.let { reason ->
         PremiumBottomSheet(
             reason = reason,
-            onDismiss = viewModel::dismissPremiumPrompt,
+            onDismiss = { paywallReason = null },
             onSeePlans = {
-                viewModel.dismissPremiumPrompt()
+                paywallReason = null
                 rootNavController.navigate(Screen.Paywall.route)
             },
         )
     }
 
-    val snackbar = remember { SnackbarHostState() }
-    // True from the tap on Finish until the save is acknowledged, so a double tap cannot write
-    // two logs.
-    var saving by remember { mutableStateOf(false) }
-    val saveFailedMessage by rememberUpdatedState(stringResource(id = R.string.session_save_failed))
-
-    // The screen leaves only once the local write has finished, as the strength session does.
-    LaunchedEffect(Unit) {
-        viewModel.runEvents.collect { event ->
-            when (event) {
-                RunEvent.Saved -> navController.popBackStack()
-                RunEvent.SaveFailed -> {
-                    saving = false
-                    snackbar.showSnackbar(saveFailedMessage)
-                }
-            }
-        }
-    }
-    // A read-only account is stopped by the paywall sheet instead of a save: let the athlete retry.
-    LaunchedEffect(premiumPrompt) {
-        if (premiumPrompt != null) saving = false
-    }
-
-    val plan = (uiState as? HomeUiState.Success)?.plan
-    val currentDay = plan?.weeks?.find { it.weekNumber == weekNumber }?.days?.getOrNull(dayIndex)
-
-    val isCardio = currentDay?.workoutType == "cardio"
-
-    // Tracking States
-    val pathPoints by WorkoutLocationManager.pathPoints.collectAsState()
-    val isTracking by WorkoutLocationManager.isTracking.collectAsState()
-    val elapsedTimeSec by WorkoutLocationManager.elapsedTimeSec.collectAsState()
-
-    var mapProperties by remember { mutableStateOf(MapProperties(isMyLocationEnabled = false)) }
-    val cameraPositionState = rememberCameraPositionState()
-
-    val locationPermissionLauncher = rememberLauncherForActivityResult(
+    var hasLocationPermission by remember { mutableStateOf(hasLocationPermission(context)) }
+    val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
-        onResult = { permissions ->
-            val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-            val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-
-            if (fineLocationGranted || coarseLocationGranted) {
-                mapProperties = mapProperties.copy(isMyLocationEnabled = true)
-                Intent(context, LocationTrackingService::class.java).apply {
-                    action = LocationTrackingService.ACTION_START
-                    context.startService(this)
-                }
-            }
+        onResult = { granted ->
+            hasLocationPermission = granted[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                granted[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            val setup = setupViewModel.uiState.value as? RunSetupUiState.Success
+            if (hasLocationPermission && setup != null) sessionViewModel.start(setup.structure)
         },
     )
 
-    LaunchedEffect(isCardio) {
-        if (isCardio) {
-            WorkoutLocationManager.clearAll()
-            val permissionsToRequest = mutableListOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-            )
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
-            }
+    when (val current = state) {
+        RunSessionUiState.Loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
 
-            val allGranted = permissionsToRequest.all {
-                ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-            }
-
-            if (allGranted) {
-                mapProperties = mapProperties.copy(isMyLocationEnabled = true)
-                Intent(context, LocationTrackingService::class.java).apply {
-                    action = LocationTrackingService.ACTION_START
-                    context.startService(this)
+        RunSessionUiState.Setup -> RunSetupScreen(
+            viewModel = setupViewModel,
+            onBack = { navController.popBackStack() },
+            onStart = {
+                val setup = setupState as? RunSetupUiState.Success ?: return@RunSetupScreen
+                if (hasLocationPermission(context)) {
+                    hasLocationPermission = true
+                    sessionViewModel.start(setup.structure)
+                } else {
+                    permissionLauncher.launch(requiredPermissions())
                 }
-            } else {
-                locationPermissionLauncher.launch(permissionsToRequest.toTypedArray())
-            }
-        }
-    }
-
-    LaunchedEffect(pathPoints.size) {
-        if (pathPoints.isNotEmpty() && isTracking) {
-            cameraPositionState.animate(
-                update = CameraUpdateFactory.newLatLng(pathPoints.last()),
-                durationMs = 1000,
-            )
-        }
-    }
-
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbar) },
-        topBar = {
-            TopAppBar(
-                title = { Text(text = currentDay?.dayName ?: stringResource(id = R.string.executing_workout_fallback), fontWeight = FontWeight.Bold) },
-            )
-        },
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (currentDay == null) {
-                CircularProgressIndicator()
-            } else if (isCardio) {
-                // MAPS / CARDIO UI
-                GoogleMap(
-                    modifier = Modifier.fillMaxSize(),
-                    cameraPositionState = cameraPositionState,
-                    properties = mapProperties,
-                    uiSettings = MapUiSettings(zoomControlsEnabled = false),
-                ) {
-                    if (pathPoints.isNotEmpty()) {
-                        Polyline(points = pathPoints, color = MaterialTheme.colorScheme.primary, width = 12f)
-                    }
-                }
-
-                Card(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)),
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        val runInstruction = currentDay.exercises.firstOrNull()
-                        if (runInstruction != null) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                            ) {
-                                Text(
-                                    text = stringResource(id = R.string.todays_mission_header),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                                Text(
-                                    text = runInstruction.name,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    textAlign = TextAlign.Center,
-                                )
-                                Text(
-                                    text = stringResource(
-                                        id = R.string.cardio_metrics_format,
-                                        runInstruction.sets,
-                                        runInstruction.reps,
-                                        runInstruction.rpe,
-                                    ),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                        }
-
-                        val distanceKm = remember(pathPoints) { calculateDistanceKm(pathPoints) }
-                        val speedKmh = if (elapsedTimeSec > 0) (distanceKm / (elapsedTimeSec / 3600f)) else 0f
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceAround,
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(text = stringResource(id = R.string.metric_time), style = MaterialTheme.typography.labelSmall)
-                                Text(text = formatSeconds(elapsedTimeSec), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                            }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(text = stringResource(id = R.string.metric_speed), style = MaterialTheme.typography.labelSmall)
-                                Text(text = String.format("%.1f km/h", speedKmh), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                            }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(text = stringResource(id = R.string.metric_distance), style = MaterialTheme.typography.labelSmall)
-                                Text(text = String.format("%.2f km", distanceKm), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-                            }
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            if (isTracking) {
-                                Button(
-                                    onClick = {
-                                        Intent(context, LocationTrackingService::class.java).apply {
-                                            action = LocationTrackingService.ACTION_PAUSE
-                                            context.startService(this)
-                                        }
-                                    },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                                ) { Text(text = stringResource(id = R.string.btn_pause_run)) }
-                            } else {
-                                Button(
-                                    onClick = {
-                                        Intent(context, LocationTrackingService::class.java).apply {
-                                            action = LocationTrackingService.ACTION_RESUME
-                                            context.startService(this)
-                                        }
-                                    },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                                ) { Text(text = stringResource(id = R.string.btn_resume_run)) }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Global Finish Button
-            Button(
-                onClick = {
-                    // Snapshot the tracked metrics before the service is told to stop.
-                    val durationSec = elapsedTimeSec
-                    val distanceKm = calculateDistanceKm(pathPoints).toDouble()
-                    val path = pathPoints.map { RunPoint(it.latitude, it.longitude) }
-
-                    if (isCardio) {
-                        Intent(context, LocationTrackingService::class.java).apply {
-                            action = LocationTrackingService.ACTION_STOP
-                            context.startService(this)
-                        }
-                    }
-
-                    saving = true
-                    viewModel.finishRun(weekNumber, dayIndex, durationSec, distanceKm, path)
-                },
-                enabled = !saving,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 32.dp)
-                    .fillMaxWidth(0.8f)
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-            ) {
-                Text(text = stringResource(id = R.string.btn_finish_workout), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-            }
-        }
-    }
-}
-
-private fun calculateDistanceKm(points: List<LatLng>): Float {
-    var totalDistanceMeters = 0f
-    if (points.size < 2) return 0f
-
-    for (i in 0 until points.size - 1) {
-        val results = FloatArray(1)
-        Location.distanceBetween(
-            points[i].latitude,
-            points[i].longitude,
-            points[i + 1].latitude,
-            points[i + 1].longitude,
-            results,
+            },
         )
-        totalDistanceMeters += results[0]
+
+        is RunSessionUiState.Running -> {
+            // Every time a run is shown, make sure it is being tracked: after a process death this
+            // is what brings the service back. The service ignores it when it already is.
+            LaunchedEffect(current.run.clientId) {
+                if (hasLocationPermission(context)) LocationTrackingService.restore(context)
+            }
+            RunTrackingScreen(
+                run = current.run,
+                hasLocationPermission = hasLocationPermission,
+                snackbar = snackbar,
+                saving = saving,
+                onBack = { navController.popBackStack() },
+                onPause = sessionViewModel::pause,
+                onResume = sessionViewModel::resume,
+                onFinish = {
+                    saving = true
+                    sessionViewModel.finish()
+                },
+                onDiscard = sessionViewModel::discard,
+            )
+        }
+
+        is RunSessionUiState.Conflict -> AlertDialog(
+            onDismissRequest = { navController.popBackStack() },
+            title = { Text(stringResource(R.string.session_conflict_title)) },
+            text = {
+                Text(stringResource(R.string.session_conflict_message, runTitle(current.existing.title, current.existing.isExtra)))
+            },
+            confirmButton = {
+                TextButton(onClick = { sessionViewModel.resolveConflict(resume = true) }) {
+                    Text(stringResource(R.string.session_conflict_resume))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { sessionViewModel.resolveConflict(resume = false) }) {
+                    Text(stringResource(R.string.session_conflict_discard))
+                }
+            },
+        )
     }
-    return totalDistanceMeters / 1000f
 }
 
-private fun formatSeconds(seconds: Long): String {
-    val hours = seconds / 3600
-    val minutes = (seconds % 3600) / 60
-    val secs = seconds % 60
-    return if (hours > 0) {
-        String.format("%02d:%02d:%02d", hours, minutes, secs)
-    } else {
-        String.format("%02d:%02d", minutes, secs)
-    }
-}
+private fun requiredPermissions(): Array<String> = buildList {
+    add(Manifest.permission.ACCESS_FINE_LOCATION)
+    add(Manifest.permission.ACCESS_COARSE_LOCATION)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) add(Manifest.permission.POST_NOTIFICATIONS)
+}.toTypedArray()
+
+private fun hasLocationPermission(context: Context): Boolean = listOf(
+    Manifest.permission.ACCESS_FINE_LOCATION,
+    Manifest.permission.ACCESS_COARSE_LOCATION,
+).any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }

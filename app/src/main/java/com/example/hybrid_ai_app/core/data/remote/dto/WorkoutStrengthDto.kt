@@ -16,6 +16,9 @@ data class WorkoutStrengthDto(
     // sessions are left this week instead of inferring it from how many logs exist.
     val weekNumber: Int? = null,
     val dayIndex: Int? = null,
+    // True for a session the athlete added on top of the plan. It still names the week and day it
+    // was done on, but the backend never counts it as closing that plan day. Sent only when true.
+    val isExtra: Boolean? = null,
     // The idempotency key. It travels in the URL of `PUT /api/workouts/strength/{clientId}`, and
     // the backend takes it from there, not from the body; it is declared here so a response that
     // echoes the document still decodes into it.

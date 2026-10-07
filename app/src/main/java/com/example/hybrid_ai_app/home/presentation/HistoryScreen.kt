@@ -52,6 +52,8 @@ data class HistoryItem(
     val notes: String? = null,
     val durationSec: Long? = null,
     val isEditable: Boolean = false,
+    // A session added on top of the plan: badged, and named by the screen when it has no title.
+    val isExtra: Boolean = false,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -201,7 +203,13 @@ fun HistoryCard(item: HistoryItem, onClick: () -> Unit) {
                     }
                     Column {
                         Text(
-                            text = item.title ?: stringResource(id = R.string.history_default_title),
+                            text = item.title ?: stringResource(
+                                id = when {
+                                    item.isExtra && item.isCardio -> R.string.extra_run_title
+                                    item.isExtra -> R.string.extra_strength_title
+                                    else -> R.string.history_default_title
+                                },
+                            ),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                         )
@@ -216,7 +224,11 @@ fun HistoryCard(item: HistoryItem, onClick: () -> Unit) {
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                 ) {
                     Text(
-                        text = stringResource(id = R.string.timeline_week_day_indicator, item.weekNumber, item.dayNumber),
+                        text = if (item.isExtra) {
+                            stringResource(id = R.string.history_extra_indicator, item.weekNumber, item.dayNumber)
+                        } else {
+                            stringResource(id = R.string.timeline_week_day_indicator, item.weekNumber, item.dayNumber)
+                        },
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,

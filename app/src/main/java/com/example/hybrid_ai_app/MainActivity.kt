@@ -24,12 +24,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
 import com.example.hybrid_ai_app.core.data.EntitlementManager
 import com.example.hybrid_ai_app.core.data.PreferencesManager
+import com.example.hybrid_ai_app.core.domain.repository.ActiveRunRepository
 import com.example.hybrid_ai_app.core.domain.repository.WorkoutPlanRepository
 import com.example.hybrid_ai_app.core.util.JwtUtils
-import com.example.hybrid_ai_app.home.presentation.workout.SessionDay
 import com.example.hybrid_ai_app.home.presentation.workout.SessionLinks
 import com.example.hybrid_ai_app.navigation.RootNavGraph
 import com.example.hybrid_ai_app.navigation.Screen
+import com.example.hybrid_ai_app.tracking.LocationTrackingService
 import com.example.hybrid_ai_app.ui.theme.HybridTrainingTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -47,6 +48,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var workoutPlanRepository: WorkoutPlanRepository
+
+    @Inject
+    lateinit var activeRunRepository: ActiveRunRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,6 +104,13 @@ class MainActivity : ComponentActivity() {
                     // Same reasoning for workouts that failed to reach the backend (offline, or a
                     // 402 that has since cleared): try them again, in the background.
                     launch { workoutPlanRepository.retryPendingSyncs() }
+
+                    // A run that outlived its process (the app was swiped away or killed) is still
+                    // in the database: bring its tracking back now, without waiting for the
+                    // athlete to reopen the run screen.
+                    launch {
+                        if (activeRunRepository.get() != null) LocationTrackingService.restore(this@MainActivity)
+                    }
                 }
             }
 
@@ -135,13 +146,7 @@ class MainActivity : ComponentActivity() {
 
     private fun openSessionIfRequested(intent: Intent?) {
         if (intent?.action != SessionLinks.ACTION_OPEN_SESSION) return
-        if (!intent.hasExtra(SessionLinks.EXTRA_WEEK) || !intent.hasExtra(SessionLinks.EXTRA_DAY)) return
-
-        SessionLinks.open(
-            SessionDay(
-                weekNumber = intent.getIntExtra(SessionLinks.EXTRA_WEEK, 1),
-                dayIndex = intent.getIntExtra(SessionLinks.EXTRA_DAY, 0),
-            ),
-        )
+        val route = intent.getStringExtra(SessionLinks.EXTRA_ROUTE) ?: return
+        SessionLinks.open(route)
     }
 }

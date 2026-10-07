@@ -42,7 +42,12 @@ class HistoryViewModel @Inject constructor(
             .map { log ->
                 // Only rows written before logs carried their own title and type need the plan
                 // lookup, and for those the plan is a best guess (it may have been regenerated).
-                val dayData = plan?.weeks?.find { it.weekNumber == log.weekNumber }?.days?.getOrNull(log.dayIndex)
+                // An extra session's day is only when it was done, never a plan day to borrow from.
+                val dayData = if (log.isExtra) {
+                    null
+                } else {
+                    plan?.weeks?.find { it.weekNumber == log.weekNumber }?.days?.getOrNull(log.dayIndex)
+                }
 
                 val workoutType = log.workoutType ?: dayData?.workoutType
                 val isCardio = workoutType == "cardio" || workoutType == "run"
@@ -83,6 +88,7 @@ class HistoryViewModel @Inject constructor(
                     // Only a log with per-set detail can be edited with the session screen; a legacy
                     // one has nothing to put in the table.
                     isEditable = !isCardio && mappedMetrics.any { it.setLogs.isNotEmpty() },
+                    isExtra = log.isExtra,
                 )
             }
 
