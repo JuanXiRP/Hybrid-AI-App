@@ -23,6 +23,7 @@ import com.example.hybrid_ai_app.testing.expiredEntitlement
 import com.example.hybrid_ai_app.testing.loggedExerciseEntity
 import com.example.hybrid_ai_app.testing.loggedSetEntity
 import com.example.hybrid_ai_app.testing.trialEntitlement
+import com.example.hybrid_ai_app.testing.userProgressEntity
 import com.example.hybrid_ai_app.testing.weekDto
 import com.example.hybrid_ai_app.testing.workoutLogEntity
 import com.example.hybrid_ai_app.testing.workoutPlanEntity
@@ -252,6 +253,86 @@ class WorkoutSessionViewModelTest {
         val state = vm.uiState.value as WorkoutSessionUiState.Conflict
         assertEquals(existing, state.existing)
         assertEquals(SessionDay(weekNumber = 1, dayIndex = 0), state.requested)
+    }
+
+    private val extraHandle = SavedStateHandle(mapOf(WorkoutSessionViewModel.KEY_KIND to WorkoutSessionViewModel.KIND_STRENGTH))
+
+    @Test
+    fun `an extra session starts empty, untitled and stamped with the plan's today`() = runTest {
+        // Arrange
+        every { plans.getUserProgress() } returns flowOf(userProgressEntity(currentWeekNumber = 2, currentDayIndex = 3))
+
+        // Act
+        val vm = viewModel(handle = extraHandle)
+        advanceUntilIdle()
+
+        // Assert
+        val session = vm.session()
+        assertTrue(session.isExtra)
+        assertEquals(2, session.weekNumber)
+        assertEquals(3, session.dayIndex)
+        assertEquals("", session.title)
+        assertTrue(session.exercises.isEmpty())
+        assertEquals(session, activeWorkout.current.value)
+    }
+
+    @Test
+    fun `an extra session already in progress is resumed from the extra route`() = runTest {
+        // Arrange: the plan has moved on to another day since the extra session started
+        every { plans.getUserProgress() } returns flowOf(userProgressEntity(currentWeekNumber = 1, currentDayIndex = 6))
+        val existing = workoutSession(weekNumber = 1, dayIndex = 5, isExtra = true)
+        activeWorkout = FakeActiveWorkout(existing)
+
+        // Act
+        val vm = viewModel(handle = extraHandle)
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(existing, vm.session())
+    }
+
+    @Test
+    fun `a planned session in progress conflicts with a new extra one, and the other way round`() = runTest {
+        // Arrange
+        every { plans.getUserProgress() } returns flowOf(userProgressEntity(currentWeekNumber = 1, currentDayIndex = 0))
+        val planned = workoutSession(weekNumber = 1, dayIndex = 0)
+        activeWorkout = FakeActiveWorkout(planned)
+
+        // Act
+        val extraVm = viewModel(handle = extraHandle)
+        advanceUntilIdle()
+
+        // Assert: same week and day, but one is extra and the other is not
+        val conflict = extraVm.uiState.value as WorkoutSessionUiState.Conflict
+        assertEquals(planned, conflict.existing)
+        assertTrue(conflict.requested.isExtra)
+
+        // Arrange
+        activeWorkout = FakeActiveWorkout(workoutSession(weekNumber = 1, dayIndex = 0, isExtra = true))
+
+        // Act
+        val plannedVm = viewModel()
+        advanceUntilIdle()
+
+        // Assert
+        assertTrue(plannedVm.uiState.value is WorkoutSessionUiState.Conflict)
+    }
+
+    @Test
+    fun `dropping a planned session for an extra one starts the extra one empty`() = runTest {
+        // Arrange
+        every { plans.getUserProgress() } returns flowOf(userProgressEntity(currentWeekNumber = 1, currentDayIndex = 0))
+        activeWorkout = FakeActiveWorkout(workoutSession(weekNumber = 1, dayIndex = 0))
+        val vm = viewModel(handle = extraHandle)
+        advanceUntilIdle()
+
+        // Act
+        vm.resolveConflict(resume = false)
+        advanceUntilIdle()
+
+        // Assert
+        assertTrue(vm.session().isExtra)
+        assertTrue(vm.session().exercises.isEmpty())
     }
 
     @Test

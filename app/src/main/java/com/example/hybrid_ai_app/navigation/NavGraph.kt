@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.hybrid_ai_app.auth.presentation.AuthScreen
 import com.example.hybrid_ai_app.home.presentation.CoachScreen
+import com.example.hybrid_ai_app.home.presentation.ExtraRunScreen
 import com.example.hybrid_ai_app.home.presentation.HistoryScreen
 import com.example.hybrid_ai_app.home.presentation.HomeScreen
 import com.example.hybrid_ai_app.home.presentation.MainScaffold
@@ -15,6 +16,7 @@ import com.example.hybrid_ai_app.home.presentation.PaywallScreen
 import com.example.hybrid_ai_app.home.presentation.WorkoutExecutionScreen
 import com.example.hybrid_ai_app.home.presentation.WorkoutsScreen
 import com.example.hybrid_ai_app.home.presentation.workout.WorkoutSessionScreen
+import com.example.hybrid_ai_app.home.presentation.workout.WorkoutSessionViewModel
 import com.example.hybrid_ai_app.onboarding.presentation.OnboardingScreen
 import com.example.hybrid_ai_app.settings.presentation.SettingsScreen
 
@@ -31,6 +33,11 @@ sealed class Screen(val route: String) {
     object History : Screen("history")
     object WorkoutExecution : Screen("workout_execution/{weekNumber}/{dayIndex}") {
         fun createRoute(weekNumber: Int, dayIndex: Int): String = "workout_execution/$weekNumber/$dayIndex"
+    }
+
+    // A workout added on top of the plan. `kind` is "strength" or "run".
+    object ExtraWorkout : Screen("extra_workout/{kind}") {
+        fun createRoute(kind: String): String = "extra_workout/$kind"
     }
 
     // A past workout reopened for editing, by the id of its stored log.
@@ -128,6 +135,18 @@ fun MainNavGraph(
                 navController = navController,
                 rootNavController = rootNavController,
             )
+        }
+
+        composable(
+            route = Screen.ExtraWorkout.route,
+            arguments = listOf(navArgument("kind") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            // The ViewModels read `kind` from the route themselves.
+            if (backStackEntry.arguments?.getString("kind") == WorkoutSessionViewModel.KIND_RUN) {
+                ExtraRunScreen(navController = navController, rootNavController = rootNavController)
+            } else {
+                WorkoutSessionScreen(navController = navController, rootNavController = rootNavController)
+            }
         }
 
         composable(

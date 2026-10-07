@@ -29,4 +29,7 @@ data class WorkoutLogEntity(
     // True until the backend has acknowledged this log. A log is saved locally first, so a failed
     // push is remembered here and retried later.
     val syncPending: Boolean = false,
+    // A session added on top of the plan. [weekNumber] and [dayIndex] then say when it was done
+    // (the plan's "today" at the time), not which plan day it completed: it completes none.
+    val isExtra: Boolean = false,
 )

@@ -53,3 +53,37 @@ val MIGRATION_3_4: Migration = object : Migration(3, 4) {
         )
     }
 }
+
+/**
+ * v4 to v5: logs can be extra sessions, and the run in progress gets two tables.
+ *
+ * As with [MIGRATION_3_4], every statement mirrors what Room generates from the entities (compare
+ * with `app/schemas/.../5.json`). `isExtra` gets a database default only because SQLite needs one
+ * to add a NOT NULL column; every existing log is a planned one, which is exactly what 0 says.
+ */
+val MIGRATION_4_5: Migration = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE workout_logs ADD COLUMN isExtra INTEGER NOT NULL DEFAULT 0")
+
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS active_run (" +
+                "id TEXT NOT NULL, " +
+                "clientId TEXT NOT NULL, " +
+                "weekNumber INTEGER NOT NULL, " +
+                "dayIndex INTEGER NOT NULL, " +
+                "isExtra INTEGER NOT NULL, " +
+                "title TEXT NOT NULL, " +
+                "structureJson TEXT, " +
+                "startedAt INTEGER NOT NULL, " +
+                "accumulatedMs INTEGER NOT NULL, " +
+                "resumedAt INTEGER, " +
+                "PRIMARY KEY(id))",
+        )
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS active_run_points (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "lat REAL NOT NULL, " +
+                "lng REAL NOT NULL)",
+        )
+    }
+}

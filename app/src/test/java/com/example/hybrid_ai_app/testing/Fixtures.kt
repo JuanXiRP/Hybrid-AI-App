@@ -11,11 +11,14 @@ import com.example.hybrid_ai_app.core.data.remote.dto.DayDto
 import com.example.hybrid_ai_app.core.data.remote.dto.ExerciseDto
 import com.example.hybrid_ai_app.core.data.remote.dto.UserDto
 import com.example.hybrid_ai_app.core.data.remote.dto.WeekDto
+import com.example.hybrid_ai_app.core.domain.model.ActiveRun
 import com.example.hybrid_ai_app.core.domain.model.CatalogExercise
 import com.example.hybrid_ai_app.core.domain.model.CompletedRun
 import com.example.hybrid_ai_app.core.domain.model.Entitlement
 import com.example.hybrid_ai_app.core.domain.model.EntitlementStatus
+import com.example.hybrid_ai_app.core.domain.model.RunMainBlock
 import com.example.hybrid_ai_app.core.domain.model.RunPoint
+import com.example.hybrid_ai_app.core.domain.model.RunStructure
 import com.example.hybrid_ai_app.home.domain.model.SessionExercise
 import com.example.hybrid_ai_app.home.domain.model.SessionSet
 import com.example.hybrid_ai_app.home.domain.model.SetType
@@ -201,6 +204,7 @@ fun workoutLogEntity(
     durationSec: Long? = null,
     notes: String? = null,
     syncPending: Boolean = false,
+    isExtra: Boolean = false,
 ): WorkoutLogEntity = WorkoutLogEntity(
     id = id,
     weekNumber = weekNumber,
@@ -215,9 +219,11 @@ fun workoutLogEntity(
     durationSec = durationSec,
     notes = notes,
     syncPending = syncPending,
+    isExtra = isExtra,
 )
 
 fun completedRun(
+    clientId: String = TestIds.uniqueClientId(),
     weekNumber: Int = 1,
     dayIndex: Int = 4,
     title: String = "Friday - Zone 2 Run",
@@ -228,7 +234,9 @@ fun completedRun(
     durationSec: Long = 1800,
     distanceKm: Double = 5.034,
     path: List<RunPoint> = listOf(RunPoint(40.4168, -3.7038), RunPoint(40.4170, -3.7040)),
+    isExtra: Boolean = false,
 ): CompletedRun = CompletedRun(
+    clientId = clientId,
     weekNumber = weekNumber,
     dayIndex = dayIndex,
     title = title,
@@ -237,6 +245,34 @@ fun completedRun(
     durationSec = durationSec,
     distanceKm = distanceKm,
     path = path,
+    isExtra = isExtra,
+)
+
+/** A run in progress. Running since [startedAt] unless [resumedAt] is set to null (paused). */
+fun activeRun(
+    clientId: String = TestIds.uniqueClientId(),
+    weekNumber: Int = 1,
+    dayIndex: Int = 4,
+    isExtra: Boolean = false,
+    title: String = "Friday - Zone 2 Run",
+    structure: RunStructure? = RunStructure(
+        warmupSec = 600,
+        main = RunMainBlock.Intervals(repeats = 6, workSec = 60, restSec = 60),
+        cooldownSec = 300,
+    ),
+    startedAt: Long = FIXED_TIMESTAMP,
+    accumulatedMs: Long = 0,
+    resumedAt: Long? = startedAt,
+): ActiveRun = ActiveRun(
+    clientId = clientId,
+    weekNumber = weekNumber,
+    dayIndex = dayIndex,
+    isExtra = isExtra,
+    title = title,
+    structure = structure,
+    startedAt = startedAt,
+    accumulatedMs = accumulatedMs,
+    resumedAt = resumedAt,
 )
 
 /**
@@ -341,6 +377,7 @@ fun workoutSession(
     exercises: List<SessionExercise> = listOf(sessionExercise()),
     restEndsAt: Long? = null,
     restTotalSec: Int? = null,
+    isExtra: Boolean = false,
 ): WorkoutSession = WorkoutSession(
     clientId = clientId,
     weekNumber = weekNumber,
@@ -351,6 +388,7 @@ fun workoutSession(
     exercises = exercises,
     restEndsAt = restEndsAt,
     restTotalSec = restTotalSec,
+    isExtra = isExtra,
 )
 
 // ---------------------------------------------------------------------------------------------

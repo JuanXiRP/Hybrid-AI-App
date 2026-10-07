@@ -320,6 +320,26 @@ class HistoryViewModelTest {
     }
 
     @Test
+    fun `an untitled extra session never borrows the name of the plan day it was done on`() = runTest {
+        // Arrange
+        val plan = workoutPlanEntity(weeks = listOf(weekDto(days = listOf(dayDto(dayName = "Lower Body")))))
+        val vm = viewModel(
+            logs = listOf(workoutLogEntity(dayIndex = 0, title = "", workoutType = "cardio", isExtra = true)),
+            plan = plan,
+        )
+
+        // Act & Assert
+        vm.uiState.test {
+            awaitItem()
+            val item = (awaitItem() as HistoryUiState.Success).items.single()
+            assertTrue(item.isExtra)
+            assertTrue(item.isCardio)
+            assertNull("the screen names it", item.title)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `a log's own type wins over the plan day when deciding if it was cardio`() = runTest {
         // Arrange — the plan day at that position is cardio now, but the log says it was strength
         val plan = workoutPlanEntity(weeks = listOf(weekDto(days = listOf(dayDto(workoutType = "cardio")))))

@@ -59,6 +59,35 @@ class WorkoutLogMapperTest {
     }
 
     @Test
+    fun `an extra session is flagged and keeps the day it was done on`() {
+        // Act
+        val dto = workoutLogEntity(weekNumber = 3, dayIndex = 4, isExtra = true).toStrengthDto()
+
+        // Assert
+        assertEquals(true, dto.isExtra)
+        assertEquals(3, dto.weekNumber)
+        assertEquals(4, dto.dayIndex)
+    }
+
+    @Test
+    fun `a planned session carries no extra flag at all`() {
+        // Act
+        val dto = workoutLogEntity().toStrengthDto()
+
+        // Assert
+        assertNull(dto.isExtra)
+    }
+
+    @Test
+    fun `an untitled extra session is sent under its own routine type`() {
+        // Act
+        val dto = workoutLogEntity(title = "", isExtra = true).toStrengthDto()
+
+        // Assert
+        assertEquals("Extra workout", dto.routineType)
+    }
+
+    @Test
     fun `absent optional session fields stay absent`() {
         // Act
         val dto = workoutLogEntity(startedAt = null, durationSec = null, notes = null).toStrengthDto()

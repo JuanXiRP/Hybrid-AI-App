@@ -10,13 +10,9 @@ import com.example.hybrid_ai_app.core.data.local.entity.WorkoutLogEntity
 import com.example.hybrid_ai_app.core.data.local.entity.WorkoutPlanEntity
 import com.example.hybrid_ai_app.core.data.remote.dto.DayDto
 import com.example.hybrid_ai_app.core.data.remote.dto.WeekDto
-import com.example.hybrid_ai_app.core.domain.model.CompletedRun
 import com.example.hybrid_ai_app.core.domain.model.PremiumRequiredReason
-import com.example.hybrid_ai_app.core.domain.model.RunPoint
 import com.example.hybrid_ai_app.core.domain.repository.WorkoutPlanRepository
-import com.example.hybrid_ai_app.core.util.TimeProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -36,18 +32,11 @@ sealed interface HomeUiState {
     data class Error(val message: String) : HomeUiState
 }
 
-/** The outcome of finishing a tracked run, which the run screen waits for before navigating. */
-sealed interface RunEvent {
-    data object Saved : RunEvent
-    data object SaveFailed : RunEvent
-}
-
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repository: WorkoutPlanRepository,
     private val entitlementManager: EntitlementManager,
     private val preferencesManager: PreferencesManager,
-    private val time: TimeProvider,
 ) : ViewModel() {
 
     val localProfilePicPath = preferencesManager.userProfilePicFlow
@@ -62,9 +51,6 @@ class HomeViewModel @Inject constructor(
     fun dismissPremiumPrompt() {
         _premiumPrompt.value = null
     }
-
-    private val runEventChannel = Channel<RunEvent>(Channel.BUFFERED)
-    val runEvents: Flow<RunEvent> = runEventChannel.receiveAsFlow()
 
     val uiState: StateFlow<HomeUiState> = repository.getActivePlan()
         .flatMapLatest { plan ->
@@ -81,7 +67,9 @@ class HomeViewModel @Inject constructor(
                         val dayData = weekData?.days?.getOrNull(dayIdx)
 
                         val completionList = MutableList(7) { false }
-                        logs.forEach { log ->
+                        // An extra session is logged against the day it was done on, but it does not
+                        // complete that day of the plan.
+                        logs.filterNot { it.isExtra }.forEach { log ->
                             if (log.dayIndex in 0..6) completionList[log.dayIndex] = log.isCompleted
                         }
 
@@ -148,58 +136,6 @@ class HomeViewModel @Inject constructor(
 
                 repository.completeWorkout(log, updatedProgress, workoutType, dayName)
             }
-        }
-    }
-
-    /**
-     * Saves a tracked run against the day the screen was opened for. Unlike
-     * [logCurrentWorkoutAsCompleted] it never uses the progress pointer: the quick-start sheet
-     * opens any pending day, and logging against the pointer filed runs under other days.
-     */
-    fun finishRun(
-        weekNumber: Int,
-        dayIndex: Int,
-        durationSec: Long,
-        distanceKm: Double,
-        path: List<RunPoint>,
-    ) {
-        // Same read-only guard as above: the screen stays put, so the paywall sheet stays visible.
-        if (entitlementManager.entitlement.value.isReadOnly) {
-            _premiumPrompt.value = PremiumRequiredReason.TRIAL_EXPIRED
-            return
-        }
-
-        val day = (uiState.value as? HomeUiState.Success)?.plan?.weeks
-            ?.find { it.weekNumber == weekNumber }?.days?.getOrNull(dayIndex)
-        if (day == null) {
-            runEventChannel.trySend(RunEvent.SaveFailed)
-            return
-        }
-
-        viewModelScope.launch {
-            val run = CompletedRun(
-                weekNumber = weekNumber,
-                dayIndex = dayIndex,
-                title = day.dayName,
-                // A run has no weight to log; the day's own instruction is what gets recorded.
-                instruction = day.exercises.map { exercise ->
-                    LoggedExerciseEntity(
-                        name = exercise.name,
-                        sets = exercise.sets,
-                        reps = exercise.reps,
-                        weight = "",
-                        rpe = exercise.rpe,
-                    )
-                },
-                finishedAt = time.nowMillis(),
-                durationSec = durationSec,
-                distanceKm = distanceKm,
-                path = path,
-            )
-
-            repository.completeRun(run)
-                .onSuccess { runEventChannel.send(RunEvent.Saved) }
-                .onFailure { runEventChannel.send(RunEvent.SaveFailed) }
         }
     }
 

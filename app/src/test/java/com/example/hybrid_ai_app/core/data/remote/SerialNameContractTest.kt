@@ -224,6 +224,7 @@ class SerialNameContractTest {
             "exercises",
             "weekNumber",
             "dayIndex",
+            "isExtra",
             "clientId",
             "startedAt",
             "durationSec",
@@ -263,6 +264,7 @@ class SerialNameContractTest {
             "gpsPath",
             "weekNumber",
             "dayIndex",
+            "isExtra",
         )
     }
 

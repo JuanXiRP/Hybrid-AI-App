@@ -36,8 +36,17 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
-/** Which day of the plan a session was requested for. */
-data class SessionDay(val weekNumber: Int, val dayIndex: Int)
+/**
+ * Which day of the plan a session was requested for. An extra session names the plan's "today"
+ * instead, and is matched by being extra rather than by its day.
+ */
+data class SessionDay(val weekNumber: Int, val dayIndex: Int, val isExtra: Boolean = false) {
+    fun matches(session: WorkoutSession): Boolean = if (isExtra) {
+        session.isExtra
+    } else {
+        !session.isExtra && session.weekNumber == weekNumber && session.dayIndex == dayIndex
+    }
+}
 
 /** Why a session could not be shown. The screen turns each into localized copy. */
 enum class WorkoutSessionError {
@@ -94,9 +103,10 @@ enum class SetField { WEIGHT, REPS, ACTUAL_RPE }
 
 /**
  * Drives the strength workout screen, in two modes:
- *  - **live** (`weekNumber` + `dayIndex` in the route): a session that is persisted to Room after
- *    every change, so it survives process death and feeds the minimized bar and the foreground
- *    service.
+ *  - **live** (`weekNumber` + `dayIndex` in the route, or `kind` = [KIND_STRENGTH] for an extra
+ *    session added on top of the plan): a session that is persisted to Room after every change, so
+ *    it survives process death and feeds the minimized bar and the foreground service. An extra
+ *    session starts empty and is stamped with the plan's "today".
  *  - **edit** (`logId`): a past workout reopened. Its state lives here and in [SavedStateHandle],
  *    never in the active-session table, so it cannot clobber a live session.
  *
@@ -122,6 +132,7 @@ class WorkoutSessionViewModel @Inject constructor(
         savedStateHandle.get<Int>(KEY_DAY)?.let { day -> SessionDay(week, day) }
     }
     private val editLogId: Long? = savedStateHandle.get<Long>(KEY_LOG_ID)
+    private val isExtraRoute: Boolean = savedStateHandle.get<String>(KEY_KIND) == KIND_STRENGTH
 
     val isEditMode: Boolean = editLogId != null
 
@@ -157,9 +168,20 @@ class WorkoutSessionViewModel @Inject constructor(
     private suspend fun load() {
         when {
             editLogId != null -> loadForEdit(editLogId)
+            isExtraRoute -> loadLive(extraDay())
             requestedDay != null -> loadLive(requestedDay)
             else -> _uiState.value = WorkoutSessionUiState.Error(WorkoutSessionError.NO_PLAN_DAY)
         }
+    }
+
+    /** An extra session is stamped with the plan's "today": the week and day the athlete is on. */
+    private suspend fun extraDay(): SessionDay {
+        val progress = plans.getUserProgress().first()
+        return SessionDay(
+            weekNumber = progress?.currentWeekNumber ?: 1,
+            dayIndex = progress?.currentDayIndex ?: 0,
+            isExtra = true,
+        )
     }
 
     private suspend fun loadLive(day: SessionDay) {
@@ -167,7 +189,7 @@ class WorkoutSessionViewModel @Inject constructor(
 
         when {
             existing == null -> startNew(day)
-            existing.weekNumber == day.weekNumber && existing.dayIndex == day.dayIndex -> show(existing)
+            day.matches(existing) -> show(existing)
             else -> _uiState.value = WorkoutSessionUiState.Conflict(existing, day)
         }
     }
@@ -177,6 +199,23 @@ class WorkoutSessionViewModel @Inject constructor(
         if (entitlementManager.entitlement.value.isReadOnly) {
             _uiState.value = WorkoutSessionUiState.Error(WorkoutSessionError.READ_ONLY)
             eventChannel.send(WorkoutSessionEvent.ShowPaywall(PremiumRequiredReason.TRIAL_EXPIRED))
+            return
+        }
+
+        if (day.isExtra) {
+            // Empty on purpose: the athlete adds exercises from the catalog. The title stays blank
+            // and the screen names it, so no language is baked into the stored session.
+            show(
+                WorkoutSession(
+                    clientId = ids.newId(),
+                    weekNumber = day.weekNumber,
+                    dayIndex = day.dayIndex,
+                    title = "",
+                    startedAt = time.nowMillis(),
+                    exercises = emptyList(),
+                    isExtra = true,
+                ),
+            )
             return
         }
 
@@ -612,6 +651,9 @@ class WorkoutSessionViewModel @Inject constructor(
         const val KEY_WEEK = "weekNumber"
         const val KEY_DAY = "dayIndex"
         const val KEY_LOG_ID = "logId"
+        const val KEY_KIND = "kind"
+        const val KIND_STRENGTH = "strength"
+        const val KIND_RUN = "run"
         private const val KEY_EDIT_SESSION = "editSession"
 
         /** The rest times offered per exercise, in seconds; 0 turns the automatic rest off. */

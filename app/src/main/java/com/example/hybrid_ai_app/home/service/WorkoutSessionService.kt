@@ -123,7 +123,10 @@ class WorkoutSessionService : Service() {
     private fun buildOngoing(session: WorkoutSession?): Notification {
         val builder = NotificationCompat.Builder(this, CHANNEL_SESSION)
             .setSmallIcon(R.drawable.ic_workout_notification)
-            .setContentTitle(session?.title?.takeIf { it.isNotBlank() } ?: getString(R.string.session_notif_title))
+            .setContentTitle(
+                session?.title?.takeIf { it.isNotBlank() }
+                    ?: getString(if (session?.isExtra == true) R.string.extra_strength_title else R.string.session_notif_title),
+            )
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setCategory(NotificationCompat.CATEGORY_WORKOUT)
@@ -168,10 +171,7 @@ class WorkoutSessionService : Service() {
         val intent = Intent(this, MainActivity::class.java).apply {
             action = SessionLinks.ACTION_OPEN_SESSION
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            if (session != null) {
-                putExtra(SessionLinks.EXTRA_WEEK, session.weekNumber)
-                putExtra(SessionLinks.EXTRA_DAY, session.dayIndex)
-            }
+            if (session != null) putExtra(SessionLinks.EXTRA_ROUTE, SessionLinks.routeFor(session))
         }
         return PendingIntent.getActivity(
             this,

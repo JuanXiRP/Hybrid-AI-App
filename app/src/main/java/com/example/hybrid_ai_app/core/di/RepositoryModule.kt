@@ -1,8 +1,10 @@
 package com.example.hybrid_ai_app.core.di
 
+import com.example.hybrid_ai_app.core.data.repository.ActiveRunRepositoryImpl
 import com.example.hybrid_ai_app.core.data.repository.ExerciseCatalogRepositoryImpl
 import com.example.hybrid_ai_app.core.data.repository.UserRepositoryImpl
 import com.example.hybrid_ai_app.core.data.repository.WorkoutPlanRepositoryImpl
+import com.example.hybrid_ai_app.core.domain.repository.ActiveRunRepository
 import com.example.hybrid_ai_app.core.domain.repository.ExerciseCatalogRepository
 import com.example.hybrid_ai_app.core.domain.repository.UserRepository
 import com.example.hybrid_ai_app.core.domain.repository.WorkoutPlanRepository
@@ -41,4 +43,10 @@ abstract class RepositoryModule {
     abstract fun bindActiveWorkoutRepository(
         activeWorkoutRepositoryImpl: ActiveWorkoutRepositoryImpl,
     ): ActiveWorkoutRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindActiveRunRepository(
+        activeRunRepositoryImpl: ActiveRunRepositoryImpl,
+    ): ActiveRunRepository
 }

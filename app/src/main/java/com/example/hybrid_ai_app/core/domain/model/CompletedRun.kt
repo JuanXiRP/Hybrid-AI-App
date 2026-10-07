@@ -10,6 +10,8 @@ data class RunPoint(val lat: Double, val lng: Double)
  * (the `workout_execution/{weekNumber}/{dayIndex}` route), never to the progress pointer.
  */
 data class CompletedRun(
+    /** The log's identity, minted when the run started. */
+    val clientId: String,
     val weekNumber: Int,
     val dayIndex: Int,
     val title: String,
@@ -19,4 +21,6 @@ data class CompletedRun(
     val durationSec: Long,
     val distanceKm: Double,
     val path: List<RunPoint>,
+    /** A run added on top of the plan: it is logged but advances no progress and closes no day. */
+    val isExtra: Boolean = false,
 )

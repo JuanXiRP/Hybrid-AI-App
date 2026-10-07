@@ -10,6 +10,7 @@ import com.example.hybrid_ai_app.core.data.remote.dto.StrengthExerciseDto
 import com.example.hybrid_ai_app.core.data.remote.dto.StrengthSetDto
 import com.example.hybrid_ai_app.core.data.remote.dto.UserDto
 import com.example.hybrid_ai_app.core.data.remote.dto.UserProfileResponse
+import com.example.hybrid_ai_app.core.data.remote.dto.WorkoutRunDto
 import com.example.hybrid_ai_app.core.data.remote.dto.WorkoutStrengthDto
 import com.example.hybrid_ai_app.onboarding.data.remote.dto.ProfileUpdateRequest
 import com.example.hybrid_ai_app.testing.BackendResponses
@@ -499,6 +500,26 @@ class WireContractTest {
         assertTrue(json, json.contains("\"startedAt\":\"2026-09-18T09:00:00Z\""))
         assertFalse("no notes were written, so none are sent: $json", json.contains("\"notes\""))
         assertFalse("the JWT supplies the user: $json", json.contains("\"userId\""))
+    }
+
+    @Test
+    fun `only an extra session carries the extra flag on the wire`() {
+        // The backend reads a missing flag as a planned session, so a planned log keeps the
+        // payload it always had and only an extra one adds the field.
+        // Arrange
+        val planned = WorkoutStrengthDto(routineType = "Upper Body", weekNumber = 2, dayIndex = 0)
+        val extra = planned.copy(isExtra = true)
+        val extraRun = WorkoutRunDto(userId = "dummy", distance = 5.0, duration = 1800, targetPace = 0, actualPace = 360, rpe = 6, isExtra = true)
+
+        // Act
+        val plannedJson = NetworkJson.encodeToString(planned)
+        val extraJson = NetworkJson.encodeToString(extra)
+        val extraRunJson = NetworkJson.encodeToString(extraRun)
+
+        // Assert
+        assertFalse(plannedJson, plannedJson.contains("isExtra"))
+        assertTrue(extraJson, extraJson.contains("\"isExtra\":true"))
+        assertTrue(extraRunJson, extraRunJson.contains("\"isExtra\":true"))
     }
 
     @Test

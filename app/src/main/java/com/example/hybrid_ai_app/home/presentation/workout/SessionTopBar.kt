@@ -61,7 +61,9 @@ internal fun SessionTopBar(
         title = {
             Column {
                 Text(
-                    text = session.title.ifBlank { stringResource(id = R.string.history_default_title) },
+                    text = session.title.ifBlank {
+                        stringResource(id = if (session.isExtra) R.string.extra_strength_title else R.string.history_default_title)
+                    },
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     style = MaterialTheme.typography.titleMedium,

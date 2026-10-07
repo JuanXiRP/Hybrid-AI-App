@@ -98,7 +98,7 @@ fun WorkoutSessionScreen(
         is WorkoutSessionUiState.Conflict -> {
             CenteredSpinner()
             ConflictDialog(
-                existingTitle = current.existing.title,
+                existingTitle = current.existing.title.ifBlank { stringResource(id = R.string.extra_strength_title) },
                 onResume = { viewModel.resolveConflict(resume = true) },
                 onDiscard = { viewModel.resolveConflict(resume = false) },
                 onDismiss = { navController.popBackStack() },

@@ -214,6 +214,20 @@ class WorkoutSessionMapperTest {
     }
 
     @Test
+    fun `an extra session stays extra through its log and back`() {
+        // Arrange
+        val session = workoutSession(isExtra = true)
+
+        // Act
+        val log = session.toWorkoutLog(finishedAt = FIXED_TIMESTAMP, completeAll = true)
+        val reopened = log.toWorkoutSession { "id" }
+
+        // Assert
+        assertTrue(log.isExtra)
+        assertTrue(reopened.isExtra)
+    }
+
+    @Test
     fun `blank notes are stored as null rather than an empty string`() {
         // Act
         val log = workoutSession(notes = "   ").toWorkoutLog(finishedAt = FIXED_TIMESTAMP, completeAll = true)
