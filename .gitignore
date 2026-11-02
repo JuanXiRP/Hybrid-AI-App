@@ -1,15 +1,8 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-# Per-user IDE state
-/.idea/appInsightsSettings.xml
-/.idea/markdown.xml
+# IDE configuration (local only)
+/.idea/
 # Kotlin 2.x compiler daemon state and crash logs
 .kotlin/
 .DS_Store
